@@ -4,14 +4,14 @@ from __future__ import absolute_import, division, generators, print_function, wi
 import ctypes
 from ctypes import c_char, c_char_p, c_int, c_uint, byref, POINTER, pointer
 import numpy
-import pyglet.gl
-from pyglet import gl
+import OpenGL.GL
+from OpenGL import GL
 
 
 __all__ = ['GLProgram']
 
 
-SETTERSF = [gl.glUniform1f, gl.glUniform2f, gl.glUniform3f, gl.glUniform4f]
+SETTERSF = [GL.glUniform1f, GL.glUniform2f, GL.glUniform3f, GL.glUniform4f]
 
 
 class GLProgram(object):
@@ -28,17 +28,17 @@ class GLProgram(object):
         try:
             uid = self.uniforms[uniform]
         except KeyError:
-            uid = gl.glGetUniformLocation(self.program, uniform)
+            uid = GL.glGetUniformLocation(self.program, uniform)
             if uid == -1:
                 raise NoSuchUniformError(uniform)
             self.uniforms[uniform] = uid
 
         args = [uid]
         if isinstance(value, (int, ctypes.c_int)):
-            setter = gl.glUniform1i
+            setter = GL.glUniform1i
             args.append(value)
         elif isinstance(value, (float, ctypes.c_float, ctypes.c_double)):
-            setter = gl.glUniform1f
+            setter = GL.glUniform1f
             args.append(value)
         else:
             args.extend(value)
@@ -68,30 +68,30 @@ class ProgramLinkError(Exception):
 
 def vertex_shader(src):
     '''Returns the id of a new compiled vertex shader'''
-    return shader(gl.GL_VERTEX_SHADER, src)
+    return shader(GL.GL_VERTEX_SHADER, src)
 
 
 def fragment_shader(src):
     '''Returns the id of a new compiled fragment shader'''
-    return shader(gl.GL_FRAGMENT_SHADER, src)
+    return shader(GL.GL_FRAGMENT_SHADER, src)
 
 
 def shader(shader_type, src):
-    assert(shader_type == gl.GL_VERTEX_SHADER or shader_type == gl.GL_FRAGMENT_SHADER)
-    s = gl.glCreateShader(shader_type);
+    assert(shader_type == GL.GL_VERTEX_SHADER or shader_type == GL.GL_FRAGMENT_SHADER)
+    s = GL.glCreateShader(shader_type);
     srclen = c_int(len(src))
     psrc = c_char_p(src)
     lpsrc = ctypes.cast(psrc, LP_c_char)
-    gl.glShaderSource(s, 1, pointer(lpsrc), byref(srclen))
-    gl.glCompileShader(s)
+    GL.glShaderSource(s, 1, pointer(lpsrc), byref(srclen))
+    GL.glCompileShader(s)
     return check_shader_or_program_status(s)
 
 
 def program(*shaders):
-    p = gl.glCreateProgram()
+    p = GL.glCreateProgram()
     for s in shaders:
-        gl.glAttachShader(p, s)
-    gl.glLinkProgram(p)
+        GL.glAttachShader(p, s)
+    GL.glLinkProgram(p)
     return check_shader_or_program_status(p)
 
 
@@ -100,17 +100,17 @@ def check_shader_or_program_status(obj):
     Raises an exception if not and deletes the object.
     Returns the object otherwise'''
 
-    if gl.glIsShader(obj):
-        getiv = gl.glGetShaderiv
-        getlog = gl.glGetShaderInfoLog
-        statusflag = gl.GL_COMPILE_STATUS
-        delete = gl.glDeleteShader
+    if GL.glIsShader(obj):
+        getiv = GL.glGetShaderiv
+        getlog = GL.glGetShaderInfoLog
+        statusflag = GL.GL_COMPILE_STATUS
+        delete = GL.glDeleteShader
         ErrorClass = ShaderCompileError
-    elif gl.glIsProgram(obj):
-        getiv = gl.glGetProgramiv
-        getlog = gl.glGetProgramInfoLog
-        statusflag = gl.GL_LINK_STATUS
-        delete = gl.glDeleteProgram
+    elif GL.glIsProgram(obj):
+        getiv = GL.glGetProgramiv
+        getlog = GL.glGetProgramInfoLog
+        statusflag = GL.GL_LINK_STATUS
+        delete = GL.glDeleteProgram
         ErrorClass = ProgramLinkError
     else:
         raise ValueError('object {} neither shader nor prorgam'.format(obj))
@@ -119,7 +119,7 @@ def check_shader_or_program_status(obj):
     getiv(obj, statusflag, byref(ok))
     if not ok:
         errlen = c_int(0)
-        getiv(obj, gl.GL_INFO_LOG_LENGTH, byref(errlen))
+        getiv(obj, GL.GL_INFO_LOG_LENGTH, byref(errlen))
         errlen = errlen.value
         if errlen <= 0:
             error = 'unknown error'

@@ -6,13 +6,12 @@ import cPickle as pickle
 import os
 import sys
 import numpy
-import pygame.image
-import pyglet
-import pyglet.gl
+import OpenGL
+import OpenGL.GL
 import components
 import ctypes
 from itertools import repeat, izip
-from pyglet import gl
+from OpenGL import GL
 
 
 def iapply(func, *iterables):

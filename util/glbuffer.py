@@ -3,8 +3,8 @@ from __future__ import absolute_import, division, generators, print_function, wi
 import ctypes
 from ctypes import c_int, c_uint, byref, POINTER
 import numpy
-import pyglet.gl
-from pyglet import gl
+import OpenGL.GL
+from OpenGL import GL
 
 
 __all__ = ['GLBuffer']
@@ -29,22 +29,22 @@ class _GLBufferContext(object):
 
     def __enter__(self):
         if self.entrycount == 0:
-            gl.glGetIntegerv(gl.GL_ARRAY_BUFFER_BINDING, ctypes.cast(byref(self.previd), c_intp))
-            gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.bufid)
+            GL.glGetIntegerv(GL.GL_ARRAY_BUFFER_BINDING, ctypes.cast(byref(self.previd), c_intp))
+            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.bufid)
         self.entrycount += 1
 
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.entrycount -= 1
         if self.entrycount == 0:
-            gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.previd)
+            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.previd)
 
 
 class GLBuffer(object):
     '''Abstracts an OpenGL buffer object with a defined datatype.
     Automatically resizes when adding data.'''
 
-    def __init__(self, size=0, dtype=numpy.float32, usage=gl.GL_DYNAMIC_DRAW):
+    def __init__(self, size=0, dtype=numpy.float32, usage=GL.GL_DYNAMIC_DRAW):
         '''
         size - how much storage to allocate for this buffer (in items, not bytes)
         dtype - type of items in storage (float, float16, float32, int, etc.)
@@ -74,19 +74,19 @@ class GLBuffer(object):
         self.usage = usage
         self.dtype = numpy.dtype(dtype)
         bufid = ctypes.c_uint(0)
-        gl.glGenBuffers(1, ctypes.byref(bufid))
+        GL.glGenBuffers(1, ctypes.byref(bufid))
         self.bufid = bufid
         self.bound = _GLBufferContext(self.bufid)
         if size > 0:
             with self.bound:
-                gl.glBufferData(gl.GL_ARRAY_BUFFER, size * self.dtype.itemsize,
+                GL.glBufferData(GL.GL_ARRAY_BUFFER, size * self.dtype.itemsize,
                                 None, self.usage)
 
 
     def __len__(self):
         with self.bound:
             size = c_int(0)
-            gl.glGetBufferParameteriv(gl.GL_ARRAY_BUFFER, gl.GL_BUFFER_SIZE, byref(size))
+            GL.glGetBufferParameteriv(GL.GL_ARRAY_BUFFER, GL.GL_BUFFER_SIZE, byref(size))
             return size.value // self.dtype.itemsize
 
 
@@ -103,7 +103,7 @@ class GLBuffer(object):
                 raise IndexError
             shape = (stop - start,)
             a = numpy.empty(shape=shape, dtype=self.dtype)
-            gl.glGetBufferSubData(gl.GL_ARRAY_BUFFER, start * self.dtype.itemsize,
+            GL.glGetBufferSubData(GL.GL_ARRAY_BUFFER, start * self.dtype.itemsize,
                                   (stop - start) * self.dtype.itemsize, a.ctypes.data)
             return a
 
@@ -122,15 +122,15 @@ class GLBuffer(object):
             if stop > sz:
                 newsz = max(sz * 2, stop)
                 a = numpy.empty((newsz,), dtype=self.dtype)
-                gl.glGetBufferSubData(gl.GL_ARRAY_BUFFER, 0,
+                GL.glGetBufferSubData(GL.GL_ARRAY_BUFFER, 0,
                                       sz * self.dtype.itemsize,
                                       a.ctypes.data)
                 b = numpy.asarray(value).reshape(-1)
                 a[start:stop] = b
-                gl.glBufferData(gl.GL_ARRAY_BUFFER, newsz * self.dtype.itemsize,
+                GL.glBufferData(GL.GL_ARRAY_BUFFER, newsz * self.dtype.itemsize,
                                 a.ctypes.data, self.usage)
             else:
                 a = numpy.ascontiguousarray(value, self.dtype).reshape(-1)
                 sz = min((stop - start), len(a))
-                gl.glBufferSubData(gl.GL_ARRAY_BUFFER, start * self.dtype.itemsize,
+                GL.glBufferSubData(GL.GL_ARRAY_BUFFER, start * self.dtype.itemsize,
                                    sz * self.dtype.itemsize, a.ctypes.data)
