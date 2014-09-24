@@ -2,15 +2,13 @@
 from __future__ import absolute_import, division, generators, print_function, with_statement
 
 
-import cPickle as pickle
 import os
 import sys
 import numpy
 import OpenGL
 import OpenGL.GL
-import components
 import ctypes
-from itertools import repeat, izip
+from itertools import repeat
 from OpenGL import GL
 
 
@@ -25,13 +23,13 @@ def iapply(func, *iterables):
     if not callable(func):
         raise ValueError('{0} is not a callable'.format(func))
 
-    for args in izip(*iterables):
+    for args in zip(*iterables):
         func(*args)
 
 
 def repeat_each(items, repeats):
     '''Iterate items, repeatedly yielding each item the corresponding times.'''
-    for i, r in izip(items, repeats):
+    for i, r in zip(items, repeats):
         for j in repeat(i, r):
             yield j
 
