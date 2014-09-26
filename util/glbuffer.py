@@ -133,4 +133,4 @@ class GLBuffer(object):
                 a = numpy.ascontiguousarray(value, self.dtype).reshape(-1)
                 sz = min((stop - start), len(a))
                 GL.glBufferSubData(GL.GL_ARRAY_BUFFER, start * self.dtype.itemsize,
-                                   sz * self.dtype.itemsize, a.ctypes.data)
+                                   sz * self.dtype.itemsize, a)
