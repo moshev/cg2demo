@@ -77,12 +77,10 @@ def fragment_shader(src):
 
 
 def shader(shader_type, src):
-    assert(shader_type == GL.GL_VERTEX_SHADER or shader_type == GL.GL_FRAGMENT_SHADER)
-    s = GL.glCreateShader(shader_type);
-    srclen = c_int(len(src))
-    psrc = c_char_p(src)
-    lpsrc = ctypes.cast(psrc, LP_c_char)
-    GL.glShaderSource(s, 1, pointer(lpsrc), byref(srclen))
+    assert(shader_type == GL.GL_VERTEX_SHADER
+           or shader_type == GL.GL_FRAGMENT_SHADER)
+    s = GL.glCreateShader(shader_type)
+    GL.glShaderSource(s, [src])
     GL.glCompileShader(s)
     return check_shader_or_program_status(s)
 
@@ -96,7 +94,8 @@ def program(*shaders):
 
 
 def check_shader_or_program_status(obj):
-    '''checks if the given shader or program object has been compiled or linked successfully.
+    '''checks if the given shader or program object has been
+    compiled or linked successfully.
     Raises an exception if not and deletes the object.
     Returns the object otherwise'''
 
@@ -124,9 +123,7 @@ def check_shader_or_program_status(obj):
         if errlen <= 0:
             error = 'unknown error'
         else:
-            log = ctypes.create_string_buffer('', errlen)
-            getlog(obj, errlen, None, log)
-            error = log.value
+            error = getlog(obj).decode('utf-8', errors='ignore')
         delete(obj)
         raise ErrorClass(error)
     else:
