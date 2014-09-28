@@ -89,6 +89,7 @@ def program(*shaders):
     p = GL.glCreateProgram()
     for s in shaders:
         GL.glAttachShader(p, s)
+    GL.glBindFragDataLocation(p, 0, 'color')
     GL.glLinkProgram(p)
     return check_shader_or_program_status(p)
 
