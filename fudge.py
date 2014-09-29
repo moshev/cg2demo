@@ -112,7 +112,7 @@ void main() {
     }
     p = q.xyz;
     color = vec4(shade(p, vec3(1.0, 1.0, 1.0)), 1.0);
-    color = pow(color, vec4(2.2, 2.2, 2.2, 1.0));
+    color = pow(color, vec4(1.0 / 2.2, 1.0 / 2.2, 1.0 / 2.2, 1.0));
 }
 '''
 
