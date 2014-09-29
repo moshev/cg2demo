@@ -36,6 +36,7 @@ FS_SRC = br'''
 in vec3 ray;
 out vec4 color;
 
+/*cube
 float dist_object(vec3 p) {
     vec3 bmin = vec3(-1.3, -1.3, -3.3);
     vec3 bmax = vec3(-0.3, -0.3, -1.0);
@@ -45,23 +46,15 @@ float dist_object(vec3 p) {
     vec2 max2 = max(max1.xy, max1.z);
     return max(max2.x, max2.y);
 }
+*/
 
-float shade(vec3 p) {
-    vec3 t1 = cross(ray, vec3(1, 0, 0));
-    if (dot(t1, t1) < 0.001) {
-        t1 = cross(ray, vec3(0, 1, 0));
-    }
-    t1 = normalize(t1);
-    vec3 t2 = normalize(cross(ray, t1));
-    vec3 p1 = p + 0.0001 * t1;
-    vec3 p2 = p + 0.0001 * t2;
-    p1 = p1 + ray * dist_object(p1);
-    p2 = p2 + ray * dist_object(p2);
-    return dot(normalize(cross(p2 - p, p1 - p)), vec3(0, -1, 0));
+/*sphere*/
+float dist_object(vec3 p) {
+    vec3 c = vec3(-1, 0, -1);
+    return distance(c, p) - 0.5;
 }
 
-void main() {
-    vec3 p = vec3(0.0, 0.0, 1.0);
+vec4 trace(vec3 p) {
     float d = dist_object(p);
     float epsilon = 1.0e-6;
     for (int i = 0; i < 1000; i++) {
@@ -71,9 +64,35 @@ void main() {
         }
     }
     if (abs(d) > epsilon) {
+        return vec4(0, 0, 0, 0);
+    }
+    return vec4(p, 1);
+}
+
+float shade(vec3 p) {
+    vec3 t1 = cross(ray, vec3(1, 0, 0));
+    vec3 light = normalize(vec3(-0.5, -0.2, -0.1));
+    if (dot(t1, t1) < 0.001) {
+        t1 = cross(ray, vec3(0, 1, 0));
+    }
+    t1 = normalize(t1);
+    vec3 t2 = normalize(cross(ray, t1));
+    vec3 p1 = p + 0.0001 * t1 - ray;
+    vec3 p2 = p + 0.0001 * t2 - ray;
+    p1 = trace(p1).xyz;
+    p2 = trace(p2).xyz;
+    return dot(normalize(cross(p1 - p, p2 - p)), light);
+}
+
+void main() {
+    vec3 p = vec3(0.0, 0.0, 1.0);
+    vec4 q = trace(p);
+    if (q.w == 0) {
         discard;
     }
+    p = q.xyz;
     color = vec4(vec3(1.0, 1.0, 1.0) * shade(p), 1.0);
+    color = pow(color, vec4(2.2, 2.2, 2.2, 1.0));
 }
 '''
 
