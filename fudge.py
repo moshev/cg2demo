@@ -34,11 +34,12 @@ void main() {
 FS_SRC = br'''
 #version 150
 
+uniform int millis;
 in vec3 ray;
 out vec4 color;
 
-/*cube
-float dist_object(vec3 p) {
+/*cube*/
+float cube(vec3 p) {
     vec3 bmin = vec3(-1.3, -1.3, -3.3);
     vec3 bmax = vec3(-0.3, -0.3, -1.0);
     vec3 dmin = bmin - p;
@@ -47,12 +48,19 @@ float dist_object(vec3 p) {
     vec2 max2 = max(max1.xy, max1.z);
     return max(max2.x, max2.y);
 }
-*/
+
 
 /*sphere*/
+float sphere(vec3 p, vec3 c, float r) {
+    return distance(c, p) - r;
+}
+
 float dist_object(vec3 p) {
-    vec3 c = vec3(-1, 0, -1);
-    return distance(c, p) - 0.5;
+    float t = 2.0 * abs(fract(millis / 5000.0) - 0.5);
+//    t = 0.7;
+//    return cube(p);
+    return (1.0 - t) * cube(p) + t * sphere(p, vec3(-1.0, -1.0, -2.0), 0.5);
+//    return cube(p) / (sphere(p, vec3(0.0, 0.0, -2.0), 0.2) + 1.0);
 }
 
 
@@ -65,15 +73,17 @@ vec4 trace(vec3 p) {
             d = dist_object(p);
         }
     }
-    if (abs(d) > epsilon) {
-        return vec4(0, 0, 0, 0);
+    if (d > epsilon) {
+        return vec4(d, d, d, 0);
     }
+    p += d * ray;
     return vec4(p, 1);
 }
 
-float shade(vec3 p) {
+vec3 shade(vec3 p, vec3 c) {
     vec3 t1 = cross(ray, vec3(1, 0, 0));
-    vec3 light = normalize(vec3(-0.5, -0.2, -0.1));
+    vec3 light1 = normalize(vec3(-0.5, -0.2, -0.1));
+    vec3 light2 = normalize(vec3(0.1, -0.0, -1.0));
     if (dot(t1, t1) < 0.001) {
         t1 = cross(ray, vec3(0, 1, 0));
     }
@@ -89,17 +99,19 @@ float shade(vec3 p) {
     if (q2.w > 0) {
         p2 = q2.xyz;
     }
-    return dot(normalize(cross(p1 - p, p2 - p)), light);
+    vec3 n = normalize(cross(p1 - p, p2 - p));
+    return min((max(dot(n, light1), 0.0) + max(dot(n, light2), 0.0)) * 0.5 * c, c);
+//    return (vec3(1.0, 1.0, 1.0) + normalize(cross(p1 - p, p2 - p))) * 0.5;
 }
 
 void main() {
     vec3 p = vec3(0.0, 0.0, 1.0);
     vec4 q = trace(p);
-    if (q.w == 0) {
+    if (q.w < 1.0) {
         discard;
     }
     p = q.xyz;
-    color = vec4(vec3(1.0, 1.0, 1.0) * shade(p), 1.0);
+    color = vec4(shade(p, vec3(1.0, 1.0, 1.0)), 1.0);
     color = pow(color, vec4(2.2, 2.2, 2.2, 1.0));
 }
 '''
@@ -149,6 +161,7 @@ def render_thread(window):
         t_start = time.monotonic()
         GL.glClear(GL.GL_COLOR_BUFFER_BIT)
         GL.glUseProgram(PROG.id)
+        PROG['millis'] = SDL_GetTicks();
         GL.glDrawArrays(GL.GL_TRIANGLE_FAN, 0, 4)
         GL.glUseProgram(0)
         SDL_GL_SwapWindow(window)
