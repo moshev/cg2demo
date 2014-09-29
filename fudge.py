@@ -22,8 +22,9 @@ in vec2 p;
 out vec3 ray;
 
 void main() {
-    vec4 pos = vec4(p, 0.5, 1.0);
-    ray = vec3(p, -1.0);
+    vec2 p1 = p * vec2(1.0, 1024.0 / 768.0);
+    vec4 pos = vec4(p1, 0.5, 1.0);
+    ray = vec3(p * 0.8, -1.0);
     ray = normalize(ray);
     gl_Position = pos;
 }
@@ -54,9 +55,10 @@ float dist_object(vec3 p) {
     return distance(c, p) - 0.5;
 }
 
+
 vec4 trace(vec3 p) {
     float d = dist_object(p);
-    float epsilon = 1.0e-6;
+    float epsilon = 4.0e-07;
     for (int i = 0; i < 1000; i++) {
         if (d > epsilon) {
             p += d * ray;
@@ -77,10 +79,16 @@ float shade(vec3 p) {
     }
     t1 = normalize(t1);
     vec3 t2 = normalize(cross(ray, t1));
-    vec3 p1 = p + 0.0001 * t1 - ray;
-    vec3 p2 = p + 0.0001 * t2 - ray;
-    p1 = trace(p1).xyz;
-    p2 = trace(p2).xyz;
+    vec3 p1 = p + 0.0001 * t1;
+    vec3 p2 = p + 0.0001 * t2;
+    vec4 q1 = trace(p1 - ray);
+    vec4 q2 = trace(p2 - ray);
+    if (q1.w > 0) {
+        p1 = q1.xyz;
+    }
+    if (q2.w > 0) {
+        p2 = q2.xyz;
+    }
     return dot(normalize(cross(p1 - p, p2 - p)), light);
 }
 
