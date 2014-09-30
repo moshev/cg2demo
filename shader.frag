@@ -1,10 +1,29 @@
 #version 150
 
 uniform int millis;
-in vec3 inray;
+
+// ray
+centroid in vec2 pixelcenter;
+
+// pixel size
+flat in vec2 pixel;
+
 out vec4 color;
 
 vec3 ray;
+
+// set this to something depending on
+// both time and pixel
+uint rand_state = 0u;
+
+float rand() {
+	rand_state = rand_state * 1664525u + 1013904223u;
+	return float((rand_state >> 8) & 0xFFFFFFu) / float(0xFFFFFF);
+}
+
+vec2 rand2() {
+	return vec2(rand(), rand());
+}
 
 float TAU = 6.28318530717958647692;
 
@@ -169,9 +188,21 @@ vec3 shade(vec3 p, vec3 c) {
 //    return (vec3(1.0, 1.0, 1.0) + normalize(cross(p1 - p, p2 - p))) * 0.5;
 }
 
+vec4 gogogo(vec3 p, vec3 ray) {
+    vec4 q = trace(p, ray);
+	vec3 result;
+    if (q.w < 1.0) {
+		return vec4(0.0, 0.0, 0.0, 0.0);
+    }
+    p = q.xyz;
+    return vec4(shade(p, vec3(1.0, 1.0, 1.0)), 1.0);
+}
+
 void main() {
+	rand_state = uint(millis) + uint((pixelcenter.x + pixelcenter.y) * 1000);
     vec3 p = vec3(0.0, 0.0, 2.0);
-    ray = inray;
+	vec3 t = vec3(pixelcenter, 0.0);
+	int i;
 
     // wavy effect1
     /*
@@ -197,14 +228,26 @@ void main() {
                                         vec3(axis.y, -axis.x, 0.0));
     rotmat = rotmat + (1.0 - cos(angle)) * outerProduct(axis, axis);
     p = rotmat * p;
-    ray = rotmat * ray;
 
-    vec4 q = trace(p, ray);
-    if (q.w < 1.0) {
-        discard;
-    }
-    p = q.xyz;
-    color = vec4(shade(p, vec3(1.0, 1.0, 1.0)), 1.0);
-    color = pow(color, vec4(1.0 / 2.2, 1.0 / 2.2, 1.0 / 2.2, 1.0));
+	vec3 tr;
+	ray = normalize(rotmat * t - p);
+	vec4 result = gogogo(p, ray);
+	if (result.w < 1.0) {
+		discard;
+	}
+
+	// the number of iterations plus one must be
+	// divided by below.
+	// anti-aliasing is turned off right now because it murders performance
+	for (i = 0; i < 0; i++) {
+		tr = t + vec3(pixel * (vec2(0.5, 0.5) - rand2()) * 2.0, 0.0);
+		tr = rotmat * tr;
+	    ray = normalize(tr - p);
+		result += gogogo(p, ray);
+	}
+
+	// divide by number of iterations plus one
+	// and gamma correction
+    color = pow(result / 1.0, vec4(1.0 / 2.2, 1.0 / 2.2, 1.0 / 2.2, 1.0));
 }
 

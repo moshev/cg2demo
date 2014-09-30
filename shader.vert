@@ -1,12 +1,18 @@
 #version 150
 
+uniform float width;
+uniform float height;
 in vec2 p;
-out vec3 inray;
+
+centroid out vec2 pixelcenter;
+
+// pixel size... well, half of it
+flat out vec2 pixel;
 
 void main() {
-    vec2 p1 = p * vec2(1.0, 1024.0 / 768.0);
+	pixel = vec2(1.0 / width, 1.0 / height);
+    vec2 p1 = p * vec2(max(height / width, 1.0), max(width / height, 1.0));
     vec4 pos = vec4(p1, 0.5, 1.0);
-    inray = vec3(p, -1.0);
-    inray = normalize(inray);
+	pixelcenter = p;
     gl_Position = pos;
 }

@@ -4,9 +4,11 @@
 # In[1]:
 
 import sdl2
+import sdl2.ext
 import sys
 import util
 import numpy
+import ctypes
 from sdl2 import *
 if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0):
     print("WAAH!")
@@ -16,6 +18,10 @@ VS_SRC = open('shader.vert', 'rb').read()
 
 
 FS_SRC = open('shader.frag', 'rb').read()
+
+
+WIDTH = 1024
+HEIGHT = 768
 
 # In[2]:
 
@@ -30,6 +36,9 @@ class FPSCounter(object):
         self.counts[i] = time
         i = (i + 1) % len(self.counts)
         self.i = i
+        if (i == 0):
+            # end has spaces in to erase previous line
+            print('FPS:', self.get(), end='              \r')
 
     def get(self):
         return (len(self.counts)) / numpy.sum(self.counts)
@@ -44,8 +53,11 @@ def render_thread(window):
     FRAME_TIME = 1.0 / 60.0
     C = SDL_GL_CreateContext(window)
     SDL_GL_MakeCurrent(window, C)
-    GL.glViewport(0, 0, 1024, 768)
+    GL.glViewport(0, 0, WIDTH, HEIGHT)
     GL.glClearColor(0, 0, 0.5, 1)
+    GL.glEnable(GL.GL_BLEND)
+    # blending with premultiplied alpha from shader
+    GL.glBlendFunc(GL.GL_ONE, GL.GL_ONE_MINUS_SRC_ALPHA)
     print('ready2')
     PROG = util.GLProgram(VS_SRC, FS_SRC)
     attrloc = GL.glGetAttribLocation(PROG.id, b'p')
@@ -61,32 +73,35 @@ def render_thread(window):
         GL.glEnableVertexAttribArray(attrloc)
         GL.glVertexAttribPointer(attrloc, 2, GL.GL_FLOAT, GL.GL_FALSE, 0, None)
     print('ready3')
-    sdlevt = SDL_Event()
     fps = FPSCounter()
+    GL.glUseProgram(PROG.id)
+    PROG['width'] = float(WIDTH)
+    PROG['height'] = float(HEIGHT)
     while True:
         evt = None
-        while SDL_PollEvent(sdlevt) != 0:
+        sdlevts = sdl2.ext.get_events()
+        for sdlevt in sdlevts:
             if sdlevt.type == SDL_QUIT:
                 evt = 'escape'
+            if sdlevt.type == SDL_WINDOWEVENT_RESIZED:
+                GL.glViewport(0, 0, sdlevt.data1, sdlevt.data2)
+                PROG['width'] = float(sdlevt.data1)
+                PROG['height'] = float(sdlevt.data2)
         if evt == 'escape':
             SDL_GL_DeleteContext(C)
             SDL_DestroyWindow(window)
             break
         t_start = time.monotonic()
         GL.glClear(GL.GL_COLOR_BUFFER_BIT)
-        GL.glUseProgram(PROG.id)
-        # PROG['millis'] = 1  # SDL_GetTicks()
+        # PROG['millis'] = 123100
         PROG['millis'] = SDL_GetTicks()
         GL.glDrawArrays(GL.GL_TRIANGLE_FAN, 0, 4)
-        GL.glUseProgram(0)
         SDL_GL_SwapWindow(window)
         t_end = time.monotonic()
         t_sleep = FRAME_TIME - (t_end - t_start)
         if t_sleep > 0:
             time.sleep(t_sleep)
         fps.push(time.monotonic() - t_start)
-        # end has spaces in to erase previous line
-        print('FPS:', fps.get(), end='              \r')
     print()
 
 
