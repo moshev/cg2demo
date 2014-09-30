@@ -6,6 +6,8 @@ out vec4 color;
 
 vec3 ray;
 
+float TAU = 6.28318530717958647692;
+
 float mixfix(float a, float b, float t) {
     // this piece is nonsensical but without it
     // we get a black screen, fuck you nVidia
@@ -35,15 +37,36 @@ float sphere(vec3 p, vec3 c, float r) {
     return distance(c, p) - r;
 }
 
+// 0.0 - 1.0
 float timing(int period) {
     return float(millis % period) / float(period - 1);
 }
 
+// 0.0 - 1.0 - 0.0
+float timing2(int period) {
+    float t = timing(period);
+    return 4.0 * t * (1.0 - t);
+}
+
 float dist_object(vec3 p) {
-    float t = timing(4000);
-    t = 2.0 * abs(t - 0.5);
+    float t = timing2(4000);
     vec3 centre = vec3(0.15, 0.0, 0.0);
+
+    // tiling effect
+
+    vec3 vmin = vec3(-1.0, -1.0, -1.0);
+    vec3 vmax = vec3(1.0, 1.0, 1.0);
+    p = vmin + fract((p - vmin) / (vmax - vmin)) * (vmax - vmin);
+
+    //OMGWTF!?
+    /*
+    p = p + vec3(sin(TAU * 0.5 * fract(p.x + t)),
+                 sin(TAU * 0.5 * fract(p.y + t)),
+                 sin(TAU * 0.5 * fract(p.z + t)));
+    */
     return mixfix(sphere(p, centre, 0.25), cube(p), t);
+//    return sphere(p, centre, 0.3);
+//    return(cube(p));
 
 //     return cube(p + vec3(sin(3.141259 * fract(p.x + t)),
 //                          sin(3.141259 * fract(p.y + t)),
@@ -53,12 +76,19 @@ float dist_object(vec3 p) {
 
 
 vec4 trace(vec3 p) {
+    vec3 p1 = p;
     float d = dist_object(p);
-    float epsilon = 4.0e-05;
-    for (int i = 0; i < 100; i++) {
+    float epsilon = 4.0e-07;
+    for (int i = 0; i < 1024; i++) {
+        // escape if too long
+        if (dot(p - p1, ray) > 7) {
+            break;
+        }
         if (d > epsilon) {
             p += d * ray;
             d = dist_object(p);
+        } else {
+            break;
         }
     }
     if (d > epsilon) {
@@ -94,8 +124,23 @@ vec3 shade(vec3 p, vec3 c) {
 }
 
 void main() {
-    vec3 p = vec3(0.0, 0.0, 1.0);
-    float angle = 6.28318530717958647692 * timing(20000);
+    vec3 p = vec3(0.0, 0.0, 2.0);
+    ray = inray;
+
+    // wavy effect1
+    /*
+    float phi = TAU * 3 * timing2(15000) * (timing2(10000) + ray.x + ray.y);
+    p.z += sin(phi) * cos(phi);
+    */
+
+    // wavy effect2
+    /*
+    float phi = TAU * timing2(15000);
+    ray.x *= sin(phi + ray.x);
+    */
+
+    // camera rotation
+    float angle = TAU * timing(20000);
     vec3 axis = normalize(vec3(-0.2, 1.0, 0.3));
     mat3x3 rotmat = mat3(vec3(1.0, 0.0, 0.0),
                          vec3(0.0, 1.0, 0.0),
@@ -106,7 +151,8 @@ void main() {
                                         vec3(axis.y, -axis.x, 0.0));
     rotmat = rotmat + (1.0 - cos(angle)) * outerProduct(axis, axis);
     p = rotmat * p;
-    ray = rotmat * inray;
+    ray = rotmat * ray;
+
     vec4 q = trace(p);
     if (q.w < 1.0) {
         discard;
