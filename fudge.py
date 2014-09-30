@@ -81,7 +81,7 @@ SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE)
 SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3)
 SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3)
 
-window = SDL_CreateWindow(b"Super Special Awesome Demo 2",
+window = SDL_CreateWindow(b"Super Special Awesome Demo 2014",
                           SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
                           1024, 768,
                           SDL_WINDOW_OPENGL |

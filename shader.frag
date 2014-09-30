@@ -6,17 +6,29 @@ out vec4 color;
 
 vec3 ray;
 
+float mixfix(float a, float b, float t) {
+    // this piece is nonsensical but without it
+    // we get a black screen, fuck you nVidia
+    // fuck you with a rusty rake
+    // (pls fix your floating point)
+    float u;
+    t = clamp(t, 0.0, 1.0);
+    u = 1.0 - t;
+    u = clamp(u, 0.0, 1.0);
+    return a * u + b * t;
+}
+
+
 /*cube*/
 float cube(vec3 p) {
-    vec3 bmin = vec3(-0.7, -0.7, -0.7);
-    vec3 bmax = vec3(-0.2, -0.2, -0.2);
+    vec3 bmin = vec3(-0.4, -0.2, -0.2);
+    vec3 bmax = vec3( 0.0,  0.2,  0.2);
     vec3 dmin = bmin - p;
     vec3 dmax = p - bmax;
     vec3 max1 = max(dmin, dmax);
     vec2 max2 = max(max1.xy, max1.z);
     return max(max2.x, max2.y);
 }
-
 
 /*sphere*/
 float sphere(vec3 p, vec3 c, float r) {
@@ -30,20 +42,13 @@ float timing(int period) {
 float dist_object(vec3 p) {
     float t = timing(4000);
     t = 2.0 * abs(t - 0.5);
-    float u = (1.0 - t);
-    // this piece is nonsensical but without it
-    // we get a black screen, fuck you nVidia
-    // fuck you with a rusty rake
-    if (u < 0.0) {
-        u = 0.0;
-    }
-    vec3 centre = vec3(-0.2, -0.2, -0.4);
-    return (u * sphere(p, centre, 0.25) + t * cube(p));
-/*
-    return cube(p + vec3(sin(3.141259 * fract(p.x + t)),
-                         sin(3.141259 * fract(p.y + t)),
-                         sin(3.141259 * fract(p.z + t))));
-                        */
+    vec3 centre = vec3(0.15, 0.0, 0.0);
+    return mixfix(sphere(p, centre, 0.25), cube(p), t);
+
+//     return cube(p + vec3(sin(3.141259 * fract(p.x + t)),
+//                          sin(3.141259 * fract(p.y + t)),
+//                          sin(3.141259 * fract(p.z + t))));
+
 }
 
 
