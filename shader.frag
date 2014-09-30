@@ -54,8 +54,8 @@ float dist_object(vec3 p) {
 
 vec4 trace(vec3 p) {
     float d = dist_object(p);
-    float epsilon = 4.0e-07;
-    for (int i = 0; i < 1024; i++) {
+    float epsilon = 4.0e-05;
+    for (int i = 0; i < 100; i++) {
         if (d > epsilon) {
             p += d * ray;
             d = dist_object(p);
