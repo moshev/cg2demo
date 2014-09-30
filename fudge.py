@@ -20,14 +20,27 @@ FS_SRC = open('shader.frag', 'rb').read()
 # In[2]:
 
 
+class FPSCounter(object):
+    def __init__(self):
+        self.counts = numpy.ndarray((15,), dtype=numpy.float)
+        self.i = 0
+
+    def push(self, time):
+        i = self.i
+        self.counts[i] = time
+        i = (i + 1) % len(self.counts)
+        self.i = i
+
+    def get(self):
+        return (len(self.counts)) / numpy.sum(self.counts)
+
+
 def render_thread(window):
     import time
-    import queue
     import OpenGL
     import OpenGL.GL
     from OpenGL import GL
     print('ready1')
-    escape = False
     FRAME_TIME = 1.0 / 60.0
     C = SDL_GL_CreateContext(window)
     SDL_GL_MakeCurrent(window, C)
@@ -49,6 +62,7 @@ def render_thread(window):
         GL.glVertexAttribPointer(attrloc, 2, GL.GL_FLOAT, GL.GL_FALSE, 0, None)
     print('ready3')
     sdlevt = SDL_Event()
+    fps = FPSCounter()
     while True:
         evt = None
         while SDL_PollEvent(sdlevt) != 0:
@@ -57,11 +71,11 @@ def render_thread(window):
         if evt == 'escape':
             SDL_GL_DeleteContext(C)
             SDL_DestroyWindow(window)
-            return
+            break
         t_start = time.monotonic()
         GL.glClear(GL.GL_COLOR_BUFFER_BIT)
         GL.glUseProgram(PROG.id)
-        #PROG['millis'] = 1  # SDL_GetTicks()
+        # PROG['millis'] = 1  # SDL_GetTicks()
         PROG['millis'] = SDL_GetTicks()
         GL.glDrawArrays(GL.GL_TRIANGLE_FAN, 0, 4)
         GL.glUseProgram(0)
@@ -70,6 +84,10 @@ def render_thread(window):
         t_sleep = FRAME_TIME - (t_end - t_start)
         if t_sleep > 0:
             time.sleep(t_sleep)
+        fps.push(time.monotonic() - t_start)
+        # end has spaces in to erase previous line
+        print('FPS:', fps.get(), end='              \r')
+    print()
 
 
 # In[4]:
