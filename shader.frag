@@ -66,7 +66,7 @@ float timing(int period) {
 // 0.0 - 1.0 - 0.0
 float timing2(int period) {
     float t = timing(period);
-    return 4.0 * t * (1.0 - t);
+    return 2.0 * (0.5 - abs(t - 0.5));
 }
 
 float dist_object(vec3 p) {
@@ -87,10 +87,16 @@ float dist_object(vec3 p) {
     */
 //    return mixfix(sphere(p, centre, 0.25), cube(p), t);
 //    return mixfix(cube(p, centre, 0.2), sphere2(p, centre, 0.5), t);
-    centre = centre + timing2(11123) * vec3(0.0, -0.7, 0.0);
+// 3-way morph and moving over a plane with shadow
+/*
+    centre = centre + timing2(11123) * vec3(0.0, -0.75, 0.0);
     return min(mixfix(mixfix(cube(p, centre, 0.25), cylinderx(p, centre, 0.25, 0.25), t * 2.0),
         sphere(p, centre, 0.4), (t - 0.5) * 2.0),
-        cube(p, vec3(0.0, -1.6, 0.0), vec3(100.0, 1.0, 100.0)));
+        cube(p, vec3(0.0, -1.0, 0.0), vec3(100.0, 0.5, 100.0)));
+*/
+    vec3 disp = timing2(12345) * vec3(0.5, 0.0, 0.0);
+    //return min(min(sphere(p, centre + disp, 0.5), sphere(p, centre - disp, 0.5)), cube(p, vec3(0.0, -1.0, 0.0), vec3(100.0, 0.5, 100.0)));
+    return min(cube(p, centre, 0.2), cube(p, vec3(0.0, -1.0, 0.0), vec3(100.0, 0.5, 100.0)));
     // return min(min(cylinderx(p, centre, 0.3, 0.2),
     //             sphere(p, centre + vec3(0.0, 0.4, 0.0), 0.4)),
     //             cube(p, centre + vec3(0.0, -0.5, -0.2), 0.4));
@@ -131,7 +137,7 @@ vec4 trace(vec3 p, vec3 r) {
 vec3 shade(vec3 p, vec3 c) {
     vec3 t1 = cross(ray, vec3(1, 0, 0));
     vec3 light1 = normalize(vec3(-0.5, -0.2, -0.1));
-    vec3 light2 = normalize(vec3(0.1, -0.0, -1.0));
+    vec3 light2 = normalize(vec3(0.1, -0.1, -1.0));
     if (dot(t1, t1) < 0.001) {
         t1 = cross(ray, vec3(0, 1, 0));
     }
@@ -150,13 +156,13 @@ vec3 shade(vec3 p, vec3 c) {
     vec3 n = normalize(cross(p1 - p, p2 - p));
     vec4 m1 = trace(p - light1 * 0.00001, -light1);
     vec4 m2 = trace(p - light2 * 0.00001, -light2);
-    float factor1 = 0.0;
-    float factor2 = 0.0;
-    if (m1.w < 1.0) {
-        factor1 = dot(n, light1);
+    float factor1 = dot(n, light1);
+    float factor2 = dot(n, light2);
+    if (m1.w > 0.0) {
+        factor1 = 0.0;
     }
-    if (m2.w < 1.0) {
-        factor2 = dot(n, light2);
+    if (m2.w > 0.0) {
+        factor2 = 0.0;
     }
     return min((max(factor1, 0.0) +
            max(factor2, 0.0)) * 0.5 * c, c);
