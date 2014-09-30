@@ -88,15 +88,15 @@ float dist_object(vec3 p) {
 //    return mixfix(sphere(p, centre, 0.25), cube(p), t);
 //    return mixfix(cube(p, centre, 0.2), sphere2(p, centre, 0.5), t);
 // 3-way morph and moving over a plane with shadow
-/*
-    centre = centre + timing2(11123) * vec3(0.0, -0.75, 0.0);
+
+    //centre = centre + timing2(11123) * vec3(0.0, -0.75, 0.0);
     return min(mixfix(mixfix(cube(p, centre, 0.25), cylinderx(p, centre, 0.25, 0.25), t * 2.0),
         sphere(p, centre, 0.4), (t - 0.5) * 2.0),
         cube(p, vec3(0.0, -1.0, 0.0), vec3(100.0, 0.5, 100.0)));
-*/
+
     vec3 disp = timing2(12345) * vec3(0.5, 0.0, 0.0);
     //return min(min(sphere(p, centre + disp, 0.5), sphere(p, centre - disp, 0.5)), cube(p, vec3(0.0, -1.0, 0.0), vec3(100.0, 0.5, 100.0)));
-    return min(cube(p, centre, 0.2), cube(p, vec3(0.0, -1.0, 0.0), vec3(100.0, 0.5, 100.0)));
+//    return min(cube(p, centre, 0.2), cube(p, vec3(0.0, -1.0, 0.0), vec3(100.0, 0.5, 100.0)));
     // return min(min(cylinderx(p, centre, 0.3, 0.2),
     //             sphere(p, centre + vec3(0.0, 0.4, 0.0), 0.4)),
     //             cube(p, centre + vec3(0.0, -0.5, -0.2), 0.4));
