@@ -47,6 +47,18 @@ float mixfix(float a, float b, float t) {
     return a * u + b * t;
 }
 
+/*rotation matrix that will make d point the same direction as z*/
+/*both must be normalized*/
+mat3x3 rotationAlign(vec3 d, vec3 z) {
+    vec3 v = cross(z, d);
+    float c = dot(z, d);
+    float k = 1.0f / (1.0f + c);
+    return k * outerProduct(v, v) +
+        mat3x3(c, v.z, -v.y,
+               -v.z, c, v.x,
+               v.y, -v.x, c);
+}
+
 
 /*cube with 3 lengths*/
 float cube(vec3 p, vec3 c, vec3 vr) {
@@ -80,9 +92,28 @@ float sphere2(vec3 p, vec3 c, float r) {
     return min(sphere(p, c1, r1), sphere(p, c2, r1));
 }
 
+/*torus*/
+/*rc - radius to centre of tube*/
+/*rt - radius of tube*/
+float torus(vec3 p, vec3 c, vec3 n, float rc, float rt) {
+    // equation is
+    // (rmax - sqrt(dot(p.xy))) ** 2 + z**2 - rmin**2
+    // for torus symmetric around z
+    float z = dot(p, n) - dot(c, n);
+    vec3 p1 = p - z * n;
+    float xy2 = dot(p1 - c, p1 - c);
+    float b = rc - sqrt(xy2);
+    return sqrt(b * b + z * z) - rt;
+}
+
 float cylinderx(vec3 p, vec3 c, float h, float r) {
     vec3 q = p - c;
     return max(max(-h - q.x, q.x - h), sqrt(dot(q.yz, q.yz)) - r);
+}
+
+float cylindery(vec3 p, vec3 c, float h, float r) {
+    vec3 q = p - c;
+    return max(max(-h - q.y, q.y - h), sqrt(dot(q.xz, q.xz)) - r);
 }
 
 // 0.0 - 1.0
@@ -98,12 +129,14 @@ float timing2(int period) {
 
 float dist_object(vec3 p) {
     float t = timing2(4000);
+    float t2 = timing2(60000);
+    t = t*t*t*(t*(t*6 - 15) + 10);
     vec3 centre = vec3(0.2, 0.0, 0.0);
 
     // tiling effect
     /*
-    vec3 vmin = vec3(-1.0, -1.0, -1.0);
-    vec3 vmax = vec3(1.0, 1.0, 1.0);
+    vec3 vmin = vec3(-3.0, -3.0, -3.0);
+    vec3 vmax = vec3(3.0, 3.0, 3.0);
     p = vmin + fract((p - vmin) / (vmax - vmin)) * (vmax - vmin);
     */
     //OMGWTF!?
@@ -115,18 +148,34 @@ float dist_object(vec3 p) {
 //    return mixfix(sphere(p, centre, 0.25), cube(p), t);
 //    return mixfix(cube(p, centre, 0.2), sphere2(p, centre, 0.5), t);
 // 3-way morph and moving over a plane with shadow
-    /*
+
     //centre = centre + timing2(11123) * vec3(0.0, -0.75, 0.0);
-    return min(mixfix(mixfix(cube(p, centre, 0.25), cylinderx(p, centre, 0.25, 0.25), t * 2.0),
-        sphere(p, centre, 0.4), (t - 0.5) * 2.0),
-        cube(p, vec3(0.0, -1.0, 0.0), vec3(100.0, 0.5, 100.0)));
-    */
-    vec3 disp = timing2(12345) * vec3(0.5, 0.0, 0.0);
-    //return min(min(sphere(p, centre + disp, 0.5), sphere(p, centre - disp, 0.5)), cube(p, vec3(0.0, -1.0, 0.0), vec3(100.0, 0.5, 100.0)));
+//     return min(mixfix(mixfix(cube(p, centre, 0.25), cylinderx(p, centre, 0.4, 0.25), t * 2.0),
+//         sphere(p, centre, 0.4), (t - 0.5) * 2.0),
+//         cube(p, vec3(0.0, -1.0, 0.0), vec3(100.0, 0.5, 100.0)));
+//     return mixfix(torus(p, centre, normalize(vec3(1.0, 0.0, 0.0)), 0.5, 0.1),
+//     cube(p, centre, 0.4), t);
+    float phi = t * TAU;
+    mat3x3 roto = mat3x3(cos(phi), sin(phi), 0,
+                        -sin(phi), cos(phi), 0,
+                                0,        0, 1);
+     return mixfix(torus(p, centre, normalize(vec3(0.3, 0.0, 0.0)), 0.5, 0.2),
+     cube(p, centre, 0.4), t);
+//     return mixfix(torus(p, centre, normalize(vec3(cos(t * TAU), sin(t * TAU), 0.0)), 0.5, 0.2),
+//     cube(p, centre, 0.4), 0.3);
+//      return mixfix(torus(p, centre, normalize(vec3(1.0, 0.0, 0.0)), 0.5, 0.15),
+//      cube(roto * p, centre, 0.4), t2);
+//     vec3 disp = timing2(12345) * vec3(0.5, 0.0, 0.0);
+//     return 0.5 * (sphere(p, centre - disp, 0.5) + sphere(p, centre + disp, 0.5));
+//     float u = smoothstep(-0.25, 0.25, p.y);
+//     u = clamp(u, 0.0, 1.0);
+//    return mixfix(cylindery(p, centre, 0.3, 0.25), sphere(p, centre, 0.5), u);
+//    cube(p, vec3(0.0, -1.0, 0.0), vec3(100.0, 0.5, 100.0)));
+//    return min(min(sphere(p, centre + disp, 0.5), sphere(p, centre - disp, 0.5)), cube(p, vec3(0.0, -1.0, 0.0), vec3(100.0, 0.5, 100.0)));
 //    return min(cube(p, centre, 0.2), cube(p, vec3(0.0, -1.0, 0.0), vec3(100.0, 0.5, 100.0)));
-     return min(min(cylinderx(p, centre, 0.3, 0.2),
-                 sphere(p, centre + vec3(0.0, 0.4, 0.0), 0.4)),
-                 cube(p, centre + vec3(0.0, -0.5, -0.2), 0.4));
+//     return min(min(cylinderx(p, centre, 0.3, 0.2),
+//                 sphere(p, centre + vec3(0.0, 0.4, 0.0), 0.4)),
+//                 cube(p, centre + vec3(0.0, -0.5, -0.2), 0.4));
 //    return sphere(p, centre, 0.3);
 //    return mixfix(cube(p, vec3(0.0, 1.0, 0.0), 0.8), cube(p, vec3(0.4, 0.4, 0.4), 0.1), t);
 //    return cube(p, centre, 0.3);
@@ -139,7 +188,7 @@ float dist_object(vec3 p) {
 
 /* gradient */
 vec3 grad(vec3 p) {
-    float eps = 0.00001;
+    float eps = 0.0001;
     return normalize(vec3(
                 dist_object(p - vec3(eps, 0.0, 0.0)) - dist_object(p + vec3(eps, 0.0, 0.0)),
                 dist_object(p - vec3(0.0, eps, 0.0)) - dist_object(p + vec3(0.0, eps, 0.0)),
@@ -157,23 +206,21 @@ vec4 trace(vec3 p, vec3 r) {
     for (int i = 0; i < 512; i++) {
         // escape if too long
         if (dsum > 16) {
-            return vec4(p1, 0);
+            return vec4(p1, 0.0);
         } else if (d > epsilon) {
-            //tmp = dsum;
+            tmp = dsum;
             dsum = dsum + d;
-            //tmp = tmp - (dsum - d);
-            //dsumerr = dsumerr + tmp;
-            p1 = p + dsum * r;
+            tmp = tmp - (dsum - d);
+            dsumerr = dsumerr + tmp;
+            p1 = p + (dsum + dsumerr) * r;
             d = dist_object(p1);
+        } else {
+            break;
         }
     }
     if (d > epsilon) {
         return vec4(p1, 0);
     }
-    //tmp = dsum;
-    dsum = dsum + d;
-    //tmp = tmp - (dsum - d);
-    //dsumerr = dsumerr + tmp;
     p1 = p + (dsum + dsumerr) * r;
     return vec4(p1, 1);
 }
@@ -182,21 +229,16 @@ vec3 shade(vec3 p, vec3 c) {
     vec3 light1 = normalize(vec3(-0.5, -0.2, -0.1));
     vec3 light2 = normalize(vec3(0.1, -0.1, -1.0));
     vec3 n = grad(p);
-    vec4 m1 = trace(p - light1 * 0.001, -light1);
-    vec4 m2 = trace(p - light2 * 0.001, -light2);
-    float factor1 = dot(n, light1);
-    float factor2 = dot(n, light2);
-    if (m1.w > 0.0) {
-        factor1 = 0.0;
-    }
-    if (m2.w > 0.0) {
-        factor2 = 0.0;
-    }
+    vec4 m1 = trace(p - light1 * 0.005, -light1);
+    vec4 m2 = trace(p - light2 * 0.005, -light2);
+    float factor1 = (1.0 - m1.w) * dot(n, light1);
+    float factor2 = (1.0 - m2.w) * dot(n, light2);
 
 //    return (vec3(1.0, 1.0, 1.0) + n) * 0.5;
-    return min((max(factor1, 0.0) +
-           max(factor2, 0.0)) * 0.5 * c, c);
+   return min((max(factor1, 0.0) +
+          max(factor2, 0.0)) * 0.5 * c, c);
 //    return (vec3(1.0, 1.0, 1.0) + normalize(cross(p1 - p, p2 - p))) * 0.5;
+//    return vec3(m1.w, m2.w, 0.0);
 }
 
 vec4 gogogo(vec3 p, vec3 ray) {
@@ -211,8 +253,8 @@ vec4 gogogo(vec3 p, vec3 ray) {
 
 void main() {
     rand_state = uint(millis) + uint((pixelcenter.x + pixelcenter.y) * 1000);
-    vec3 p = vec3(0.0, 0.0, 2.0);
-    vec3 t = vec3(pixelcenter, 0.0);
+    vec3 p = vec3(0.0, 0.0, 3.0);
+    vec3 t = vec3(pixelcenter, 1.0);
     int i;
 
     // wavy effect1
