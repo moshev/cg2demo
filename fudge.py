@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python3
 # coding: utf-8
 
 # In[1]:
@@ -9,15 +9,18 @@ import sys
 import util
 import numpy
 import ctypes
+import os
+import os.path
 from sdl2 import *
 if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0):
     print("WAAH!")
     sys.exit(1)
 
-VS_SRC = open('shader.vert', 'rb').read()
+DIR = os.path.dirname(sys.argv[0])
 
+VS_SRC = open(os.path.join(DIR, 'shader.vert'), 'rb').read()
 
-FS_SRC = open('shader.frag', 'rb').read()
+FS_SRC = open(os.path.join(DIR, 'shader.frag'), 'rb').read()
 
 
 WIDTH = 1024
