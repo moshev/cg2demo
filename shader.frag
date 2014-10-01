@@ -10,19 +10,25 @@ flat in vec2 pixel;
 
 out vec4 color;
 
-vec3 ray;
-
 // set this to something depending on
 // both time and pixel
 uint rand_state = 0u;
 
 float rand() {
-	rand_state = rand_state * 1664525u + 1013904223u;
-	return float((rand_state >> 8) & 0xFFFFFFu) / float(0xFFFFFF);
+    rand_state = ((rand_state * 1664525u + 1013904223u) >> 8) & 0xFFFFFFu;
+    return float(rand_state) / float(0xFFFFFF);
+}
+
+vec2 rand2_state = vec2(-0.75, 0.75);
+vec2 rand2_state_m = vec2(-1.0, 1.0);
+
+void srand2(int seed) {
 }
 
 vec2 rand2() {
-	return vec2(rand(), rand());
+    rand2_state *= rand2_state_m;
+    rand2_state_m *= vec2(-1.0, -1.0);
+    return rand2_state;
 }
 
 float TAU = 6.28318530717958647692;
@@ -107,21 +113,21 @@ float dist_object(vec3 p) {
 //    return mixfix(sphere(p, centre, 0.25), cube(p), t);
 //    return mixfix(cube(p, centre, 0.2), sphere2(p, centre, 0.5), t);
 // 3-way morph and moving over a plane with shadow
-
+    /*
     //centre = centre + timing2(11123) * vec3(0.0, -0.75, 0.0);
     return min(mixfix(mixfix(cube(p, centre, 0.25), cylinderx(p, centre, 0.25, 0.25), t * 2.0),
         sphere(p, centre, 0.4), (t - 0.5) * 2.0),
         cube(p, vec3(0.0, -1.0, 0.0), vec3(100.0, 0.5, 100.0)));
-
+    */
     vec3 disp = timing2(12345) * vec3(0.5, 0.0, 0.0);
     //return min(min(sphere(p, centre + disp, 0.5), sphere(p, centre - disp, 0.5)), cube(p, vec3(0.0, -1.0, 0.0), vec3(100.0, 0.5, 100.0)));
 //    return min(cube(p, centre, 0.2), cube(p, vec3(0.0, -1.0, 0.0), vec3(100.0, 0.5, 100.0)));
-    // return min(min(cylinderx(p, centre, 0.3, 0.2),
-    //             sphere(p, centre + vec3(0.0, 0.4, 0.0), 0.4)),
-    //             cube(p, centre + vec3(0.0, -0.5, -0.2), 0.4));
+     return min(min(cylinderx(p, centre, 0.3, 0.2),
+                 sphere(p, centre + vec3(0.0, 0.4, 0.0), 0.4)),
+                 cube(p, centre + vec3(0.0, -0.5, -0.2), 0.4));
 //    return sphere(p, centre, 0.3);
 //    return mixfix(cube(p, vec3(0.0, 1.0, 0.0), 0.8), cube(p, vec3(0.4, 0.4, 0.4), 0.1), t);
-
+//    return cube(p, centre, 0.3);
 //     return cube(p + vec3(sin(3.141259 * fract(p.x + t)),
 //                          sin(3.141259 * fract(p.y + t)),
 //                          sin(3.141259 * fract(p.z + t))));
@@ -129,52 +135,53 @@ float dist_object(vec3 p) {
 }
 
 
+/* gradient */
+vec3 grad(vec3 p) {
+    float eps = 0.00001;
+    return normalize(vec3(
+                dist_object(p - vec3(eps, 0.0, 0.0)) - dist_object(p + vec3(eps, 0.0, 0.0)),
+                dist_object(p - vec3(0.0, eps, 0.0)) - dist_object(p + vec3(0.0, eps, 0.0)),
+                dist_object(p - vec3(0.0, 0.0, eps)) - dist_object(p + vec3(0.0, 0.0, eps))));
+}
+
 /* trace from point p along ray r */
 vec4 trace(vec3 p, vec3 r) {
     vec3 p1 = p;
     float d = dist_object(p);
-    float epsilon = 4.0e-07;
-    for (int i = 0; i < 1024; i++) {
+    float epsilon = 1.0e-05;
+    float dsum = 0.0;
+    float dsumerr = 0.0;
+    float tmp;
+    for (int i = 0; i < 512; i++) {
         // escape if too long
-        if (dot(p - p1, r) > 16) {
-            break;
-        }
-        if (d > epsilon) {
-            p += d * r;
-            d = dist_object(p);
-        } else {
-            break;
+        if (dsum > 16) {
+            return vec4(p1, 0);
+        } else if (d > epsilon) {
+            //tmp = dsum;
+            dsum = dsum + d;
+            //tmp = tmp - (dsum - d);
+            //dsumerr = dsumerr + tmp;
+            p1 = p + dsum * r;
+            d = dist_object(p1);
         }
     }
     if (d > epsilon) {
-        return vec4(d, d, d, 0);
+        return vec4(p1, 0);
     }
-    p += d * r;
-    return vec4(p, 1);
+    //tmp = dsum;
+    dsum = dsum + d;
+    //tmp = tmp - (dsum - d);
+    //dsumerr = dsumerr + tmp;
+    p1 = p + (dsum + dsumerr) * r;
+    return vec4(p1, 1);
 }
 
 vec3 shade(vec3 p, vec3 c) {
-    vec3 t1 = cross(ray, vec3(1, 0, 0));
     vec3 light1 = normalize(vec3(-0.5, -0.2, -0.1));
     vec3 light2 = normalize(vec3(0.1, -0.1, -1.0));
-    if (dot(t1, t1) < 0.001) {
-        t1 = cross(ray, vec3(0, 1, 0));
-    }
-    t1 = normalize(t1);
-    vec3 t2 = normalize(cross(ray, t1));
-    vec3 p1 = p + 0.0001 * t1;
-    vec3 p2 = p + 0.0001 * t2;
-    vec4 q1 = trace(p1 - ray, ray);
-    vec4 q2 = trace(p2 - ray, ray);
-    if (q1.w > 0) {
-        p1 = q1.xyz;
-    }
-    if (q2.w > 0) {
-        p2 = q2.xyz;
-    }
-    vec3 n = normalize(cross(p1 - p, p2 - p));
-    vec4 m1 = trace(p - light1 * 0.00001, -light1);
-    vec4 m2 = trace(p - light2 * 0.00001, -light2);
+    vec3 n = grad(p);
+    vec4 m1 = trace(p - light1 * 0.001, -light1);
+    vec4 m2 = trace(p - light2 * 0.001, -light2);
     float factor1 = dot(n, light1);
     float factor2 = dot(n, light2);
     if (m1.w > 0.0) {
@@ -183,6 +190,8 @@ vec3 shade(vec3 p, vec3 c) {
     if (m2.w > 0.0) {
         factor2 = 0.0;
     }
+
+//    return (vec3(1.0, 1.0, 1.0) + n) * 0.5;
     return min((max(factor1, 0.0) +
            max(factor2, 0.0)) * 0.5 * c, c);
 //    return (vec3(1.0, 1.0, 1.0) + normalize(cross(p1 - p, p2 - p))) * 0.5;
@@ -190,19 +199,19 @@ vec3 shade(vec3 p, vec3 c) {
 
 vec4 gogogo(vec3 p, vec3 ray) {
     vec4 q = trace(p, ray);
-	vec3 result;
+    vec3 result;
     if (q.w < 1.0) {
-		return vec4(0.0, 0.0, 0.0, 0.0);
+        return vec4(0.0, 0.0, 0.0, 0.0);
     }
     p = q.xyz;
     return vec4(shade(p, vec3(1.0, 1.0, 1.0)), 1.0);
 }
 
 void main() {
-	rand_state = uint(millis) + uint((pixelcenter.x + pixelcenter.y) * 1000);
+    rand_state = uint(millis) + uint((pixelcenter.x + pixelcenter.y) * 1000);
     vec3 p = vec3(0.0, 0.0, 2.0);
-	vec3 t = vec3(pixelcenter, 0.0);
-	int i;
+    vec3 t = vec3(pixelcenter, 0.0);
+    int i;
 
     // wavy effect1
     /*
@@ -229,25 +238,25 @@ void main() {
     rotmat = rotmat + (1.0 - cos(angle)) * outerProduct(axis, axis);
     p = rotmat * p;
 
-	vec3 tr;
-	ray = normalize(rotmat * t - p);
-	vec4 result = gogogo(p, ray);
-	if (result.w < 1.0) {
-		discard;
-	}
+    vec3 tr;
+    vec3 ray = normalize(rotmat * t - p);
+    vec4 result = gogogo(p, ray);
+    if (result.w < 1.0) {
+        discard;
+    }
 
-	// the number of iterations plus one must be
-	// divided by below.
-	// anti-aliasing is turned off right now because it murders performance
-	for (i = 0; i < 0; i++) {
-		tr = t + vec3(pixel * (vec2(0.5, 0.5) - rand2()) * 2.0, 0.0);
-		tr = rotmat * tr;
-	    ray = normalize(tr - p);
-		result += gogogo(p, ray);
-	}
+    // the number of iterations plus one must be
+    // divided by below.
+    // anti-aliasing is turned off right now because it murders performance
+    for (i = 0; i < 0; i++) {
+        tr = t + vec3(pixel * rand2(), 0.0);
+        tr = rotmat * tr;
+        ray = normalize(tr - p);
+        result += gogogo(p, ray);
+    }
 
-	// divide by number of iterations plus one
-	// and gamma correction
+    // divide by number of iterations plus one
+    // and gamma correction
     color = pow(result / 1.0, vec4(1.0 / 2.2, 1.0 / 2.2, 1.0 / 2.2, 1.0));
 }
 
