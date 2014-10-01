@@ -1,5 +1,7 @@
 #version 150
 
+const float TAU = 6.28318530717958647692;
+
 uniform int millis;
 
 // ray
@@ -7,6 +9,8 @@ centroid in vec2 pixelcenter;
 
 // pixel size
 flat in vec2 pixel;
+
+flat in mat3x3 rotmat;
 
 out vec4 color;
 
@@ -30,8 +34,6 @@ vec2 rand2() {
     rand2_state_m *= vec2(-1.0, -1.0);
     return rand2_state;
 }
-
-float TAU = 6.28318530717958647692;
 
 float mixfix(float a, float b, float t) {
     // this piece is nonsensical but without it
@@ -226,16 +228,6 @@ void main() {
     */
 
     // camera rotation - timing sets speed for one rotation in ms
-    float angle = TAU * timing(47000);
-    vec3 axis = normalize(vec3(-0.2, 1.0, 0.3));
-    mat3x3 rotmat = mat3(vec3(1.0, 0.0, 0.0),
-                         vec3(0.0, 1.0, 0.0),
-                         vec3(0.0, 0.0, 1.0));
-    rotmat = rotmat * cos(angle);
-    rotmat = rotmat + sin(angle) * mat3(vec3(0.0, axis.z, -axis.y),
-                                        vec3(-axis.z, 0.0, axis.x),
-                                        vec3(axis.y, -axis.x, 0.0));
-    rotmat = rotmat + (1.0 - cos(angle)) * outerProduct(axis, axis);
     p = rotmat * p;
 
     vec3 tr;
