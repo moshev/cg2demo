@@ -172,7 +172,7 @@ float dist_object(vec3 p) {
 //     return 0.5 * (sphere(p, centre - disp, 0.5) + sphere(p, centre + disp, 0.5));
      float u = smoothstep(-0.25, 0.25, p.y);
      u = clamp(u, 0.0, 1.0);
-     return mixfix(cylindery(p, centre, 0.3, 0.25), sphere(p, centre, 0.5), u);
+     return mixfix(cylindery(p, centre, 0.4, 0.25), cylinderx(p, centre, 0.5, 0.5), u);
 //           cube(p, vec3(0.0, -1.0, 0.0), vec3(100.0, 0.5, 100.0)));
 //    return min(min(sphere(p, centre + disp, 0.5), sphere(p, centre - disp, 0.5)), cube(p, vec3(0.0, -1.0, 0.0), vec3(100.0, 0.5, 100.0)));
 //    return min(cube(p, centre, 0.2), cube(p, vec3(0.0, -1.0, 0.0), vec3(100.0, 0.5, 100.0)));
