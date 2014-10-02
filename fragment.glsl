@@ -207,28 +207,31 @@ vec4 trace(vec3 p, vec3 r) {
     float dsum = 0.0;
     float dsumerr = 0.0;
     float tmp;
-    for (int i = 0; i < 512; i++) {
+    for (int i = 0; i < 512 && d >= epsilon; i++) {
         // escape if too long
         if (dsum > 16) {
             return vec4(p1, 0.0);
-        } else if (d > epsilon) {
-            tmp = dsum;
-            dsum = dsum + d;
-            tmp = tmp - (dsum - d);
-            dsumerr = dsumerr + tmp;
-            p1 = p + (dsum + dsumerr) * r;
-            d = dist_object(p1);
-        } else {
-            break;
         }
+        tmp = dsum;
+        dsum = dsum + d;
+        tmp = tmp - (dsum - d);
+        dsumerr = dsumerr + tmp;
+        p1 = dsumerr * r + dsum * r + p;
+        d = dist_object(p1);
     }
     if (d > epsilon) {
         return vec4(p1, 0.0);
     } else {
-        if (d < 0) {
-            dsumerr += d;
+        // woop woop
+        for (int j = 0; j < 16 && d < 0; j++) {
+            tmp = dsum;
+            dsum = dsum + d;
+            tmp = tmp - (dsum - d);
+            dsumerr = dsumerr + tmp;
+            p1 = dsumerr * r + dsum * r + p;
+            d = dist_object(p1);
         }
-        p1 = p + (dsum + dsumerr) * r;
+        p1 = dsumerr * r + dsum * r + p;
         return vec4(p1, 1.0);
     }
 }
