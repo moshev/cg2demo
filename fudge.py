@@ -57,8 +57,8 @@ def render_thread(window):
     C = SDL_GL_CreateContext(window)
     SDL_GL_MakeCurrent(window, C)
     GL.glViewport(0, 0, WIDTH, HEIGHT)
-#    GL.glClearColor(0x8A / 255.0, 0xFF / 255.0, 0xC1 / 255.0, 1)
-    GL.glClearColor(0.85, 0.85, 0.85, 1.0);
+    GL.glClearColor(0x8A / 255.0, 0xFF / 255.0, 0xC1 / 255.0, 1)
+#    GL.glClearColor(0.85, 0.85, 0.85, 1.0);
     GL.glEnable(GL.GL_BLEND)
     # blending with premultiplied alpha from shader
     GL.glBlendFunc(GL.GL_ONE, GL.GL_ONE_MINUS_SRC_ALPHA)

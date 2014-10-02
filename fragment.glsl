@@ -229,8 +229,8 @@ vec4 trace(vec3 p, vec3 r) {
 }
 
 vec3 texmex(vec3 n) {
-    return (vec3(1.0, 1.0, 1.0) + n) * 0.5;
-//    return vec3(1.0, 1.0, 1.0);
+//    return (vec3(1.0, 1.0, 1.0) + n) * 0.5;
+    return vec3(1.0, 1.0, 1.0);
 }
 
 vec3 shade(vec3 p) {
@@ -244,20 +244,20 @@ vec3 shade(vec3 p) {
 
     vec3 c = texmex(n);
     // no light shadows only
-   return c * ((2.0 - m1.w - m2.w) * 2.0 / 3.0 + 1.0 / 3.0);
+//   return c * ((2.0 - m1.w - m2.w) * 2.0 / 3.0 + 1.0 / 3.0);
     // two lights
-//     return min((max(factor1, 0.0) +
-//            max(factor2, 0.0)) * 0.5 * c, c);
+     return min((max(factor1, 0.0) +
+            max(factor2, 0.0)) * 0.5 * c, c);
     // debug shadows
 //    return vec3(m1.w, m2.w, 0.0);
 }
 
 vec4 gogogo(vec3 p, vec3 ray) {
     // wavy effect1
-
+    /*
     float phi = TAU * 3 * timing2(15000) * (timing2(10000) + ray.x + ray.y);
     p.z += sin(phi) * cos(phi) * 0.2;
-
+    */
 
     // wavy effect2
     /*
