@@ -18,9 +18,9 @@ if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0):
 
 DIR = os.path.dirname(sys.argv[0])
 
-VS_SRC = open(os.path.join(DIR, 'shader.vert'), 'rb').read()
+VS_SRC = open(os.path.join(DIR, 'vertex.glsl'), 'rb').read()
 
-FS_SRC = open(os.path.join(DIR, 'shader.frag'), 'rb').read()
+FS_SRC = open(os.path.join(DIR, 'fragment.glsl'), 'rb').read()
 
 
 WIDTH = 1024
