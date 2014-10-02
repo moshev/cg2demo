@@ -26,7 +26,7 @@ float timing2(int period) {
 }
 
 void main() {
-    float angle = TAU * timing(17000);
+    float angle = -TAU * timing(10000);
     vec3 axis = normalize(vec3(-0.2, 1.0, 0.3));
     rotmat = mat3(vec3(1.0, 0.0, 0.0),
                   vec3(0.0, 1.0, 0.0),

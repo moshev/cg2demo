@@ -151,10 +151,10 @@ float dist_object(vec3 p) {
 
     //centre = centre + timing2(11123) * vec3(0.0, -0.75, 0.0);
 
-    return mixfix(mixfix(mixfix(cube(p, centre, 0.25),
-                                torus(p, centre, normalize(vec3(0.5, 0.1, 0.01)), 0.4, 0.15), t * 3.0),
-                         cylinderx(p, centre, 0.4, 0.25), (t - 1.0 / 3.0) * 3.0),
-                  sphere(p, centre, 0.4), (t - 2.0 / 3.0) * 3.0);
+//    return mixfix(mixfix(mixfix(cube(p, centre, 0.25),
+//                                torus(p, centre, normalize(vec3(0.5, 0.1, 0.01)), 0.4, 0.15), t * 3.0),
+//                         cylinderx(p, centre, 0.4, 0.25), (t - 1.0 / 3.0) * 3.0),
+//                  sphere(p, centre, 0.4), (t - 2.0 / 3.0) * 3.0);
 //               cube(p, vec3(0.0, -1.0, 0.0), vec3(100.0, 0.5, 100.0)));
 //     return mixfix(torus(p, centre, normalize(vec3(1.0, 0.0, 0.0)), 0.5, 0.1),
 //     cube(p, centre, 0.4), t);
@@ -170,9 +170,9 @@ float dist_object(vec3 p) {
 //                    cube(roto * p, centre, 0.4), t2);
 //     vec3 disp = timing2(12345) * vec3(0.5, 0.0, 0.0);
 //     return 0.5 * (sphere(p, centre - disp, 0.5) + sphere(p, centre + disp, 0.5));
-//     float u = smoothstep(-0.25, 0.25, p.y);
-//     u = clamp(u, 0.0, 1.0);
-//     return mixfix(cylindery(p, centre, 0.3, 0.25), sphere(p, centre, 0.5), u);
+     float u = smoothstep(-0.25, 0.25, p.y);
+     u = clamp(u, 0.0, 1.0);
+     return mixfix(cylindery(p, centre, 0.3, 0.25), sphere(p, centre, 0.5), u);
 //           cube(p, vec3(0.0, -1.0, 0.0), vec3(100.0, 0.5, 100.0)));
 //    return min(min(sphere(p, centre + disp, 0.5), sphere(p, centre - disp, 0.5)), cube(p, vec3(0.0, -1.0, 0.0), vec3(100.0, 0.5, 100.0)));
 //    return min(cube(p, centre, 0.2), cube(p, vec3(0.0, -1.0, 0.0), vec3(100.0, 0.5, 100.0)));
@@ -203,6 +203,7 @@ vec4 trace(vec3 p, vec3 r) {
     vec3 p1 = p;
     float d = dist_object(p);
     float epsilon = 1.0e-05;
+    // Kalman summation
     float dsum = 0.0;
     float dsumerr = 0.0;
     float tmp;
@@ -222,10 +223,14 @@ vec4 trace(vec3 p, vec3 r) {
         }
     }
     if (d > epsilon) {
-        return vec4(p1, 0);
+        return vec4(p1, 0.0);
+    } else {
+        if (d < 0) {
+            dsumerr += d;
+        }
+        p1 = p + (dsum + dsumerr) * r;
+        return vec4(p1, 1.0);
     }
-    p1 = p + (dsum + dsumerr) * r;
-    return vec4(p1, 1);
 }
 
 vec3 texmex(vec3 n) {
@@ -233,12 +238,12 @@ vec3 texmex(vec3 n) {
     return vec3(1.0, 1.0, 1.0);
 }
 
+const vec3 light1 = normalize(vec3(-0.5, -0.2, -0.1));
+const vec3 light2 = normalize(vec3(0.1, -0.1, -1.0));
 vec3 shade(vec3 p) {
-    vec3 light1 = normalize(vec3(-0.5, -0.2, -0.1));
-    vec3 light2 = normalize(vec3(0.1, -0.1, -1.0));
     vec3 n = grad(p);
-    vec4 m1 = trace(p - light1 * 0.005, -light1);
-    vec4 m2 = trace(p - light2 * 0.005, -light2);
+    vec4 m1 = trace(p - light1 * 0.05, -light1);
+    vec4 m2 = trace(p - light2 * 0.05, -light2);
     float factor1 = (1.0 - m1.w) * dot(n, light1);
     float factor2 = (1.0 - m2.w) * dot(n, light2);
 
