@@ -128,8 +128,8 @@ float timing2(int period) {
 }
 
 float dist_object(vec3 p) {
-    float t = timing2(60000);
-    float t2 = timing2(60000);
+    float t = timing2(14000);
+    float t2 = timing2(57000);
 //     t = t*t*t*(t*(t*6 - 15) + 10);
     vec3 centre = vec3(0.2, 0.0, 0.0);
 
@@ -140,11 +140,11 @@ float dist_object(vec3 p) {
     p = vmin + fract((p - vmin) / (vmax - vmin)) * (vmax - vmin);
     */
     //OMGWTF!?
-    /*
-    p = p + vec3(sin(TAU * 0.5 * fract(p.x + t)),
-                 sin(TAU * 0.5 * fract(p.y + t)),
-                 sin(TAU * 0.5 * fract(p.z + t)));
-    */
+
+    p = p + (t + t2) * vec3(sin(TAU * 0.5 * fract(p.x + t2)),
+                            sin(TAU * 0.5 * fract(p.y + t2)),
+                            sin(TAU * 0.5 * fract(p.z + t2)));
+
 //    return mixfix(sphere(p, centre, 0.25), cube(p), t);
 //    return mixfix(cube(p, centre, 0.2), sphere2(p, centre, 0.5), t);
 // 4-way morph and moving over a plane with shadow
