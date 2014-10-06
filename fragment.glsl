@@ -116,6 +116,23 @@ float cylindery(vec3 p, vec3 c, float h, float r) {
     return max(max(-h - q.y, q.y - h), sqrt(dot(q.xz, q.xz)) - r);
 }
 
+/*cylinder with spherical caps at ends*/
+/* a, b - centres of the caps, r - radius */
+float cylinder_spherical_caps(vec3 p, vec3 a, vec3 b, float r) {
+    vec3 n = normalize(b - a);
+    vec3 p1 = p - a;
+    float d = dot(n, p1);
+    vec3 c = d * n;
+    if (dot(n, c) < 0.0f) {
+        return sphere(p, a, r);
+    }
+    if (dot(n, c) > distance(a, b)) {
+        return sphere(p, b, r);
+    }
+    float daxis = length(p1 - d * n);
+    return daxis - r;
+}
+
 // 0.0 - 1.0
 float timing(int period) {
     return float(millis % period) / float(period - 1);
@@ -130,7 +147,7 @@ float timing2(int period) {
 float dist_object(vec3 p) {
     float t = timing2(14000);
     float t2 = timing2(57000);
-//     t = t*t*t*(t*(t*6 - 15) + 10);
+     t = t*t*t*(t*(t*6 - 15) + 10);
     vec3 centre = vec3(0.2, 0.0, 0.0);
 
     // tiling effect
@@ -140,11 +157,11 @@ float dist_object(vec3 p) {
     p = vmin + fract((p - vmin) / (vmax - vmin)) * (vmax - vmin);
     */
     //OMGWTF!?
-
+    /*
     p = p + (t + t2) * vec3(sin(TAU * 0.5 * fract(p.x + t2)),
                             sin(TAU * 0.5 * fract(p.y + t2)),
                             sin(TAU * 0.5 * fract(p.z + t2)));
-
+    */
 //    return mixfix(sphere(p, centre, 0.25), cube(p), t);
 //    return mixfix(cube(p, centre, 0.2), sphere2(p, centre, 0.5), t);
 // 4-way morph and moving over a plane with shadow
@@ -170,9 +187,9 @@ float dist_object(vec3 p) {
 //                    cube(roto * p, centre, 0.4), t2);
 //     vec3 disp = timing2(12345) * vec3(0.5, 0.0, 0.0);
 //     return 0.5 * (sphere(p, centre - disp, 0.5) + sphere(p, centre + disp, 0.5));
-     float u = smoothstep(-0.25, 0.25, p.y);
-     u = clamp(u, 0.0, 1.0);
-     return mixfix(cylindery(p, centre, 0.4, 0.25), cylinderx(p, centre, 0.5, 0.5), u);
+//     float u = smoothstep(-0.25, 0.25, p.y);
+//     u = clamp(u, 0.0, 1.0);
+//     return mixfix(cylindery(p, centre, 0.4, 0.25), cylinderx(p, centre, 0.5, 0.5), u);
 //           cube(p, vec3(0.0, -1.0, 0.0), vec3(100.0, 0.5, 100.0)));
 //    return min(min(sphere(p, centre + disp, 0.5), sphere(p, centre - disp, 0.5)), cube(p, vec3(0.0, -1.0, 0.0), vec3(100.0, 0.5, 100.0)));
 //    return min(cube(p, centre, 0.2), cube(p, vec3(0.0, -1.0, 0.0), vec3(100.0, 0.5, 100.0)));
@@ -185,7 +202,24 @@ float dist_object(vec3 p) {
 //      return cube(p + vec3(sin(3.141259 * fract(p.x + t)),
 //                           sin(3.141259 * fract(p.y + t)),
 //                           sin(3.141259 * fract(p.z + t))), centre, 0.5);
-
+    /*
+    return mixfix(cylinder_spherical_caps(p, vec3(-1.0, 0.0, 0.0), vec3(1.0, 0.0, 0.0), 0.6),
+                  cylinder_spherical_caps(p, vec3(0.0, -1.0, 0.0), vec3(0.0, 1.0, 0.0), 0.1),
+                  t);
+    */
+    /*
+    return mixfix(torus(p, vec3(0, 0, 0), normalize(vec3(0, 1, 0)), 0.4, 0.15),
+                  cylinder_spherical_caps(p, vec3(0, -1, 0), vec3(0, 1, 0), 0.9),
+                  t);
+    */
+//    /*
+    return mixfix(torus(p, vec3(0, 0, 0), normalize(vec3(0, 1, 0)), 0.4, 0.15),
+            min(
+                  cylinder_spherical_caps(p, vec3(0.4, 0, -0.3), vec3(0.4, 0, 0.3), 0.05),
+                  cylinder_spherical_caps(p, vec3(-0.4, -0.3, 0), vec3(-0.4, 0.3, 0), 0.05)
+            ),
+                  t);
+//    */
 }
 
 
@@ -236,9 +270,20 @@ vec4 trace(vec3 p, vec3 r) {
     }
 }
 
-vec3 texmex(vec3 n) {
+vec3 texmex(vec3 p, vec3 n) {
 //    return (vec3(1.0, 1.0, 1.0) + n) * 0.5;
-    return vec3(1.0, 1.0, 1.0);
+//    return vec3(1.0, 1.0, 1.0);
+    
+    // glTexGen GL_SPHERE_MAP
+    vec3 u = normalize(p);
+    vec3 f = u - 2 * dot(n, u) * n;
+    float m = 2 * sqrt(f.x * f.x + f.y * f.y + (f.z + 1) * (f.z + 1));
+    vec2 t = f.xy / m + vec2(0.5, 0.5);
+
+    // :/
+    float sblue = sin(dot(t, t) * 18 * TAU);
+    sblue = (sblue + 1) * 0.5;
+    return vec3(sblue, sblue, 0);
 }
 
 const vec3 light1 = normalize(vec3(-0.5, -0.2, -0.1));
@@ -250,7 +295,7 @@ vec3 shade(vec3 p) {
     float factor1 = (1.0 - m1.w) * dot(n, light1);
     float factor2 = (1.0 - m2.w) * dot(n, light2);
 
-    vec3 c = texmex(n);
+    vec3 c = texmex(p, n);
     // no light shadows only
 //   return c * ((2.0 - m1.w - m2.w) * 2.0 / 3.0 + 1.0 / 3.0);
     // two lights
