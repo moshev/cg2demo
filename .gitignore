@@ -7,3 +7,6 @@ __pycache__
 /Debug
 /Release
 /ipch
+/cg2demo.opensdf
+/x64
+/flog
