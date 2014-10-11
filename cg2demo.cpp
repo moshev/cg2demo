@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
     (void)argc;
     (void)argv;
 #if defined(_DEBUG)
-    flog = fopen("flog", "w");
+    flog = fopen("flog.txt", "w");
     if (!flog) {
         exit(-1);
     }
@@ -70,7 +70,7 @@ int main(int argc, char *argv[]) {
         SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
         WIDTH, HEIGHT,
         SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE);
-    
+
     if (!window) {
         LOGF("Could not create window: %s\n", SDL_GetError());
         exit(1);
@@ -87,13 +87,14 @@ int main(int argc, char *argv[]) {
 }
 
 int read_file(const char *path, char **text, size_t *sz) {
-    FILE *f = fopen(path, "r");
+    FILE *f = fopen(path, "rb");
     if (!f) {
         LOGF("Couldn't read %s: %s", path, strerror(errno));
         return 0;
     }
     fseek(f, 0, SEEK_END);
     long size = ftell(f);
+    LOGF("size %ld\n", size);
     if (size < 0) {
         LOG("error seeking\n");
         fclose(f);
@@ -108,7 +109,16 @@ int read_file(const char *path, char **text, size_t *sz) {
     }
     size_t read = 0;
     while ((size_t)size > read) {
-        read += fread(buf + read, (size_t)size - read, 1, f);
+        LOGF("read %d\n", (int)read);
+        size_t res = fread(buf + read, 1, (size_t)size - read, f);
+        LOGF("res %d\n", (int)res);
+        if (res <= 0) {
+            LOGF("error reading: %s\n", strerror(errno));
+            fclose(f);
+            free(buf);
+            return 0;
+        }
+        read += res;
     }
     fclose(f);
     *text = buf;
@@ -212,8 +222,8 @@ int renderloop(SDL_Window *window, SDL_GLContext context) {
 
     GLuint prog = create_program_from_files("vertex.glsl", "fragment.glsl");
     glUseProgram(prog);
-    glUniform1ui(ufrm_width, width);
-    glUniform1ui(ufrm_height, height);
+    glUniform1i(ufrm_width, width);
+    glUniform1i(ufrm_height, height);
 
     GLuint vao, buf;
     glGenVertexArrays(1, &vao);
@@ -222,7 +232,7 @@ int renderloop(SDL_Window *window, SDL_GLContext context) {
     glBindBuffer(GL_ARRAY_BUFFER, buf);
     glBufferData(GL_ARRAY_BUFFER, sizeof(RECTANGLE), RECTANGLE, GL_STATIC_DRAW);
     glEnableVertexAttribArray(attr_p);
-    glVertexAttribPointer(attr_p, 8, GL_FLOAT, 0, 0, 0);
+    glVertexAttribPointer(attr_p, 2, GL_FLOAT, 0, 0, 0);
 
     // to keep precise 60fps
     // every third frame will be 17ms
@@ -234,11 +244,19 @@ int renderloop(SDL_Window *window, SDL_GLContext context) {
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                 return 0;
+            } else if (event.type == SDL_WINDOWEVENT) {
+                if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
+                    width = event.window.data1;
+                    height = event.window.data2;
+                    glUniform1i(ufrm_width, width);
+                    glUniform1i(ufrm_height, height);
+                    glViewport(0, 0, width, height);
+                }
             }
         }
         glClear(GL_COLOR_BUFFER_BIT);
-        glUniform1ui(ufrm_millis, ticks_start);
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        glUniform1i(ufrm_millis, ticks_start);
+        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
         SDL_GL_SwapWindow(window);
         Uint32 allotted = 16;
         if (waiterror == 2) {
@@ -249,8 +267,7 @@ int renderloop(SDL_Window *window, SDL_GLContext context) {
         if (frametime < allotted) {
             SDL_Delay(allotted - frametime);
             ticks_start += allotted;
-        }
-        else {
+        } else {
             ticks_start = SDL_GetTicks();
         }
         waiterror = (waiterror + 1) % 3;

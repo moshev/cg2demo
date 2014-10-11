@@ -16,6 +16,6 @@ extern PFNGLGETSHADERIVPROC glGetShaderiv;
 extern PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation;
 extern PFNGLLINKPROGRAMPROC glLinkProgram;
 extern PFNGLSHADERSOURCEPROC glShaderSource;
-extern PFNGLUNIFORM1UIPROC glUniform1ui;
+extern PFNGLUNIFORM1IPROC glUniform1i;
 extern PFNGLUSEPROGRAMPROC glUseProgram;
 extern PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer;

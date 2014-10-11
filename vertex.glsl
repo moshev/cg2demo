@@ -2,9 +2,9 @@
 
 const float TAU = 6.28318530717958647692;
 
-uniform uint width;
-uniform uint height;
-uniform uint millis;
+uniform int width;
+uniform int height;
+uniform int millis;
 in vec2 p;
 
 centroid out vec2 pixelcenter;
@@ -37,7 +37,7 @@ void main() {
                                         vec3(axis.y, -axis.x, 0.0));
     rotmat = rotmat + (1.0 - cos(angle)) * outerProduct(axis, axis);
     pixel = vec2(1.0 / width, 1.0 / height);
-    vec2 p1 = p * vec2(max(height / width, 1.0), max(width / height, 1.0));
+    vec2 p1 = p * vec2(max(float(height) / float(width), 1.0), max(float(width) / float(height), 1.0));
     vec4 pos = vec4(p1, 0.5, 1.0);
     pixelcenter = p;
     gl_Position = pos;

@@ -22,7 +22,7 @@ GetShaderiv
 GetUniformLocation
 LinkProgram
 ShaderSource
-Uniform1ui
+Uniform1i
 UseProgram
 VertexAttribPointer
 '''.split()

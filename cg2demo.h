@@ -5,11 +5,11 @@
 #include <stdio.h>
 
 #if defined(_DEBUG)
-#define LOG(str) fputs(str, flog)
-#define LOGF(fmt, ...) fprintf(flog, fmt, __VA_ARGS__)
+#define LOG(str) fputs(str, flog); fflush(flog)
+#define LOGF(fmt, ...) fprintf(flog, fmt, __VA_ARGS__); fflush(flog)
 #else
-#define LOG(str) (void)
-#define LOGF(fmt, ...) (void)
+#define LOG(str) 
+#define LOGF(fmt, ...) 
 #endif
 
 extern FILE *flog;
