@@ -9,6 +9,7 @@
 #include <SDL_opengl.h>
 
 #include "cg2demo.h"
+#include "math3d.h"
 
 #include "protodef.inc"
 
@@ -29,6 +30,7 @@ GLint attr_p;
 GLint ufrm_width;
 GLint ufrm_height;
 GLint ufrm_millis;
+GLint ufrm_camera;
 
 int renderloop(SDL_Window *window, SDL_GLContext context);
 
@@ -208,12 +210,28 @@ GLuint create_program(const char *vs, size_t szvs, const char *fs, size_t szfs) 
     ufrm_width = glGetUniformLocation(prog, "width");
     ufrm_height = glGetUniformLocation(prog, "height");
     ufrm_millis = glGetUniformLocation(prog, "millis");
+    ufrm_camera = glGetUniformLocation(prog, "camera");
     return prog;
+}
+
+float smootherstep(float x) {
+    return  x*x*x*(x*(x * 6 - 15) + 10);
+}
+
+mat4 mkcamera(Uint32 ticks) {
+    float rotf = (ticks % 32000) / 31999.0f;
+    float trf = (ticks % 17000) / 16999.0f;
+    rotf = smootherstep(rotf);
+    return mulm4(
+        mkrotationm4(mkv3(0, 1, 0), rotf * TAU),
+        mkrotationm4(normalizev3(mkv3(0.0f + cosf(trf * TAU), 1.0f + 0.5f * sinf(trf * TAU), 0)), trf * TAU)
+        );
 }
 
 int renderloop(SDL_Window *window, SDL_GLContext context) {
     unsigned int width = WIDTH;
     unsigned int height = HEIGHT;
+    mat4 camera;
 
     glViewport(0, 0, width, height);
     glClearColor(0x8A / 255.0f, 0xFF / 255.0f, 0xC1 / 255.0f, 1);
@@ -256,6 +274,8 @@ int renderloop(SDL_Window *window, SDL_GLContext context) {
         }
         glClear(GL_COLOR_BUFFER_BIT);
         glUniform1i(ufrm_millis, ticks_start);
+        camera = mkcamera(ticks_start);
+        glUniformMatrix4fv(ufrm_camera, 1, 0, &camera.c[0].v[0]);
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
         SDL_GL_SwapWindow(window);
         Uint32 allotted = 16;

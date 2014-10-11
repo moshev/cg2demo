@@ -3,14 +3,13 @@
 const float TAU = 6.28318530717958647692;
 
 uniform int millis;
+uniform mat4 camera;
 
 // ray
 centroid in vec2 pixelcenter;
 
 // pixel size
 flat in vec2 pixel;
-
-flat in mat3x3 rotmat;
 
 out vec4 color;
 
@@ -198,7 +197,7 @@ float dist_object(vec3 p) {
 //                 cube(p, centre + vec3(0.0, -0.5, -0.2), 0.4));
 //    return sphere(p, centre, 0.3);
 //    return mixfix(cube(p, vec3(0.0, 1.0, 0.0), 0.8), cube(p, vec3(0.4, 0.4, 0.4), 0.1), t);
-//    return cube(p, centre, 0.3);
+    return cube(p, centre, 0.3);
 //      return cube(p + vec3(sin(3.141259 * fract(p.x + t)),
 //                           sin(3.141259 * fract(p.y + t)),
 //                           sin(3.141259 * fract(p.z + t))), centre, 0.5);
@@ -212,14 +211,14 @@ float dist_object(vec3 p) {
                   cylinder_spherical_caps(p, vec3(0, -1, 0), vec3(0, 1, 0), 0.9),
                   t);
     */
-//    /*
+    /*
     return mixfix(torus(p, vec3(0, 0, 0), normalize(vec3(0, 1, 0)), 0.4, 0.15),
             min(
                   cylinder_spherical_caps(p, vec3(0.4, 0, -0.3), vec3(0.4, 0, 0.3), 0.05),
                   cylinder_spherical_caps(p, vec3(-0.4, -0.3, 0), vec3(-0.4, 0.3, 0), 0.05)
             ),
                   t);
-//    */
+    */
 }
 
 
@@ -333,11 +332,10 @@ void main() {
     vec3 t = vec3(pixelcenter, 1.0);
     int i;
 
-    // camera rotation - timing sets speed for one rotation in ms
-    p = rotmat * p;
+    p = (camera * vec4(p, 1.0)).xyz;
 
     vec3 tr;
-    vec3 ray = normalize(rotmat * t - p);
+    vec3 ray = normalize((camera * vec4(t, 1.0)).xyz - p);
     vec4 result = gogogo(p, ray);
     if (result.w < 1.0) {
         discard;
@@ -348,7 +346,7 @@ void main() {
     // anti-aliasing is turned off right now because it murders performance
     for (i = 0; i < 0; i++) {
         tr = t + vec3(pixel * rand2(), 0.0);
-        tr = rotmat * tr;
+        tr = (camera * vec4(tr, 1.0)).xyz;
         ray = normalize(tr - p);
         result += gogogo(p, ray);
     }

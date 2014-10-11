@@ -18,10 +18,24 @@
     <ClCompile Include="cg2demo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="math3d.h">
+      <Filter>Header Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cg2demo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="protodecl.inc">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="protodef.inc">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="protoget.inc">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

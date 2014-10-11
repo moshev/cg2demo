@@ -23,6 +23,8 @@ GetUniformLocation
 LinkProgram
 ShaderSource
 Uniform1i
+Uniform4fv
+UniformMatrix4fv
 UseProgram
 VertexAttribPointer
 '''.split()
