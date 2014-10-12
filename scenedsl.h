@@ -24,7 +24,7 @@ vf - vector function
 #define SC_MIX(A, B, C) DF_MIX, A, B, C
 #define SC_MIN(A, B) DF_MIN, A, B
 #define SC_MAX(A, B) DF_MAX, A, B
-#define SC_FIXED(f) GF_NUMBER, ((uint8_t)f), ((uint8_t)(f * 256))
+#define SC_FIXED(f) GF_NUMBER, ((char)f), ((char)(f * 256))
 #define SC_TIME(n) GF_TIME, n
 #define SC_TIME2(n) GF_TIME2, n
 #define SC_CLAMP(gfarg, gfmin, gfmax) GF_CLAMP, gfarg, gfmin, gfmax

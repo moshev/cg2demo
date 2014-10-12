@@ -246,7 +246,7 @@ int parse_scene(const char *scene, size_t scenesz, char **shader, size_t *shader
     scenesz_in = scenesz;
     parsed = (char *)malloc(needed);
     if (!parsed) {
-        LOG("error malloc: %s\n", strerror(errno));
+        LOGF("error malloc: %s\n", strerror(errno));
         return 0;
     }
     needed = sizeof(prologue) + sizeof(epilogue) - 2;
