@@ -10,6 +10,8 @@
 
 #include "cg2demo.h"
 #include "math3d.h"
+#include "scene.h"
+#include "scenedsl.h"
 
 #include "protodef.inc"
 
@@ -145,6 +147,47 @@ GLuint create_program_from_files(const char *vspath, const char *fspath) {
     return prog;
 }
 
+GLuint create_program_from_scene(const char *scene, size_t scenesz) {
+    char *vs;
+    size_t vssz;
+    char *fspre;
+    size_t fspresz;
+    char *fspost;
+    size_t fspostsz;
+    if (!read_file("vertex.glsl", &vs, &vssz) ||
+        !read_file("fragment_pre.glsl", &fspre, &fspresz) ||
+        !read_file("fragment_post.glsl", &fspost, &fspostsz)) {
+        LOG("Error reading shader source");
+        exit(1);
+    }
+    char *fsscene;
+    size_t fsscenesz;
+    if (!parse_scene(scene, scenesz, &fsscene, &fsscenesz)) {
+        LOG("Error parsing scene");
+        exit(1);
+    }
+    char *fs;
+    size_t fssz = fspresz + fsscenesz + fspostsz + 1;
+    fs = (char *)malloc(fssz);
+    if (!fs) {
+        LOG("Error malloc");
+        exit(1);
+    }
+    memcpy(fs, fspre, fspresz);
+    memcpy(fs + fspresz, fsscene, fsscenesz);
+    memcpy(fs + fspresz + fsscenesz, fspost, fspostsz);
+    fs[fssz - 1] = '\0';
+    LOGF("generated shader:\n-----\n%.*s\n------\n", (int)fssz, fs);
+
+    GLuint prog = create_program(vs, vssz, fs, fssz);
+    free(fs);
+    free(fsscene);
+    free(fspost);
+    free(fspre);
+    free(vs);
+    return prog;
+}
+
 void check_shader(GLuint shaderid) {
     GLint compiled;
     glGetShaderiv(shaderid, GL_COMPILE_STATUS, &compiled);
@@ -219,6 +262,7 @@ float smootherstep(float x) {
 }
 
 mat4 mkcamera(Uint32 ticks) {
+    ///*
     float rotf = (ticks % 32000) / 31999.0f;
     float trf = (ticks % 17000) / 16999.0f;
     rotf = smootherstep(rotf);
@@ -226,7 +270,21 @@ mat4 mkcamera(Uint32 ticks) {
         mkrotationm4(mkv3(0, 1, 0), rotf * TAU),
         mkrotationm4(normalizev3(mkv3(0.0f + cosf(trf * TAU), 1.0f + 0.5f * sinf(trf * TAU), 0)), trf * TAU)
         );
+    //*/
+    /*
+    return mkm4(
+        mkv4(1, 0, 0, 0),
+        mkv4(0, 1, 0, 0),
+        mkv4(0, 0, 1, 0),
+        mkv4(0, 0, 0, 1));
+        */
 }
+
+static const char SCENE[] = { SC_MIX(
+    SC_SPHERE(SC_VEC3(SC_FIXED(0.2), SC_FIXED(0), SC_TIME2(SC_FIXED(3))), SC_FIXED(0.8)),
+    SC_CUBE(SC_VEC3(SC_FIXED(0.2), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.5)),
+    SC_TIME2(SC_FIXED(16)))
+};
 
 int renderloop(SDL_Window *window, SDL_GLContext context) {
     unsigned int width = WIDTH;
@@ -238,7 +296,12 @@ int renderloop(SDL_Window *window, SDL_GLContext context) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
-    GLuint prog = create_program_from_files("vertex.glsl", "fragment.glsl");
+    //GLuint prog = create_program_from_files("vertex.glsl", "fragment.glsl");
+    for (int i = 0; i < sizeof(SCENE); i++) {
+        LOGF("%02x ", SCENE[i]);
+    }
+    LOG("\n");
+    GLuint prog = create_program_from_scene(SCENE, sizeof(SCENE));
     glUseProgram(prog);
     glUniform1i(ufrm_width, width);
     glUniform1i(ufrm_height, height);

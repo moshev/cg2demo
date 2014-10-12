@@ -117,7 +117,7 @@ float cylindery(vec3 p, vec3 c, float h, float r) {
 
 /*cylinder with spherical caps at ends*/
 /* a, b - centres of the caps, r - radius */
-float cylinder_spherical_caps(vec3 p, vec3 a, vec3 b, float r) {
+float cylinder_caps(vec3 p, vec3 a, vec3 b, float r) {
     vec3 n = normalize(b - a);
     vec3 p1 = p - a;
     float d = dot(n, p1);
@@ -202,20 +202,20 @@ float dist_object(vec3 p) {
 //                           sin(3.141259 * fract(p.y + t)),
 //                           sin(3.141259 * fract(p.z + t))), centre, 0.5);
     /*
-    return mixfix(cylinder_spherical_caps(p, vec3(-1.0, 0.0, 0.0), vec3(1.0, 0.0, 0.0), 0.6),
-                  cylinder_spherical_caps(p, vec3(0.0, -1.0, 0.0), vec3(0.0, 1.0, 0.0), 0.1),
+    return mixfix(cylinder_caps(p, vec3(-1.0, 0.0, 0.0), vec3(1.0, 0.0, 0.0), 0.6),
+                  cylinder_caps(p, vec3(0.0, -1.0, 0.0), vec3(0.0, 1.0, 0.0), 0.1),
                   t);
     */
     /*
     return mixfix(torus(p, vec3(0, 0, 0), normalize(vec3(0, 1, 0)), 0.4, 0.15),
-                  cylinder_spherical_caps(p, vec3(0, -1, 0), vec3(0, 1, 0), 0.9),
+                  cylinder_caps(p, vec3(0, -1, 0), vec3(0, 1, 0), 0.9),
                   t);
     */
     /*
     return mixfix(torus(p, vec3(0, 0, 0), normalize(vec3(0, 1, 0)), 0.4, 0.15),
             min(
-                  cylinder_spherical_caps(p, vec3(0.4, 0, -0.3), vec3(0.4, 0, 0.3), 0.05),
-                  cylinder_spherical_caps(p, vec3(-0.4, -0.3, 0), vec3(-0.4, 0.3, 0), 0.05)
+                  cylinder_caps(p, vec3(0.4, 0, -0.3), vec3(0.4, 0, 0.3), 0.05),
+                  cylinder_caps(p, vec3(-0.4, -0.3, 0), vec3(-0.4, 0.3, 0), 0.05)
             ),
                   t);
     */

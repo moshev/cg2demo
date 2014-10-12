@@ -88,9 +88,12 @@
   <ItemGroup>
     <ClCompile Include="cg2demo.cpp" />
     <ClCompile Include="math3d.h" />
+    <ClCompile Include="scene.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cg2demo.h" />
+    <ClInclude Include="scene.h" />
+    <ClInclude Include="scenedsl.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="protodecl.inc" />

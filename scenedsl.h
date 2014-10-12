@@ -6,31 +6,27 @@
 
 #include "scene.h"
 
-// why yes, I am mixing templates and C macros
-// because I can
+/*
+prefix meaning:
+df - distance function
+gf - generic function
+vf - vector function
+<empty> - any
+*/
 
-template <uint8_t _value>
-struct ForceEval {
-	static const uint8_t v = _value;
-};
+#define SC_VEC3(gfx, gfy, gfz) VF_VECTOR, gfx, gfy, gfz
+#define SC_CUBE(v3centre, gfsz) DF_CUBE, v3centre, gfsz
+#define SC_CUBE3(v3centre, v3sz) DF_CUBE3, v3centre, v3sz
+#define SC_SPHERE(v3centre, gfradius) DF_SPHERE, v3centre, gfradius
+#define SC_TORUS(v3centre, v3normal, gfrc, gfrt) DF_TORUS, v3centre, v3normal, gfrc, gfrt
+#define SC_CYLINDER_CAP(v3A, v3B, gfradius) DF_CYLINDER_CAP, v3A, v3B, gfradius
+#define SC_PLANE(v3P, v3N) DF_PLANE, v3P, v3N
+#define SC_MIX(A, B, C) DF_MIX, A, B, C
+#define SC_MIN(A, B) DF_MIN, A, B
+#define SC_MAX(A, B) DF_MAX, A, B
+#define SC_FIXED(f) GF_NUMBER, ((uint8_t)f), ((uint8_t)(f * 256))
+#define SC_TIME(n) GF_TIME, n
+#define SC_TIME2(n) GF_TIME2, n
 
-template <uint8_t _value>
-struct Log2 {
-	static const uint8_t v = ForceEval<Log2<_value / 2>::v + 1>::v;
-};
-
-// best we can do under the circumstances
-template <>
-struct Log2<0> {
-	static const uint8_t v = 0;
-};
-
-template <>
-struct Log2<1> {
-	static const uint8_t v = 0;
-};
-
-#define FABSF(f) (f < 0.0f ? -f : f)
-#define SC_FIXED(f) (ForceEval< ((f < 0) << 7) | (Log2<(uint8_t)FABSF(f)>::v & 0x7F) >::v),
 
 #endif
