@@ -46,7 +46,7 @@ enum vec_func {
     VF_VECTOR = 'V',
 };
 
-int parse_scene(const char *scene, size_t scenesz, char **shader, size_t *shadersz);
+int parse_scene(const uint8_t *scene, size_t scenesz, char **shader, size_t *shadersz);
 
 #endif
 

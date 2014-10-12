@@ -13,7 +13,7 @@ if shader is nullptr, nothing is written, but shadersz is still updated.
 Use that to validate input and calculate size.
 */
 
-static inline uint8_t consume1(const char **scene, size_t *scenesz) {
+static inline uint8_t consume1(const uint8_t **scene, size_t *scenesz) {
     (*scenesz)--;
     return (uint8_t)*(*scene)++;
 }
@@ -30,7 +30,7 @@ static inline void appendstr(const char *str, size_t strsz, char **shader, size_
 
 #define APPENDSTR(str) appendstr(str, sizeof(str) - 1, shader, shadersz)
 
-static inline int parse_num(const char **scene, size_t *scenesz, char **shader, size_t *shadersz) {
+static inline int parse_num(const uint8_t **scene, size_t *scenesz, char **shader, size_t *shadersz) {
     if (*scenesz < 2) {
         LOG("No bytes left for NUM\n");
         return 0;
@@ -55,12 +55,12 @@ static inline int parse_num(const char **scene, size_t *scenesz, char **shader, 
 #define PARSE_GF do { if (!parse_gf(scene, scenesz, shader, shadersz)) return 0; } while (0)
 #define PARSE_VF do { if (!parse_vf(scene, scenesz, shader, shadersz)) return 0; } while (0)
 
-static int parse_df(const char **scene, size_t *scenesz, char **shader, size_t *shadersz);
-static int parse_gf(const char **scene, size_t *scenesz, char **shader, size_t *shadersz);
-static int parse_vf(const char **scene, size_t *scenesz, char **shader, size_t *shadersz);
+static int parse_df(const uint8_t **scene, size_t *scenesz, char **shader, size_t *shadersz);
+static int parse_gf(const uint8_t **scene, size_t *scenesz, char **shader, size_t *shadersz);
+static int parse_vf(const uint8_t **scene, size_t *scenesz, char **shader, size_t *shadersz);
 
 
-static int parse_df(const char **scene, size_t *scenesz, char **shader, size_t *shadersz) {
+static int parse_df(const uint8_t **scene, size_t *scenesz, char **shader, size_t *shadersz) {
     if (!scenesz || !*scenesz) {
         LOG("No bytes left for DF\n");
         return 0;
@@ -70,9 +70,9 @@ static int parse_df(const char **scene, size_t *scenesz, char **shader, size_t *
     case DF_CUBE:
         APPENDSTR("cube(p, ");
         PARSE_VF;
-        APPENDSTR(", ");
+        APPENDSTR(", float(");
         PARSE_GF;
-        APPENDSTR(")");
+        APPENDSTR("))");
         return 1;
     case DF_CUBE3:
         APPENDSTR("cube(p, ");
@@ -143,7 +143,7 @@ static int parse_df(const char **scene, size_t *scenesz, char **shader, size_t *
     return 0;
 }
 
-static int parse_gf(const char **scene, size_t *scenesz, char **shader, size_t *shadersz) {
+static int parse_gf(const uint8_t **scene, size_t *scenesz, char **shader, size_t *shadersz) {
     if (!scenesz || !*scenesz) {
         LOG("No bytes left for GF\n");
         return 0;
@@ -209,7 +209,7 @@ static int parse_gf(const char **scene, size_t *scenesz, char **shader, size_t *
     return 0;
 }
 
-static int parse_vf(const char **scene, size_t *scenesz, char **shader, size_t *shadersz) {
+static int parse_vf(const uint8_t **scene, size_t *scenesz, char **shader, size_t *shadersz) {
     if (!scenesz || !*scenesz) {
         LOG("No bytes left for VF\n");
         return 0;
@@ -233,10 +233,10 @@ static int parse_vf(const char **scene, size_t *scenesz, char **shader, size_t *
 static const char prologue[] = "float dist_object(vec3 p) { return ";
 static const char epilogue[] = " ; }";
 
-int parse_scene(const char *scene, size_t scenesz, char **shader, size_t *shadersz) {
+int parse_scene(const uint8_t *scene, size_t scenesz, char **shader, size_t *shadersz) {
     size_t needed = sizeof(prologue) + sizeof(epilogue) - 2;
     char *parsed = nullptr;
-    const char *scene_in = scene;
+    const uint8_t *scene_in = scene;
     size_t scenesz_in = scenesz;
     if (!parse_df(&scene_in, &scenesz_in, nullptr, &needed)) {
         LOG("error parsing scene\n");

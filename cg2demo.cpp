@@ -205,7 +205,7 @@ GLuint create_program_from_files(const char *vspath, const char *fspath) {
     return prog;
 }
 
-GLuint create_program_from_scene(const char *scene, size_t scenesz) {
+GLuint create_program_from_scene(const uint8_t *scene, size_t scenesz) {
     char *vs;
     size_t vssz;
     char *fspre;
@@ -324,10 +324,16 @@ mat4 mkcamera(Uint32 ticks) {
     float rotf = (ticks % 32000) / 31999.0f;
     float trf = (ticks % 17000) / 16999.0f;
     rotf = smootherstep(rotf);
+
+    //return mkrotationm4(mkv3(0, 1, 0), trf * TAU);
     return mulm4(
-        mkrotationm4(mkv3(0, 1, 0), rotf * TAU),
-        mkrotationm4(normalizev3(mkv3(0.0f + cosf(trf * TAU), 1.0f + 0.5f * sinf(trf * TAU), 0)), trf * TAU)
+        mktranslationm4(mkv3(0.5, 0, 0)),
+        mkrotationm4(mkv3(0, 1, 0), trf * TAU)
         );
+    //return mulm4(
+    //    mkrotationm4(mkv3(0, 1, 0), rotf * TAU),
+    //    mkrotationm4(normalizev3(mkv3(1.0f + cosf(trf * TAU), 0.5f * sinf(trf * TAU), 0)), trf * TAU)
+    //    );
     //*/
     /*
     return mkm4(
@@ -338,31 +344,72 @@ mat4 mkcamera(Uint32 ticks) {
         */
 }
 
-static const char SCENE[] = {
+static const uint8_t SCENE1[] = {
 SC_MIN(
   SC_MIX(
     SC_SPHERE(SC_VEC3(SC_TIME2(SC_FIXED(3)), SC_FIXED(0), SC_FIXED(-0.0)), SC_FIXED(0.2)),
     SC_CUBE(SC_VEC3(SC_FIXED(0.2), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.5)),
     SC_TIME2(SC_FIXED(16))),
   SC_MIN(
-    SC_MIN(
-      SC_PLANE(SC_VEC3(SC_FIXED(0), SC_FIXED(-2), SC_FIXED(0)),
+//    SC_MIN(
+      SC_PLANE(SC_VEC3(SC_FIXED(0), SC_FIXED(-3), SC_FIXED(0)),
                SC_VEC3(SC_FIXED(0), SC_FIXED(1), SC_FIXED(0))),
-      SC_PLANE(SC_VEC3(SC_FIXED(0), SC_FIXED(4), SC_FIXED(0)),
-               SC_VEC3(SC_FIXED(0), SC_FIXED(-1), SC_FIXED(0)))
-    ),
+//      SC_PLANE(SC_VEC3(SC_FIXED(0), SC_FIXED(4), SC_FIXED(0)),
+    //           SC_VEC3(SC_FIXED(0), SC_FIXED(-1), SC_FIXED(0)))
+    //),
     SC_MIX(
       SC_TORUS(SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(-2.3)),
                SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(1)),
-               SC_CLAMP(SC_SMOOTH(SC_FIXED(0), SC_FIXED(1), SC_TIME2(SC_FIXED(3))), SC_FIXED(0.25), SC_FIXED(0.6)),
+               SC_CLAMP(SC_SMOOTH(SC_FIXED(0.1), SC_FIXED(0.9), SC_TIME2(SC_FIXED(3))), SC_FIXED(0.25), SC_FIXED(0.6)),
                SC_FIXED(0.2)),
-      SC_CUBE3(SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(-2.3)),
-               SC_VEC3(SC_FIXED(0.5), SC_FIXED(0.5), SC_FIXED(0.2))),
+      SC_MIN(SC_CUBE3(SC_VEC3(SC_FIXED(0), SC_FIXED(0.25), SC_FIXED(-2.3)),
+                      SC_VEC3(SC_FIXED(0.25), SC_FIXED(0.25), SC_FIXED(0.2))),
+             SC_CUBE3(SC_VEC3(SC_FIXED(0), SC_FIXED(-0.25), SC_FIXED(-2.3)),
+                      SC_VEC3(SC_FIXED(0.25), SC_FIXED(0.25), SC_FIXED(0.2)))),
       SC_TIME2(SC_FIXED(11))
     )
   )
 )
 };
+
+static const uint8_t SCENE2[] = {
+    SC_MIX(
+    SC_MIN(SC_MIN(SC_MIN(SC_MIN(SC_MIN(SC_MIN(SC_MIN(SC_MIN(
+    SC_CUBE(SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.1)),
+    SC_CUBE(SC_VEC3(SC_FIXED(0.515), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.1))),
+    SC_CUBE(SC_VEC3(SC_FIXED(-0.515), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.1))),
+    SC_CUBE(SC_VEC3(SC_FIXED(0), SC_FIXED(0.515), SC_FIXED(0)), SC_FIXED(0.1))),
+    SC_CUBE(SC_VEC3(SC_FIXED(0.515), SC_FIXED(0.515), SC_FIXED(0)), SC_FIXED(0.1))),
+    SC_CUBE(SC_VEC3(SC_FIXED(-0.515), SC_FIXED(0.515), SC_FIXED(0)), SC_FIXED(0.1))),
+    SC_CUBE(SC_VEC3(SC_FIXED(0), SC_FIXED(-0.515), SC_FIXED(0)), SC_FIXED(0.1))),
+    SC_CUBE(SC_VEC3(SC_FIXED(0.515), SC_FIXED(-0.515), SC_FIXED(0)), SC_FIXED(0.1))),
+    SC_CUBE(SC_VEC3(SC_FIXED(-0.515), SC_FIXED(-0.515), SC_FIXED(0)), SC_FIXED(0.1))),
+    SC_TORUS(SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(0)),
+             SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(1)),
+             SC_CLAMP(SC_SMOOTH(SC_FIXED(0.1), SC_FIXED(0.9), SC_TIME2(SC_FIXED(3))), SC_FIXED(0.25), SC_FIXED(0.6)),
+             SC_FIXED(0.2)),
+    SC_TIME2(SC_FIXED(10)))
+};
+
+static const uint8_t SCENE3[] = {
+SC_MIX(
+  SC_SPHERE(SC_VEC3(SC_TIME2(SC_FIXED(2.4)), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.2)),
+  SC_CYLINDER_CAP(SC_VEC3(SC_FIXED(0.1), SC_FIXED(0), SC_FIXED(0)), SC_VEC3(SC_FIXED(0.9), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.1)),
+  SC_TIME2(SC_FIXED(1.2)),
+)
+};
+
+static const uint8_t SCENE4[] = {
+SC_MIX(
+SC_MIX(SC_TORUS(SC_VEC3(SC_FIXED(-0.1), SC_FIXED(0), SC_FIXED(0)), SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(1)), SC_FIXED(0.2), SC_FIXED(0.1)),
+         SC_SPHERE(SC_VEC3(SC_TIME2(SC_FIXED(4)), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.08)),
+         SC_SMOOTH(SC_FIXED(0.03), SC_FIXED(0.4), SC_TIME2(SC_FIXED(4)))),
+  SC_CUBE(SC_VEC3(SC_FIXED(1), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.2)),
+  SC_SMOOTH(SC_FIXED(0.6), SC_FIXED(1), SC_TIME2(SC_FIXED(4)))
+)
+};
+
+#define SCENE SCENE2
 
 int renderloop(SDL_Window *window, SDL_GLContext context) {
     unsigned int width = WIDTH;
@@ -371,7 +418,7 @@ int renderloop(SDL_Window *window, SDL_GLContext context) {
 
     glViewport(0, 0, width, height);
     //glClearColor(0x8A / 255.0f, 0xFF / 255.0f, 0xC1 / 255.0f, 1);
-    glClearColor(0, 0, 0, 1);
+    glClearColor(0.9, 0.9, 0.9, 1);
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -436,9 +483,15 @@ int renderloop(SDL_Window *window, SDL_GLContext context) {
     }
 }
 
+// BLUES SCALE
 uint16_t noteshz[] = {
     262, 311, 349, 370, 392, 466, 523, 622, 699, 740, 784, 932, 1047, 1245, 1397, 1480
 };
+
+//HUNGARIAN MINOR
+//uint16_t noteshz[] = {
+//    262, 294, 311, 370, 392, 415, 494, 523, 587, 622, 734, 784, 831, 988, 1047, 1175
+//};
 
 //AUDIO
 void audio_callback(void *userdata, Uint8 *stream, int len) {

@@ -65,13 +65,15 @@ vec3 texmex(vec3 p, vec3 n) {
 //    float sblue = sin(dot(t, t) * 18 * TAU);
 //    sblue = (sblue + 1) * 0.5;
     //float sblue = step(0.5, fract((t.x * t.x + t.y * t.y) * 1.5));
+    //float sblue = step(0.5, fract((t.x + t.y) * 1.5));
     //return mix(srgb(89, 132, 50), srgb(148, 174, 22), sblue);
     //return mix(srgb(246, 200, 44), srgb(250, 236, 147), sblue);
-    return vec3(t, 0.7);
+    //return vec3(t, 0.3 + 0.4 * timing2(12345));
+    return vec3(1.0 - t.x, 1.0 - t.x - t.y, 1.0 - t.x - t.y);
 }
 
-const vec3 light1 = normalize(vec3(-0.5, -0.2, -0.1));
-const vec3 light2 = normalize(vec3(0.1, -0.1, -1.0));
+const vec3 light1 = normalize(vec3(-0.0, -0.2, -0.0));
+const vec3 light2 = normalize(vec3(0.1, -0.1, -0.0));
 const vec3 light3_posc = vec3(-0.2, 0, 2.5);
 vec3 shade(vec3 p) {
     vec3 n = grad(p);
