@@ -27,6 +27,8 @@ vf - vector function
 #define SC_FIXED(f) GF_NUMBER, ((uint8_t)f), ((uint8_t)(f * 256))
 #define SC_TIME(n) GF_TIME, n
 #define SC_TIME2(n) GF_TIME2, n
+#define SC_CLAMP(gfarg, gfmin, gfmax) GF_CLAMP, gfarg, gfmin, gfmax
+#define SC_SMOOTH(gfmin, gfmax, gfarg) GF_SMOOTH, gfmin, gfmax, gfarg
 
 
 #endif

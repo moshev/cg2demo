@@ -34,6 +34,9 @@ GLint ufrm_height;
 GLint ufrm_millis;
 GLint ufrm_camera;
 
+uint8_t *taudigits;
+const size_t ntaudigits = 1280;
+
 int renderloop(SDL_Window *window, SDL_GLContext context);
 
 /* exits with error status and logs error if program wasn't successfully linked */
@@ -47,6 +50,39 @@ GLuint create_program(const char *vs, size_t szvs, const char *fs, size_t szfs);
 
 /* read file into memory, return 1 on success, 0 on failure */
 int read_file(const char *path, char **text, size_t *sz);
+
+// http://en.wikipedia.org/wiki/Modular_exponentiation#Right-to-left_binary_method
+int modpow(int base, int exponent, int modulus) {
+    int result = 1;
+    base %= modulus;
+    while (exponent > 0) {
+        if (exponent & 1) result = (result * base) % modulus;
+        exponent >>= 1;
+        base = (base * base) % modulus;
+    }
+    return result;
+}
+
+int S(int j, int n) {
+    double s = 0;
+    for (int k = 0; k <= n; ++k) {
+        int r = 8 * k + j;
+        s += (2 * modpow(16, n - k, r)) / (double)r;
+    }
+    return (int)s & 0xf;
+}
+
+int tau(int n) {
+    int r = (4 * S(1, n) - 2 * S(2, n) - S(3, n) - S(4, n)) & 0xf;
+    return r;
+}
+
+struct audio_state {
+    unsigned samples;
+    int note;
+};
+
+void audio_callback(void *userdata, Uint8 *stream, int len);
 
 int main(int argc, char *argv[]) {
     (void)argc;
@@ -63,6 +99,21 @@ int main(int argc, char *argv[]) {
         LOG("FAILED TO INIT VIDEO\n");
         exit(1);
     }
+    if (SDL_InitSubSystem(SDL_INIT_AUDIO) != 0) {
+        LOG("FAILED TO INIT AUDIO\n");
+        exit(1);
+    }
+    audio_state as;
+    as.samples = 0;
+    as.note = 0;
+    SDL_AudioSpec desired;
+    desired.channels = 1;
+    desired.format = AUDIO_S16;
+    desired.freq = 44100;
+    desired.samples = 4096;
+    desired.callback = audio_callback;
+    desired.userdata = &as;
+    SDL_OpenAudio(&desired, nullptr);
     SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
@@ -83,6 +134,13 @@ int main(int argc, char *argv[]) {
     SDL_GLContext context = SDL_GL_CreateContext(window);
 
 #include "protoget.inc"
+
+    taudigits = (uint8_t *)malloc(ntaudigits);
+    // gen tau
+    for (size_t i = 0; i < ntaudigits; i++) {
+        taudigits[i] = tau((int)i);
+    }
+    SDL_PauseAudio(0);
 
     // main loop
     int result = renderloop(window, context);
@@ -280,10 +338,30 @@ mat4 mkcamera(Uint32 ticks) {
         */
 }
 
-static const char SCENE[] = { SC_MIX(
-    SC_SPHERE(SC_VEC3(SC_FIXED(0.2), SC_FIXED(0), SC_TIME2(SC_FIXED(3))), SC_FIXED(0.8)),
+static const char SCENE[] = {
+SC_MIN(
+  SC_MIX(
+    SC_SPHERE(SC_VEC3(SC_TIME2(SC_FIXED(3)), SC_FIXED(0), SC_FIXED(-0.0)), SC_FIXED(0.2)),
     SC_CUBE(SC_VEC3(SC_FIXED(0.2), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.5)),
-    SC_TIME2(SC_FIXED(16)))
+    SC_TIME2(SC_FIXED(16))),
+  SC_MIN(
+    SC_MIN(
+      SC_PLANE(SC_VEC3(SC_FIXED(0), SC_FIXED(-2), SC_FIXED(0)),
+               SC_VEC3(SC_FIXED(0), SC_FIXED(1), SC_FIXED(0))),
+      SC_PLANE(SC_VEC3(SC_FIXED(0), SC_FIXED(4), SC_FIXED(0)),
+               SC_VEC3(SC_FIXED(0), SC_FIXED(-1), SC_FIXED(0)))
+    ),
+    SC_MIX(
+      SC_TORUS(SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(-2.3)),
+               SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(1)),
+               SC_CLAMP(SC_SMOOTH(SC_FIXED(0), SC_FIXED(1), SC_TIME2(SC_FIXED(3))), SC_FIXED(0.25), SC_FIXED(0.6)),
+               SC_FIXED(0.2)),
+      SC_CUBE3(SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(-2.3)),
+               SC_VEC3(SC_FIXED(0.5), SC_FIXED(0.5), SC_FIXED(0.2))),
+      SC_TIME2(SC_FIXED(11))
+    )
+  )
+)
 };
 
 int renderloop(SDL_Window *window, SDL_GLContext context) {
@@ -292,7 +370,8 @@ int renderloop(SDL_Window *window, SDL_GLContext context) {
     mat4 camera;
 
     glViewport(0, 0, width, height);
-    glClearColor(0x8A / 255.0f, 0xFF / 255.0f, 0xC1 / 255.0f, 1);
+    //glClearColor(0x8A / 255.0f, 0xFF / 255.0f, 0xC1 / 255.0f, 1);
+    glClearColor(0, 0, 0, 1);
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -354,5 +433,30 @@ int renderloop(SDL_Window *window, SDL_GLContext context) {
             ticks_start = SDL_GetTicks();
         }
         waiterror = (waiterror + 1) % 3;
+    }
+}
+
+uint16_t noteshz[] = {
+    262, 311, 349, 370, 392, 466, 523, 622, 699, 740, 784, 932, 1047, 1245, 1397, 1480
+};
+
+//AUDIO
+void audio_callback(void *userdata, Uint8 *stream, int len) {
+    audio_state *as = (audio_state *)userdata;
+    Sint16 *buf = (Sint16 *)stream;
+    size_t bufsz = len / 2;
+    for (size_t i = 0; i < bufsz; i++) {
+        int s = as->samples + 1;
+        int n = as->note;
+        int hz = noteshz[taudigits[n]];
+        if ((s * hz) % 44100 < 500 && s > 11025) {
+            s = 0;
+            n = (n + 1) % ntaudigits;
+        }
+        hz = noteshz[taudigits[n]];
+        double t = ((s * hz) % 44100) / 44099.0;
+        buf[i] = (Sint16)(sin(t * TAU) * 0x7fff);
+        as->samples = s;
+        as->note = n;
     }
 }

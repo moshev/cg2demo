@@ -59,6 +59,10 @@ mat3x3 rotationAlign(vec3 d, vec3 z) {
 }
 
 
+float plane(vec3 p, vec3 c, vec3 n) {
+    return dot(n, p) - dot(n, c);
+}
+
 /*cube with 3 lengths*/
 float cube(vec3 p, vec3 c, vec3 vr) {
     vec3 bmin = c - vr;

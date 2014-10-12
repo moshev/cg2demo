@@ -38,7 +38,7 @@ static inline int parse_num(const char **scene, size_t *scenesz, char **shader, 
     uint16_t x = 0;
     x |= ((uint16_t)CONSUME1) << 8;
     x |= ((uint16_t)CONSUME1) & 0xFF;
-    float f = x;
+    float f = (float)(int16_t)x;
     f /= 256.0;
     // haha, no snprintf and no ftoa in MSVS
     // sure, why not
