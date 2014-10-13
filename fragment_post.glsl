@@ -136,7 +136,7 @@ void main() {
     if (result.w < 1.0) {
         discard;
     }
-
+/*
     // the number of iterations plus one must be
     // divided by below.
     // anti-aliasing is turned off right now because it murders performance
@@ -146,7 +146,7 @@ void main() {
         ray = normalize(tr - p);
         result += gogogo(p, ray);
     }
-
+*/
     // divide by number of iterations plus one
     // and gamma correction
     color = pow(result / 1.0, vec4(1.0 / 2.2, 1.0 / 2.2, 1.0 / 2.2, 1.0));

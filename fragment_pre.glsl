@@ -13,6 +13,7 @@ flat in vec2 pixel;
 
 out vec4 color;
 
+/*
 // set this to something depending on
 // both time and pixel
 uint rand_state = 0u;
@@ -33,7 +34,7 @@ vec2 rand2() {
     rand2_state_m *= vec2(-1.0, -1.0);
     return rand2_state;
 }
-
+*/
 float mixfix(float a, float b, float t) {
     // this piece is nonsensical but without it
     // we get a black screen, fuck you nVidia
@@ -48,6 +49,7 @@ float mixfix(float a, float b, float t) {
 
 /*rotation matrix that will make d point the same direction as z*/
 /*both must be normalized*/
+/*
 mat3x3 rotationAlign(vec3 d, vec3 z) {
     vec3 v = cross(z, d);
     float c = dot(z, d);
@@ -57,7 +59,7 @@ mat3x3 rotationAlign(vec3 d, vec3 z) {
                -v.z, c, v.x,
                v.y, -v.x, c);
 }
-
+*/
 
 float plane(vec3 p, vec3 c, vec3 n) {
     return dot(n, p) - dot(n, c);
@@ -85,16 +87,6 @@ float sphere(vec3 p, vec3 c, float r) {
     return distance(c, p) - r;
 }
 
-/*2 spheres*/
-float sphere2(vec3 p, vec3 c, float r) {
-    vec3 c1 = c;
-    vec3 c2 = c;
-    c1.x -= r * 0.5;
-    c2.x += r * 0.5;
-    float r1 = r * 0.5;
-    return min(sphere(p, c1, r1), sphere(p, c2, r1));
-}
-
 /*torus*/
 /*rc - radius to centre of tube*/
 /*rt - radius of tube*/
@@ -109,6 +101,7 @@ float torus(vec3 p, vec3 c, vec3 n, float rc, float rt) {
     return sqrt(b * b + z * z) - rt;
 }
 
+/*
 float cylinderx(vec3 p, vec3 c, float h, float r) {
     vec3 q = p - c;
     return max(max(-h - q.x, q.x - h), sqrt(dot(q.yz, q.yz)) - r);
@@ -118,6 +111,7 @@ float cylindery(vec3 p, vec3 c, float h, float r) {
     vec3 q = p - c;
     return max(max(-h - q.y, q.y - h), sqrt(dot(q.xz, q.xz)) - r);
 }
+*/
 
 /*cylinder with spherical caps at ends*/
 /* a, b - centres of the caps, r - radius */
