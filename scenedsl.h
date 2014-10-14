@@ -6,18 +6,6 @@
 
 #include "scene.h"
 
-struct scene {
-    // camera transform on top of the rotation
-    vec3 camera_translation;
-
-    // duration in seconds
-    uint8_t duration;
-
-    // compressed scene data
-    size_t datasz;
-    const uint8_t *data;
-};
-
 /*
 prefix meaning:
 df - distance function
@@ -35,6 +23,13 @@ template <int x>
 struct _lo {
     static const uint8_t v = (uint8_t)((x) & 0xFF);
 };
+
+#define SCENESPEC(tx, ty, tz, duration, dfscene)\
+    _hi<(int)((tx) * 256)>::v, _lo<(int)((tx) * 256)>::v,\
+    _hi<(int)((ty) * 256)>::v, _lo<(int)((ty) * 256)>::v,\
+    _hi<(int)((tz) * 256)>::v, _lo<(int)((tz) * 256)>::v,\
+    _hi<(int)(duration)>::v, _lo<(int)(duration)>::v,\
+    dfscene
 
 #define SC_VEC3(gfx, gfy, gfz) VF_VECTOR, gfx, gfy, gfz
 #define SC_TILED(vtile, dfobj) DF_TILED, vtile, dfobj

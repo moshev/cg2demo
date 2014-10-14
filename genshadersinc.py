@@ -27,5 +27,5 @@ with open('shaders.inc', 'wt') as shaders:
         shaders.write(varname)
         shaders.write('sz = sizeof(')
         shaders.write(varname)
-        shaders.write(');\n\n')
+        shaders.write(') - 1;\n\n')
 

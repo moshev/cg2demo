@@ -5,38 +5,25 @@
 static const char vertex_glsl[] =
 	"#version 150\n"
 	"\n"
-	"uniform float w;\n"
-	"uniform float h;\n"
+	"uniform int width;\n"
+	"uniform int height;\n"
 	"in vec2 p;\n"
 	"\n"
 	"// pixel center\n"
-	"centroid out vec2 q;\n"
+	"centroid out vec2 pixelcenter;\n"
 	"\n"
 	"// pixel size... well, half of it\n"
 	"//flat out vec2 pixel;\n"
 	"\n"
-	"/*\n"
-	"// 0.0 - 1.0\n"
-	"float timing(int period) {\n"
-	"    return float(millis % period) / float(period - 1);\n"
-	"}\n"
-	"\n"
-	"// 0.0 - 1.0 - 0.0\n"
-	"float timing2(int period) {\n"
-	"    float t = timing(period);\n"
-	"    return 2.0 * (0.5 - abs(t - 0.5));\n"
-	"}\n"
-	"*/\n"
-	"\n"
 	"void main() {\n"
-	"    pixel = vec2(1.0 / w, 1.0 / h);\n"
-	"    vec2 p1 = p * vec2(max(h / w, 1.0), max(w / h, 1.0));\n"
+	"    //pixel = vec2(1.0 / w, 1.0 / h);\n"
+	"    vec2 p1 = p * vec2(max(float(height) / float(width), 1.0), max(float(width) / float(height), 1.0));\n"
 	"    vec4 pos = vec4(p1, 0.5, 1.0);\n"
-	"//    pixelcenter = p;\n"
+	"    pixelcenter = p;\n"
 	"    gl_Position = pos;\n"
 	"}\n"
 	"\n";
-static const size_t vertex_glslsz = sizeof(vertex_glsl);
+static const size_t vertex_glslsz = sizeof(vertex_glsl) - 1;
 
 // fragment_pre.glsl
 static const char fragment_pre_glsl[] =
@@ -44,11 +31,11 @@ static const char fragment_pre_glsl[] =
 	"\n"
 	"const float TAU = 6.2831853;\n"
 	"\n"
-	"uniform int M;\n"
-	"uniform mat4 C;\n"
+	"uniform int millis;\n"
+	"uniform mat4 camera;\n"
 	"\n"
 	"// ray\n"
-	"centroid in vec2 q;\n"
+	"centroid in vec2 pixelcenter;\n"
 	"\n"
 	"/*\n"
 	"// pixel size\n"
@@ -174,9 +161,14 @@ static const char fragment_pre_glsl[] =
 	"    return daxis - r;\n"
 	"}\n"
 	"\n"
+	"/* tile vec3 around the centre with radius r */\n"
+	"vec3 tile(vec3 p, vec3 r) {\n"
+	"    return 2 * (fract((p + r) / (2 * r)) - vec3(0.5, 0.5, 0.5)) * r;\n"
+	"}\n"
+	"\n"
 	"// 0.0 - 1.0\n"
 	"float timing(int p) {\n"
-	"    return float(M % p) / float(p - 1);\n"
+	"    return float(int(millis) % p) / float(p - 1);\n"
 	"}\n"
 	"\n"
 	"// 0.0 - 1.0 - 0.0\n"
@@ -185,7 +177,7 @@ static const char fragment_pre_glsl[] =
 	"    return 2.0 * (0.5 - abs(t - 0.5));\n"
 	"}\n"
 	"\n";
-static const size_t fragment_pre_glslsz = sizeof(fragment_pre_glsl);
+static const size_t fragment_pre_glslsz = sizeof(fragment_pre_glsl) - 1;
 
 // fragment_post.glsl
 static const char fragment_post_glsl[] =
@@ -313,16 +305,16 @@ static const char fragment_post_glsl[] =
 	"}\n"
 	"\n"
 	"void main() {\n"
-	"    rand_state = uint(millis) + uint((pixelcenter.x + pixelcenter.y) * 1000);\n"
+	"    //rand_state = uint(millis) + uint((pixelcenter.x + pixelcenter.y) * 1000);\n"
 	"    vec3 p = vec3(0.0, 0.0, 3.0);\n"
-	"    vec3 t = vec3(q, 1.0);\n"
+	"    vec3 t = vec3(pixelcenter, 1.0);\n"
 	"    int i;\n"
 	"\n"
-	"    light3_pos = (C * vec4(light3_pos, 1.0)).xyz;\n"
+	"    light3_pos = (camera * vec4(light3_pos, 1.0)).xyz;\n"
 	"    p = (camera * vec4(p, 1.0)).xyz;\n"
 	"\n"
 	"    vec3 tr;\n"
-	"    vec3 ray = normalize((C * vec4(t, 1.0)).xyz - p);\n"
+	"    vec3 ray = normalize((camera * vec4(t, 1.0)).xyz - p);\n"
 	"    vec4 result = go(p, ray);\n"
 	"    if (result.w < 1.0) {\n"
 	"        discard;\n"
@@ -344,5 +336,5 @@ static const char fragment_post_glsl[] =
 	"    color = pow(result / 1.0, vec4(g, g, g, 1.0));\n"
 	"}\n"
 	"\n";
-static const size_t fragment_post_glslsz = sizeof(fragment_post_glsl);
+static const size_t fragment_post_glslsz = sizeof(fragment_post_glsl) - 1;
 

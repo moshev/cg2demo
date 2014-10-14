@@ -1,16 +1,7 @@
 #define __USE_MISC 1
 #include <math.h>
 
-#define VEC(n) typedef struct t_vec##n { float v[n]; } vec##n;
-
-/* NOTE: Matrices are column-major like in OpenGL (and fortran) */
-#define MAT(n) typedef struct t_mat##n { struct t_vec##n c[n]; } mat##n;
-
-VEC(2);
-VEC(3);
-VEC(4);
-MAT(3);
-MAT(4);
+#include "math3d_t.h"
 
 static inline vec2 mkv2(float v0, float v1) {
     vec2 r = { { v0, v1 } };

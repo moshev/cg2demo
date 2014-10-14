@@ -4,6 +4,7 @@
 
 #include "cg2demo.h"
 #include "scene.h"
+#include "math3d.h"
 
 /*
 Actual parsing functions.
@@ -14,7 +15,7 @@ Use that to validate input and calculate size.
 
 static inline uint8_t consume1(const uint8_t **scene, size_t *scenesz) {
     (*scenesz)--;
-    return (uint8_t)*(*scene)++;
+    return *(*scene)++;
 }
 
 #define CONSUME1 consume1(scene, scenesz)
@@ -31,7 +32,7 @@ static inline void appendstr(const char *str, size_t strsz, char **shader, size_
 
 static inline int parse_num(const uint8_t **scene, size_t *scenesz, char **shader, size_t *shadersz) {
     if (*scenesz < 2) {
-        LOG("No bytes left for NUM\n");
+        LOG("No bytes left for NUM");
         return 0;
     }
     uint16_t x = 0;
@@ -72,7 +73,7 @@ static const char _multhousand[] = " * 1000";
 
 static int parse_df(const uint8_t **scene, size_t *scenesz, char **shader, size_t *shadersz) {
     if (!scenesz || !*scenesz) {
-        LOG("No bytes left for DF\n");
+        LOG("No bytes left for DF");
         return 0;
     }
     enum distance_func df = (enum distance_func) CONSUME1;
@@ -168,7 +169,7 @@ static int parse_df(const uint8_t **scene, size_t *scenesz, char **shader, size_
         tiledpsz = strlen(_tile) + strlen(_lparen) + strlen(oldp) + strlen(_comma) + tiledpsz + strlen(_rparen);
         tiledp = (char *)malloc(tiledpsz + 1);
         if (!tiledp) {
-            LOG("Error malloc\n");
+            LOG("Error malloc");
             return 0;
         }
         _p = tiledp;
@@ -222,13 +223,13 @@ static int parse_df(const uint8_t **scene, size_t *scenesz, char **shader, size_
         APPENDSTR(_rparen);
         return 1;
     }
-    LOGF("Unknown DF: %c\n", df);
+    LOGF("Unknown DF: %c", df);
     return 0;
 }
 
 static int parse_gf(const uint8_t **scene, size_t *scenesz, char **shader, size_t *shadersz) {
     if (!scenesz || !*scenesz) {
-        LOG("No bytes left for GF\n");
+        LOG("No bytes left for GF");
         return 0;
     }
     enum generic_func gf = (enum generic_func) CONSUME1;
@@ -304,13 +305,13 @@ static int parse_gf(const uint8_t **scene, size_t *scenesz, char **shader, size_
         APPENDSTR(_rparen);
         return 1;
     }
-    LOGF("Unknown GF: %c\n", gf);
+    LOGF("Unknown GF: %c", gf);
     return 0;
 }
 
 static int parse_vf(const uint8_t **scene, size_t *scenesz, char **shader, size_t *shadersz) {
     if (!scenesz || !*scenesz) {
-        LOG("No bytes left for VF\n");
+        LOG("No bytes left for VF");
         return 0;
     }
     enum vec_func vf = (enum vec_func) CONSUME1;
@@ -326,38 +327,90 @@ static int parse_vf(const uint8_t **scene, size_t *scenesz, char **shader, size_
         APPENDSTR(_rparen);
         return 1;
     }
-    LOGF("Unknown VF: %c\n", vf);
+    LOGF("Unknown VF: %c", vf);
     return 0;
 }
 
 static const char prologue[] = "float dist_object(vec3 p){return ";
 static const char epilogue[] = ";}";
 
-int parse_scene(const uint8_t *scene, size_t scenesz, char **shader, size_t *shadersz) {
+size_t parse_scene(const uint8_t *scene, size_t scenesz, char **shader, size_t *shadersz) {
     size_t needed = sizeof(prologue) + sizeof(epilogue) - 2;
     char *parsed = nullptr;
     const uint8_t *scene_in = scene;
     size_t scenesz_in = scenesz;
     if (!parse_df(&scene_in, &scenesz_in, nullptr, &needed)) {
-        LOG("error parsing scene\n");
+        LOG("error parsing scene");
         return 0;
+    }
+    if (!shader) {
+        *shadersz = needed;
+        return scene - scene_in;
     }
     scene_in = scene;
     scenesz_in = scenesz;
     parsed = (char *)malloc(needed);
     if (!parsed) {
-        LOGF("error malloc: %s\n", strerror(errno));
+        LOGF("error malloc: %s", strerror(errno));
         return 0;
     }
     needed = sizeof(prologue) + sizeof(epilogue) - 2;
     memcpy(parsed, prologue, sizeof(prologue) - 1);
     char *parsed_in = parsed + sizeof(prologue) - 1;
     if (!parse_df(&scene_in, &scenesz_in, &parsed_in, &needed)) {
-        LOG("error parsing scene\n");
+        LOG("error parsing scene");
         return 0;
     }
     memcpy(parsed_in, epilogue, sizeof(epilogue) - 1);
     *shader = parsed;
     *shadersz = needed;
+    return scene - scene_in;
+}
+
+int split_scenes(const uint8_t *scenes, size_t scenessz, struct scene **parsed, size_t *nparsed) {
+    const uint8_t *scene_in = scenes;
+    size_t scenesz_in = scenessz;
+    size_t n = 0;
+    struct scene *p;
+    size_t tmp;
+    while (scenesz_in > 8) {
+        scenesz_in -= 8;
+        scene_in += 8;
+        if (!parse_df(&scene_in, &scenesz_in, nullptr, &tmp)) {
+            LOGF("Couldn't parse scene %d", (int)n);
+            return 0;
+        }
+        n++;
+    }
+    p = (struct scene *)malloc(n * sizeof(struct scene));
+    if (!p) {
+        LOG("error malloc");
+        return 0;
+    }
+    scene_in = scenes;
+    scenesz_in = scenessz;
+    n = 0;
+    while (scenesz_in > 8) {
+        float tx = (int16_t)(scene_in[0] * 256 + scene_in[1]) / 256.0f;
+        float ty = (int16_t)(scene_in[2] * 256 + scene_in[3]) / 256.0f;
+        float tz = (int16_t)(scene_in[4] * 256 + scene_in[5]) / 256.0f;
+        unsigned duration = (unsigned)(scene_in[6] * 256 + scene_in[7]);
+        LOGF("Scene %d %f %f %f %d", n, tx, ty, tz, duration);
+        p[n].camera_translation = mkv3(tx, ty, tz);
+        p[n].duration = duration;
+        scenesz_in -= 8;
+        scene_in += 8;
+        p[n].data = scene_in;
+        size_t oldsz = scenesz_in;
+        if (!parse_df(&scene_in, &scenesz_in, nullptr, &tmp)) {
+            LOGF("Couldn't parse scene %d", (int)n);
+            free(p);
+            return 0;
+        }
+        p[n].datasz = oldsz - scenesz_in;
+        ++n;
+    }
+    *parsed = p;
+    *nparsed = n;
     return 1;
 }

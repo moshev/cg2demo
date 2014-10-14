@@ -1,6 +1,8 @@
 #if !defined(CG2DEMO_SCENE_H)
 #define CG2DEMO_SCENE_H
 
+#include "math3d_t.h"
+
 enum distance_func {
     // cube, centre, radius
     DF_CUBE = 'C',
@@ -48,7 +50,17 @@ enum vec_func {
     VF_VECTOR = 'V',
 };
 
-int parse_scene(const uint8_t *scene, size_t scenesz, char **shader, size_t *shadersz);
+struct scene {
+    vec3 camera_translation;
+    unsigned duration;
+    const uint8_t *data;
+    size_t datasz;
+};
+
+/* return number of bytes consumed, 0 on error */
+size_t parse_scene(const uint8_t *scene, size_t scenesz, char **shader, size_t *shadersz);
+
+int split_scenes(const uint8_t *scenes, size_t scenessz, struct scene **parsed, size_t *nparsed);
 
 #endif
 
