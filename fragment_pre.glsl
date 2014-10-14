@@ -1,15 +1,17 @@
 #version 150
 
-const float TAU = 6.28318530717958647692;
+const float TAU = 6.2831853;
 
-uniform int millis;
-uniform mat4 camera;
+uniform int M;
+uniform mat4 C;
 
 // ray
-centroid in vec2 pixelcenter;
+centroid in vec2 q;
 
+/*
 // pixel size
 flat in vec2 pixel;
+*/
 
 out vec4 color;
 
@@ -131,12 +133,12 @@ float cylinder_caps(vec3 p, vec3 a, vec3 b, float r) {
 }
 
 // 0.0 - 1.0
-float timing(int period) {
-    return float(millis % period) / float(period - 1);
+float timing(int p) {
+    return float(M % p) / float(p - 1);
 }
 
 // 0.0 - 1.0 - 0.0
-float timing2(int period) {
-    float t = timing(period);
+float timing2(int p) {
+    float t = timing(p);
     return 2.0 * (0.5 - abs(t - 0.5));
 }

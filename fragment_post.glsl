@@ -74,10 +74,9 @@ vec3 texmex(vec3 p, vec3 n) {
 
 const vec3 light1 = normalize(vec3(-0.0, -0.2, -0.0));
 const vec3 light2 = normalize(vec3(0.1, -0.1, -0.0));
-const vec3 light3_posc = vec3(-0.2, 0, 2.5);
+vec3 light3_pos = vec3(-0.2, 0, 2.5);
 vec3 shade(vec3 p) {
     vec3 n = grad(p);
-    vec3 light3_pos = (camera * vec4(light3_posc, 1.0)).xyz;
     vec3 light3 = normalize(p - light3_pos);
     vec4 m1 = trace(p - light1 * 0.05, -light1);
     vec4 m2 = trace(p - light2 * 0.05, -light2);
@@ -125,13 +124,14 @@ vec4 go(vec3 p, vec3 ray) {
 void main() {
     rand_state = uint(millis) + uint((pixelcenter.x + pixelcenter.y) * 1000);
     vec3 p = vec3(0.0, 0.0, 3.0);
-    vec3 t = vec3(pixelcenter, 1.0);
+    vec3 t = vec3(q, 1.0);
     int i;
 
+    light3_pos = (C * vec4(light3_pos, 1.0)).xyz;
     p = (camera * vec4(p, 1.0)).xyz;
 
     vec3 tr;
-    vec3 ray = normalize((camera * vec4(t, 1.0)).xyz - p);
+    vec3 ray = normalize((C * vec4(t, 1.0)).xyz - p);
     vec4 result = go(p, ray);
     if (result.w < 1.0) {
         discard;
@@ -149,5 +149,6 @@ void main() {
 */
     // divide by number of iterations plus one
     // and gamma correction
-    color = pow(result / 1.0, vec4(1.0 / 2.2, 1.0 / 2.2, 1.0 / 2.2, 1.0));
+    float g = 1.0 / 2.2;
+    color = pow(result / 1.0, vec4(g, g, g, 1.0));
 }
