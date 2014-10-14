@@ -100,7 +100,7 @@ vec3 shade(vec3 p) {
 //    return vec3(m1.w, m2.w, 0.0);
 }
 
-vec4 gogogo(vec3 p, vec3 ray) {
+vec4 go(vec3 p, vec3 ray) {
     // wavy effect1
     /*
     float phi = TAU * 3 * timing2(15000) * (timing2(10000) + ray.x + ray.y);
@@ -132,7 +132,7 @@ void main() {
 
     vec3 tr;
     vec3 ray = normalize((camera * vec4(t, 1.0)).xyz - p);
-    vec4 result = gogogo(p, ray);
+    vec4 result = go(p, ray);
     if (result.w < 1.0) {
         discard;
     }
@@ -144,7 +144,7 @@ void main() {
         tr = t + vec3(pixel * rand2(), 0.0);
         tr = (camera * vec4(tr, 1.0)).xyz;
         ray = normalize(tr - p);
-        result += gogogo(p, ray);
+        result += go(p, ray);
     }
 */
     // divide by number of iterations plus one

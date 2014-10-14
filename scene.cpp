@@ -1,5 +1,3 @@
-#include <stdlib.h>
-#include <stdio.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -59,6 +57,15 @@ static int parse_df(const uint8_t **scene, size_t *scenesz, char **shader, size_
 static int parse_gf(const uint8_t **scene, size_t *scenesz, char **shader, size_t *shadersz);
 static int parse_vf(const uint8_t **scene, size_t *scenesz, char **shader, size_t *shadersz);
 
+static const char _comma[] = ", ";
+static const char _pstart[] = "(p";
+static const char _cube[] = "cube";
+static const char _normalize[] = "normalize";
+static const char _lparen[] = "(";
+static const char _rparen[] = ")";
+static const char _timing[] = "timing";
+static const char _int[] = "int";
+static const char _multhousand = " * 1000";
 
 static int parse_df(const uint8_t **scene, size_t *scenesz, char **shader, size_t *shadersz) {
     if (!scenesz || !*scenesz) {
@@ -68,75 +75,104 @@ static int parse_df(const uint8_t **scene, size_t *scenesz, char **shader, size_
     enum distance_func df = (enum distance_func) CONSUME1;
     switch (df) {
     case DF_CUBE:
-        APPENDSTR("cube(p, ");
+        APPENDSTR(_cube);
+        APPENDSTR(_lparen);
+        APPENDSTR(_pstart);
+        APPENDSTR(_comma);
         PARSE_VF;
-        APPENDSTR(", float(");
+        APPENDSTR(_comma);
+        APPENDSTR("float");
+        APPENDSTR(_lparen);
         PARSE_GF;
-        APPENDSTR("))");
+        APPENDSTR(_rparen);
+        APPENDSTR(_rparen);
         return 1;
     case DF_CUBE3:
-        APPENDSTR("cube(p, ");
+        APPENDSTR(_cube);
+        APPENDSTR(_lparen);
+        APPENDSTR(_pstart);
+        APPENDSTR(_comma);
         PARSE_VF;
-        APPENDSTR(", ");
+        APPENDSTR(_comma);
         PARSE_VF;
-        APPENDSTR(")");
+        APPENDSTR(_rparen);
         return 1;
     case DF_CYLINDER_CAP:
-        APPENDSTR("cylinder_caps(p, ");
+        APPENDSTR("cylinder_caps");
+        APPENDSTR(_lparen);
+        APPENDSTR(_pstart);
+        APPENDSTR(_comma);
         PARSE_VF;
-        APPENDSTR(", ");
+        APPENDSTR(_comma);
         PARSE_VF;
-        APPENDSTR(", ");
+        APPENDSTR(_comma);
         PARSE_GF;
-        APPENDSTR(")");
+        APPENDSTR(_rparen);
         return 1;
     case DF_TORUS:
-        APPENDSTR("torus(p, ");
+        APPENDSTR("torus");
+        APPENDSTR(_lparen);
+        APPENDSTR(_pstart);
+        APPENDSTR(_comma);
         PARSE_VF;
-        APPENDSTR(", normalize(");
+        APPENDSTR(_comma);
+        APPENDSTR(_normalize);
+        APPENDSTR(_lparen);
         PARSE_VF;
-        APPENDSTR("), ");
+        APPENDSTR(_rparen);
+        APPENDSTR(_comma);
         PARSE_GF;
-        APPENDSTR(", ");
+        APPENDSTR(_comma);
         PARSE_GF;
-        APPENDSTR(")");
+        APPENDSTR(_rparen);
         return 1;
     case DF_PLANE:
-        APPENDSTR("plane(p, ");
+        APPENDSTR("plane");
+        APPENDSTR(_lparen);
+        APPENDSTR(_pstart);
+        APPENDSTR(_comma);
         PARSE_VF;
-        APPENDSTR(", normalize(");
+        APPENDSTR(_comma);
+        APPENDSTR(_normalize);
+        APPENDSTR(_lparen);
         PARSE_VF;
         APPENDSTR("))");
         return 1;
     case DF_SPHERE:
-        APPENDSTR("sphere(p, ");
+        APPENDSTR("sphere");
+        APPENDSTR(_lparen);
+        APPENDSTR(_pstart);
+        APPENDSTR(_comma);
         PARSE_VF;
-        APPENDSTR(", ");
+        APPENDSTR(_comma);
         PARSE_GF;
-        APPENDSTR(")");
+        APPENDSTR(_rparen);
         return 1;
     case DF_MAX:
-        APPENDSTR("max(");
+        APPENDSTR("max");
+        APPENDSTR(_lparen);
         PARSE_DF;
-        APPENDSTR(", ");
+        APPENDSTR(_comma);
         PARSE_DF;
-        APPENDSTR(")");
+        APPENDSTR(_rparen);
         return 1;
     case DF_MIN:
-        APPENDSTR("min(");
+        APPENDSTR("min");
+        APPENDSTR(_lparen);
         PARSE_DF;
-        APPENDSTR(", ");
+        APPENDSTR(_comma);
         PARSE_DF;
-        APPENDSTR(")");
+        APPENDSTR(_rparen);
         return 1;
     case DF_MIX:
-        APPENDSTR("mixfix(");
+        APPENDSTR("mixfix");
+        APPENDSTR(_lparen);
         PARSE_DF;
-        APPENDSTR(", ");
+        APPENDSTR(_comma);
         PARSE_DF;
-        APPENDSTR(", ");
+        APPENDSTR(_comma);
         PARSE_GF;
-        APPENDSTR(")");
+        APPENDSTR(_rparen);
         return 1;
     }
     LOGF("Unknown DF: %c\n", df);
@@ -151,58 +187,74 @@ static int parse_gf(const uint8_t **scene, size_t *scenesz, char **shader, size_
     enum generic_func gf = (enum generic_func) CONSUME1;
     switch (gf) {
     case GF_CLAMP:
-        APPENDSTR("clamp(");
+        APPENDSTR("clamp");
+        APPENDSTR(_lparen);
         PARSE_GF;
-        APPENDSTR(", ");
+        APPENDSTR(_comma);
         PARSE_GF;
-        APPENDSTR(", ");
+        APPENDSTR(_comma);
         PARSE_GF;
-        APPENDSTR(")");
+        APPENDSTR(_rparen);
         return 1;
     case GF_MAX:
-        APPENDSTR("max(");
+        APPENDSTR("max");
+        APPENDSTR(_lparen);
         PARSE_GF;
-        APPENDSTR(", ");
+        APPENDSTR(_comma);
         PARSE_GF;
-        APPENDSTR(")");
+        APPENDSTR(_rparen);
         return 1;
     case GF_MIN:
-        APPENDSTR("min(");
+        APPENDSTR("min");
+        APPENDSTR(_lparen);
         PARSE_GF;
-        APPENDSTR(", ");
+        APPENDSTR(_comma);
         PARSE_GF;
-        APPENDSTR(")");
+        APPENDSTR(_rparen);
         return 1;
     case GF_MIX:
-        APPENDSTR("mixfix(");
+        APPENDSTR("mixfix");
+        APPENDSTR(_lparen);
         PARSE_GF;
-        APPENDSTR(", ");
+        APPENDSTR(_comma);
         PARSE_GF;
-        APPENDSTR(", ");
+        APPENDSTR(_comma);
         PARSE_GF;
-        APPENDSTR(")");
+        APPENDSTR(_rparen);
         return 1;
     case GF_NUMBER:
         PARSE_NUM;
         return 1;
     case GF_SMOOTH:
-        APPENDSTR("smoothstep(");
+        APPENDSTR("smoothstep");
+        APPENDSTR(_lparen);
         PARSE_GF;
-        APPENDSTR(", ");
+        APPENDSTR(_comma);
         PARSE_GF;
-        APPENDSTR(", ");
+        APPENDSTR(_comma);
         PARSE_GF;
-        APPENDSTR(")");
+        APPENDSTR(_rparen);
         return 1;
     case GF_TIME:
-        APPENDSTR("timing(int(");
+        APPENDSTR(_timing);
+        APPENDSTR(_lparen);
+        APPENDSTR(_int);
+        APPENDSTR(_lparen);
         PARSE_GF;
-        APPENDSTR(" * 1000))");
+        APPENDSTR(_multhousand);
+        APPENDSTR(_rparen);
+        APPENDSTR(_rparen);
         return 1;
     case GF_TIME2:
-        APPENDSTR("timing2(int(");
+        APPENDSTR(_timing);
+        APPENDSTR("2");
+        APPENDSTR(_lparen);
+        APPENDSTR(_int);
+        APPENDSTR(_lparen);
         PARSE_GF;
-        APPENDSTR(" * 1000))");
+        APPENDSTR(_multhousand);
+        APPENDSTR(_rparen);
+        APPENDSTR(_rparen);
         return 1;
     }
     LOGF("Unknown GF: %c\n", gf);
@@ -217,21 +269,22 @@ static int parse_vf(const uint8_t **scene, size_t *scenesz, char **shader, size_
     enum vec_func vf = (enum vec_func) CONSUME1;
     switch (vf) {
     case VF_VECTOR:
-        APPENDSTR("vec3(");
+        APPENDSTR("vec3");
+        APPENDSTR(_lparen);
         PARSE_GF;
-        APPENDSTR(", ");
+        APPENDSTR(_comma);
         PARSE_GF;
-        APPENDSTR(", ");
+        APPENDSTR(_comma);
         PARSE_GF;
-        APPENDSTR(")");
+        APPENDSTR(_rparen);
         return 1;
     }
     LOGF("Unknown VF: %c\n", vf);
     return 0;
 }
 
-static const char prologue[] = "float dist_object(vec3 p) { return ";
-static const char epilogue[] = " ; }";
+static const char prologue[] = "float dist_object(vec3 p){return ";
+static const char epilogue[] = ";}";
 
 int parse_scene(const uint8_t *scene, size_t scenesz, char **shader, size_t *shadersz) {
     size_t needed = sizeof(prologue) + sizeof(epilogue) - 2;
