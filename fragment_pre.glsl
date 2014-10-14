@@ -132,6 +132,11 @@ float cylinder_caps(vec3 p, vec3 a, vec3 b, float r) {
     return daxis - r;
 }
 
+/* tile vec3 around the centre with radius r */
+vec3 tile(vec3 p, vec3 r) {
+    return 2 * (fract((p + r) / (2 * r)) - vec3(0.5, 0.5, 0.5)) * r;
+}
+
 // 0.0 - 1.0
 float timing(int p) {
     return float(int(millis) % p) / float(p - 1);

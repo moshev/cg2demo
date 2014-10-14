@@ -58,6 +58,13 @@ static inline mat3 mkm3(vec3 c0, vec3 c1, vec3 c2) {
     return r;
 }
 
+static inline mat3 mkm3identity() {
+    return mkm3(
+        mkv3(1, 0, 0),
+        mkv3(0, 1, 0),
+        mkv3(0, 0, 1));
+}
+
 static inline mat4 mkm4(vec4 c0, vec4 c1, vec4 c2, vec4 c3) {
     /* column-major, so the actual matrix
      * is the transpose of what you're looking at*/
@@ -67,6 +74,14 @@ static inline mat4 mkm4(vec4 c0, vec4 c1, vec4 c2, vec4 c3) {
     r.c[2] = c2;
     r.c[3] = c3;
     return r;
+}
+
+static inline mat4 mkm4identity() {
+    return mkm4(
+        mkv4(1, 0, 0, 0),
+        mkv4(0, 1, 0, 0),
+        mkv4(0, 0, 1, 0),
+        mkv4(0, 0, 0, 1));
 }
 
 static const float TAU = 6.283185307179586476925286766559f;

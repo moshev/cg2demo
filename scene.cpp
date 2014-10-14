@@ -27,7 +27,7 @@ static inline void appendstr(const char *str, size_t strsz, char **shader, size_
     *shadersz += strsz;
 }
 
-#define APPENDSTR(str) appendstr(str, sizeof(str) - 1, shader, shadersz)
+#define APPENDSTR(str) appendstr(str, strlen(str), shader, shadersz)
 
 static inline int parse_num(const uint8_t **scene, size_t *scenesz, char **shader, size_t *shadersz) {
     if (*scenesz < 2) {
@@ -59,8 +59,10 @@ static int parse_gf(const uint8_t **scene, size_t *scenesz, char **shader, size_
 static int parse_vf(const uint8_t **scene, size_t *scenesz, char **shader, size_t *shadersz);
 
 static const char _comma[] = ", ";
-static const char _p[] = "p";
+static const char __p[] = "p";
+static const char *_p = __p;
 static const char _cube[] = "cube";
+static const char _tile[] = "tile";
 static const char _normalize[] = "normalize";
 static const char _lparen[] = "(";
 static const char _rparen[] = ")";
@@ -149,6 +151,50 @@ static int parse_df(const uint8_t **scene, size_t *scenesz, char **shader, size_
         PARSE_GF;
         APPENDSTR(_rparen);
         return 1;
+    case DF_TILED:
+    {
+        // have to change _p to
+        // tile(_p, VF)
+        // and call parse_df
+        const char *oldp = _p;
+        char *tiledp;
+        size_t tiledpsz;
+        const uint8_t *scene_in = *scene;
+        size_t scenesz_in = *scenesz;
+        tiledpsz = 0;
+        if (!parse_vf(&scene_in, &scenesz_in, nullptr, &tiledpsz)) {
+            return 0;
+        }
+        tiledpsz = strlen(_tile) + strlen(_lparen) + strlen(oldp) + strlen(_comma) + tiledpsz + strlen(_rparen);
+        tiledp = (char *)malloc(tiledpsz + 1);
+        if (!tiledp) {
+            LOG("Error malloc\n");
+            return 0;
+        }
+        _p = tiledp;
+        const char *parts[] = {_tile, _lparen, oldp, _comma, nullptr};
+        tiledpsz = 0;
+        for (int i = 0; parts[i]; i++) {
+            memcpy(tiledp + tiledpsz, parts[i], strlen(parts[i]));
+            tiledpsz += strlen(parts[i]);
+        }
+        char *tiledp_in = tiledp + tiledpsz;
+        if (!parse_vf(scene, scenesz, &tiledp_in, &tiledpsz)) {
+            free(tiledp);
+            return 0;
+        }
+        memcpy(tiledp + tiledpsz, _rparen, strlen(_rparen));
+        tiledpsz += strlen(_rparen);
+        tiledp[tiledpsz] = '\0';
+        LOGF("tiled: %s", _p);
+        if (!parse_df(scene, scenesz, shader, shadersz)) {
+            free(tiledp);
+            return 0;
+        }
+        _p = oldp;
+        free(tiledp);
+        return 1;
+    }
     case DF_MAX:
         APPENDSTR("max");
         APPENDSTR(_lparen);

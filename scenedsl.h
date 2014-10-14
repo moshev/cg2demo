@@ -7,6 +7,13 @@
 #include "scene.h"
 
 struct scene {
+    // camera transform on top of the rotation
+    vec3 camera_translation;
+
+    // duration in seconds
+    uint8_t duration;
+
+    // compressed scene data
     size_t datasz;
     const uint8_t *data;
 };
@@ -30,6 +37,7 @@ struct _lo {
 };
 
 #define SC_VEC3(gfx, gfy, gfz) VF_VECTOR, gfx, gfy, gfz
+#define SC_TILED(vtile, dfobj) DF_TILED, vtile, dfobj
 #define SC_CUBE(v3centre, gfsz) DF_CUBE, v3centre, gfsz
 #define SC_CUBE3(v3centre, v3sz) DF_CUBE3, v3centre, v3sz
 #define SC_SPHERE(v3centre, gfradius) DF_SPHERE, v3centre, gfradius

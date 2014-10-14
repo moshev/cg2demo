@@ -17,6 +17,10 @@
 #include "protodef.inc"
 
 FILE *flog;
+
+/* read file into memory, return 1 on success, 0 on failure */
+int read_file(const char *path, char **text, size_t *sz);
+
 static const unsigned int WIDTH = 1024;
 static const unsigned int HEIGHT = 768;
 
@@ -45,22 +49,19 @@ static size_t fragment_pre_glslsz;
 static const char *fragment_post_glsl;
 static size_t fragment_post_glslsz;
 
-int renderloop(SDL_Window *window, SDL_GLContext context);
+static int renderloop(SDL_Window *window, SDL_GLContext context);
 
 /* exits with error status and logs error if program wasn't successfully linked */
-void check_program(GLuint id);
+static void check_program(GLuint id);
 
 /* exits with error status and logs error if shader wasn't successfully compiled */
-void check_shader(GLuint id);
+static void check_shader(GLuint id);
 
-GLuint create_program_from_files(const char *vspath, const char *fspath);
-GLuint create_program(const char *vs, size_t szvs, const char *fs, size_t szfs);
-
-/* read file into memory, return 1 on success, 0 on failure */
-int read_file(const char *path, char **text, size_t *sz);
+static GLuint create_program_from_files(const char *vspath, const char *fspath);
+static GLuint create_program(const char *vs, size_t szvs, const char *fs, size_t szfs);
 
 // http://en.wikipedia.org/wiki/Modular_exponentiation#Right-to-left_binary_method
-int modpow(int base, int exponent, int modulus) {
+static int modpow(int base, int exponent, int modulus) {
     int result = 1;
     base %= modulus;
     while (exponent > 0) {
@@ -71,7 +72,10 @@ int modpow(int base, int exponent, int modulus) {
     return result;
 }
 
-int S(int j, int n) {
+// I could not understand Bailey-Borwein-Plouffe
+// this is not quite that formula
+// but it generates some randomish numbers
+static int S(int j, int n) {
     double s = 0;
     for (int k = 0; k <= n; ++k) {
         int r = 8 * k + j;
@@ -80,7 +84,7 @@ int S(int j, int n) {
     return (int)s & 0xf;
 }
 
-int tau(int n) {
+static int tau(int n) {
     int r = (4 * S(1, n) - 2 * S(2, n) - S(3, n) - S(4, n)) & 0xf;
     return r;
 }
@@ -90,7 +94,7 @@ struct audio_state {
     int note;
 };
 
-void audio_callback(void *userdata, Uint8 *stream, int len);
+static void audio_callback(void *userdata, Uint8 *stream, int len);
 
 int main(int argc, char *argv[]) {
     (void)argc;
@@ -209,7 +213,7 @@ int read_file(const char *path, char **text, size_t *sz) {
     return 1;
 }
 
-GLuint create_program_from_files(const char *vspath, const char *fspath) {
+static GLuint create_program_from_files(const char *vspath, const char *fspath) {
     char *vs, *fs;
     size_t szvs, szfs;
     if (!read_file(vspath, &vs, &szvs)) {
@@ -226,7 +230,7 @@ GLuint create_program_from_files(const char *vspath, const char *fspath) {
     return prog;
 }
 
-GLuint create_program_from_scene(const uint8_t *scene, size_t scenesz) {
+static GLuint create_program_from_scene(const uint8_t *scene, size_t scenesz) {
     char *fsscene;
     size_t fsscenesz;
     if (!parse_scene(scene, scenesz, &fsscene, &fsscenesz)) {
@@ -251,7 +255,7 @@ GLuint create_program_from_scene(const uint8_t *scene, size_t scenesz) {
     return prog;
 }
 
-void check_shader(GLuint shaderid) {
+static void check_shader(GLuint shaderid) {
     GLint compiled;
     glGetShaderiv(shaderid, GL_COMPILE_STATUS, &compiled);
     if (!compiled) {
@@ -271,7 +275,7 @@ void check_shader(GLuint shaderid) {
     }
 }
 
-void check_program(GLuint progid) {
+static void check_program(GLuint progid) {
     GLint compiled;
     glGetProgramiv(progid, GL_LINK_STATUS, &compiled);
     if (!compiled) {
@@ -291,7 +295,7 @@ void check_program(GLuint progid) {
     }
 }
 
-GLuint create_shader(GLenum shader_type, const char *src, size_t srcsz) {
+static GLuint create_shader(GLenum shader_type, const char *src, size_t srcsz) {
     if (shader_type != GL_VERTEX_SHADER && shader_type != GL_FRAGMENT_SHADER) {
         LOGF("unknown shader type: %d\n", (int)shader_type);
         exit(1);
@@ -304,7 +308,7 @@ GLuint create_shader(GLenum shader_type, const char *src, size_t srcsz) {
     return shaderid;
 }
 
-GLuint create_program(const char *vs, size_t szvs, const char *fs, size_t szfs) {
+static GLuint create_program(const char *vs, size_t szvs, const char *fs, size_t szfs) {
     GLuint prog = glCreateProgram();
     GLuint vsid = create_shader(GL_VERTEX_SHADER, vs, szvs);
     GLuint fsid = create_shader(GL_FRAGMENT_SHADER, fs, szfs);
@@ -320,36 +324,11 @@ GLuint create_program(const char *vs, size_t szvs, const char *fs, size_t szfs) 
     return prog;
 }
 
-float smootherstep(float x) {
+static float smootherstep(float x) {
     return  x*x*x*(x*(x * 6 - 15) + 10);
 }
 
-mat4 mkcamera(Uint32 ticks) {
-    ///*
-    float rotf = (ticks % 32000) / 31999.0f;
-    float trf = (ticks % 17000) / 16999.0f;
-    rotf = smootherstep(rotf);
-
-    //return mkrotationm4(mkv3(0, 1, 0), trf * TAU);
-    return mulm4(
-        mktranslationm4(mkv3(0.5, 0, 0)),
-        mkrotationm4(mkv3(0, 1, 0), trf * TAU)
-        );
-    //return mulm4(
-    //    mkrotationm4(mkv3(0, 1, 0), rotf * TAU),
-    //    mkrotationm4(normalizev3(mkv3(1.0f + cosf(trf * TAU), 0.5f * sinf(trf * TAU), 0)), trf * TAU)
-    //    );
-    //*/
-    /*
-    return mkm4(
-        mkv4(1, 0, 0, 0),
-        mkv4(0, 1, 0, 0),
-        mkv4(0, 0, 1, 0),
-        mkv4(0, 0, 0, 1));
-        */
-}
-
-static const uint8_t SCENE1[] = {
+static const uint8_t SCENE0[] = {
 SC_MIN(
   SC_MIX(
     SC_SPHERE(SC_VEC3(SC_TIME2(SC_FIXED(3)), SC_FIXED(0), SC_FIXED(-0.0)), SC_FIXED(0.2)),
@@ -367,9 +346,9 @@ SC_MIN(
                SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(1)),
                SC_CLAMP(SC_SMOOTH(SC_FIXED(0.1), SC_FIXED(0.9), SC_TIME2(SC_FIXED(3))), SC_FIXED(0.25), SC_FIXED(0.6)),
                SC_FIXED(0.2)),
-      SC_MIN(SC_CUBE3(SC_VEC3(SC_FIXED(0), SC_FIXED(0.25), SC_FIXED(-2.3)),
+      SC_MIN(SC_CUBE3(SC_VEC3(SC_FIXED(0.0), SC_FIXED(0.25), SC_FIXED(-2.3)),
                       SC_VEC3(SC_FIXED(0.25), SC_FIXED(0.25), SC_FIXED(0.2))),
-             SC_CUBE3(SC_VEC3(SC_FIXED(0), SC_FIXED(-0.25), SC_FIXED(-2.3)),
+             SC_CUBE3(SC_VEC3(SC_FIXED(0.0), SC_FIXED(0.75), SC_FIXED(-2.3)),
                       SC_VEC3(SC_FIXED(0.25), SC_FIXED(0.25), SC_FIXED(0.2)))),
       SC_TIME2(SC_FIXED(11))
     )
@@ -377,26 +356,18 @@ SC_MIN(
 )
 };
 
-static const uint8_t SCENE2[] = {
+static const uint8_t SCENE1[] = {
     SC_MIX(
-    SC_MIN(SC_MIN(SC_MIN(SC_MIN(SC_MIN(SC_MIN(SC_MIN(SC_MIN(
-    SC_CUBE(SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.1)),
-    SC_CUBE(SC_VEC3(SC_FIXED(0.515), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.1))),
-    SC_CUBE(SC_VEC3(SC_FIXED(-0.515), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.1))),
-    SC_CUBE(SC_VEC3(SC_FIXED(0), SC_FIXED(0.515), SC_FIXED(0)), SC_FIXED(0.1))),
-    SC_CUBE(SC_VEC3(SC_FIXED(0.515), SC_FIXED(0.515), SC_FIXED(0)), SC_FIXED(0.1))),
-    SC_CUBE(SC_VEC3(SC_FIXED(-0.515), SC_FIXED(0.515), SC_FIXED(0)), SC_FIXED(0.1))),
-    SC_CUBE(SC_VEC3(SC_FIXED(0), SC_FIXED(-0.515), SC_FIXED(0)), SC_FIXED(0.1))),
-    SC_CUBE(SC_VEC3(SC_FIXED(0.515), SC_FIXED(-0.515), SC_FIXED(0)), SC_FIXED(0.1))),
-    SC_CUBE(SC_VEC3(SC_FIXED(-0.515), SC_FIXED(-0.515), SC_FIXED(0)), SC_FIXED(0.1))),
+    SC_TILED(SC_VEC3(SC_FIXED(0.2), SC_FIXED(0.2), SC_FIXED(0.2)),
+            SC_CUBE(SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.1))),
     SC_TORUS(SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(0)),
              SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(1)),
              SC_CLAMP(SC_SMOOTH(SC_FIXED(0.1), SC_FIXED(0.9), SC_TIME2(SC_FIXED(3))), SC_FIXED(0.25), SC_FIXED(0.6)),
              SC_FIXED(0.2)),
-    SC_TIME2(SC_FIXED(10)))
+    SC_CLAMP(SC_TIME2(SC_FIXED(10)), SC_FIXED(0.05), SC_FIXED(1.0)))
 };
 
-static const uint8_t SCENE3[] = {
+static const uint8_t SCENE2[] = {
 SC_MIX(
   SC_SPHERE(SC_VEC3(SC_TIME2(SC_FIXED(2.4)), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.2)),
   SC_CYLINDER_CAP(SC_VEC3(SC_FIXED(0.1), SC_FIXED(0), SC_FIXED(0)), SC_VEC3(SC_FIXED(0.9), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.1)),
@@ -404,7 +375,7 @@ SC_MIX(
 )
 };
 
-static const uint8_t SCENE4[] = {
+static const uint8_t SCENE3[] = {
 SC_MIX(
 SC_MIX(SC_TORUS(SC_VEC3(SC_FIXED(-0.1), SC_FIXED(0), SC_FIXED(0)), SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(1)), SC_FIXED(0.2), SC_FIXED(0.1)),
          SC_SPHERE(SC_VEC3(SC_TIME2(SC_FIXED(4)), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.08)),
@@ -415,15 +386,45 @@ SC_MIX(SC_TORUS(SC_VEC3(SC_FIXED(-0.1), SC_FIXED(0), SC_FIXED(0)), SC_VEC3(SC_FI
 };
 
 static struct scene SCENES[] = {
-        { sizeof(SCENE1), SCENE1 },
-        { sizeof(SCENE2), SCENE2 },
-        { sizeof(SCENE3), SCENE3 },
-        { sizeof(SCENE4), SCENE4 },
+        { mkv3(-0.25f, 0, 0), 20, sizeof(SCENE0), SCENE0 },
+        { mkv3(0.5f, 0, 0), 10, sizeof(SCENE2), SCENE2 },
+        { mkv3(0.5f, 0, 0), 10, sizeof(SCENE3), SCENE3 },
+        { mkv3(0, 0, 0), 20, sizeof(SCENE1), SCENE1 },
 };
 
-#define SCENE SCENE2
+static const size_t NSCENES = sizeof(SCENES) / sizeof(*SCENES);
 
-int renderloop(SDL_Window *window, SDL_GLContext context) {
+static mat4 mkcamera(Uint32 ticks, int scene) {
+    ///*
+    float rotf = (ticks % 32000) / 31999.0f;
+    float trf = (ticks % 17000) / 16999.0f;
+    rotf = smootherstep(rotf);
+
+    //return mkrotationm4(mkv3(0, 1, 0), trf * TAU);
+    return mulm4(
+        mulm4(
+            mktranslationm4(SCENES[scene].camera_translation),
+            mkrotationm4(mkv3(0, 1, 0), rotf * TAU)
+        ),
+        mkrotationm4(normalizev3(mkv3(1.0f + cosf(trf * TAU), 0.5f * sinf(trf * TAU), 0)), trf * TAU)
+    );
+    //*/
+    /*
+    return mkm4(
+    mkv4(1, 0, 0, 0),
+    mkv4(0, 1, 0, 0),
+    mkv4(0, 0, 1, 0),
+    mkv4(0, 0, 0, 1));
+    */
+}
+
+static void switch_scene(GLuint prog, unsigned width, unsigned height) {
+    glUseProgram(prog);
+    glUniform1i(ufrm_width, width);
+    glUniform1i(ufrm_height, height);
+}
+
+static int renderloop(SDL_Window *window, SDL_GLContext context) {
     unsigned int width = WIDTH;
     unsigned int height = HEIGHT;
     mat4 camera;
@@ -434,15 +435,14 @@ int renderloop(SDL_Window *window, SDL_GLContext context) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
-    //GLuint prog = create_program_from_files("vertex.glsl", "fragment.glsl");
-    for (int i = 0; i < sizeof(SCENE); i++) {
-        LOGF("%02x ", SCENE[i]);
-    }
     LOG("\n");
-    GLuint prog = create_program_from_scene(SCENE, sizeof(SCENE));
-    glUseProgram(prog);
-    glUniform1i(ufrm_width, width);
-    glUniform1i(ufrm_height, height);
+    GLuint progs[NSCENES];
+    for (int i = 0; i < NSCENES; i++) {
+        progs[i] = create_program_from_scene(SCENES[i].data, SCENES[i].datasz);
+    }
+    
+    int scene = 2;
+    switch_scene(progs[scene], width, height);
 
     GLuint vao, buf;
     glGenVertexArrays(1, &vao);
@@ -459,8 +459,14 @@ int renderloop(SDL_Window *window, SDL_GLContext context) {
     int waiterror = 0;
     Uint32 ticks_start = SDL_GetTicks();
     const Uint32 ticks_first = ticks_start;
+    Uint32 scene_start = ticks_start;
     for (;;) {
         SDL_Event event;
+        if ((SDL_GetTicks() - scene_start) / 1000 > SCENES[scene].duration) {
+            scene = (scene + 1) % NSCENES;
+            switch_scene(progs[scene], width, height);
+            scene_start = SDL_GetTicks();
+        }
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                 return 0;
@@ -476,7 +482,7 @@ int renderloop(SDL_Window *window, SDL_GLContext context) {
         }
         glClear(GL_COLOR_BUFFER_BIT);
         glUniform1i(ufrm_millis, ticks_start - ticks_first);
-        camera = mkcamera(ticks_start - ticks_first);
+        camera = mkcamera(ticks_start - ticks_first, scene);
         glUniformMatrix4fv(ufrm_camera, 1, 0, &camera.c[0].v[0]);
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
         SDL_GL_SwapWindow(window);

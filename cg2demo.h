@@ -5,8 +5,8 @@
 #include <stdio.h>
 
 #if defined(_DEBUG)
-#define LOG(str) fputs(str, flog); fflush(flog)
-#define LOGF(fmt, ...) fprintf(flog, fmt, __VA_ARGS__); fflush(flog)
+#define LOGF(fmt, ...) fprintf(flog, "[FILE %s LINE %d] " fmt, __FILE__, __LINE__, __VA_ARGS__); fflush(flog)
+#define LOG(str) LOGF("%s", str)
 #else
 #define LOG(str)
 #define LOGF(fmt, ...)

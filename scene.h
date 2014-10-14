@@ -14,6 +14,8 @@ enum distance_func {
     DF_TORUS = 'T',
     // plane, point, normal
     DF_PLANE = 'P',
+    // tiled
+    DF_TILED = '#',
     // mix, distance_func, distance_func, generic_func
     DF_MIX = 'X',
     // min, distance_func, distance_func
