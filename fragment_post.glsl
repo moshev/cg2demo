@@ -122,16 +122,16 @@ vec4 go(vec3 p, vec3 ray) {
 }
 
 void main() {
-    rand_state = uint(millis) + uint((pixelcenter.x + pixelcenter.y) * 1000);
+    //rand_state = uint(millis) + uint((pixelcenter.x + pixelcenter.y) * 1000);
     vec3 p = vec3(0.0, 0.0, 3.0);
-    vec3 t = vec3(q, 1.0);
+    vec3 t = vec3(pixelcenter, 1.0);
     int i;
 
-    light3_pos = (C * vec4(light3_pos, 1.0)).xyz;
+    light3_pos = (camera * vec4(light3_pos, 1.0)).xyz;
     p = (camera * vec4(p, 1.0)).xyz;
 
     vec3 tr;
-    vec3 ray = normalize((C * vec4(t, 1.0)).xyz - p);
+    vec3 ray = normalize((camera * vec4(t, 1.0)).xyz - p);
     vec4 result = go(p, ray);
     if (result.w < 1.0) {
         discard;

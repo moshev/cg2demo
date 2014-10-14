@@ -24,6 +24,9 @@
     <ClCompile Include="scene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="shaders.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cg2demo.h">
@@ -35,6 +38,9 @@
     <ClInclude Include="scenedsl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="shaders.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="protodecl.inc">
@@ -44,6 +50,9 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="protoget.inc">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="shaders.inc">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>

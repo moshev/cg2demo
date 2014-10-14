@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -58,14 +59,14 @@ static int parse_gf(const uint8_t **scene, size_t *scenesz, char **shader, size_
 static int parse_vf(const uint8_t **scene, size_t *scenesz, char **shader, size_t *shadersz);
 
 static const char _comma[] = ", ";
-static const char _pstart[] = "(p";
+static const char _p[] = "p";
 static const char _cube[] = "cube";
 static const char _normalize[] = "normalize";
 static const char _lparen[] = "(";
 static const char _rparen[] = ")";
 static const char _timing[] = "timing";
 static const char _int[] = "int";
-static const char _multhousand = " * 1000";
+static const char _multhousand[] = " * 1000";
 
 static int parse_df(const uint8_t **scene, size_t *scenesz, char **shader, size_t *shadersz) {
     if (!scenesz || !*scenesz) {
@@ -77,7 +78,7 @@ static int parse_df(const uint8_t **scene, size_t *scenesz, char **shader, size_
     case DF_CUBE:
         APPENDSTR(_cube);
         APPENDSTR(_lparen);
-        APPENDSTR(_pstart);
+        APPENDSTR(_p);
         APPENDSTR(_comma);
         PARSE_VF;
         APPENDSTR(_comma);
@@ -90,7 +91,7 @@ static int parse_df(const uint8_t **scene, size_t *scenesz, char **shader, size_
     case DF_CUBE3:
         APPENDSTR(_cube);
         APPENDSTR(_lparen);
-        APPENDSTR(_pstart);
+        APPENDSTR(_p);
         APPENDSTR(_comma);
         PARSE_VF;
         APPENDSTR(_comma);
@@ -100,7 +101,7 @@ static int parse_df(const uint8_t **scene, size_t *scenesz, char **shader, size_
     case DF_CYLINDER_CAP:
         APPENDSTR("cylinder_caps");
         APPENDSTR(_lparen);
-        APPENDSTR(_pstart);
+        APPENDSTR(_p);
         APPENDSTR(_comma);
         PARSE_VF;
         APPENDSTR(_comma);
@@ -112,7 +113,7 @@ static int parse_df(const uint8_t **scene, size_t *scenesz, char **shader, size_
     case DF_TORUS:
         APPENDSTR("torus");
         APPENDSTR(_lparen);
-        APPENDSTR(_pstart);
+        APPENDSTR(_p);
         APPENDSTR(_comma);
         PARSE_VF;
         APPENDSTR(_comma);
@@ -129,7 +130,7 @@ static int parse_df(const uint8_t **scene, size_t *scenesz, char **shader, size_
     case DF_PLANE:
         APPENDSTR("plane");
         APPENDSTR(_lparen);
-        APPENDSTR(_pstart);
+        APPENDSTR(_p);
         APPENDSTR(_comma);
         PARSE_VF;
         APPENDSTR(_comma);
@@ -141,7 +142,7 @@ static int parse_df(const uint8_t **scene, size_t *scenesz, char **shader, size_
     case DF_SPHERE:
         APPENDSTR("sphere");
         APPENDSTR(_lparen);
-        APPENDSTR(_pstart);
+        APPENDSTR(_p);
         APPENDSTR(_comma);
         PARSE_VF;
         APPENDSTR(_comma);

@@ -12,6 +12,7 @@
 #include "math3d.h"
 #include "scene.h"
 #include "scenedsl.h"
+#include "shaders.h"
 
 #include "protodef.inc"
 
@@ -233,7 +234,7 @@ GLuint create_program_from_scene(const uint8_t *scene, size_t scenesz) {
         exit(1);
     }
     char *fs;
-    size_t fssz = fragment_pre_glsl + fsscenesz + fragment_post_glsl + 1;
+    size_t fssz = fragment_pre_glslsz + fsscenesz + fragment_post_glslsz + 1;
     fs = (char *)malloc(fssz);
     if (!fs) {
         LOG("Error malloc");
@@ -414,11 +415,13 @@ SC_MIX(SC_TORUS(SC_VEC3(SC_FIXED(-0.1), SC_FIXED(0), SC_FIXED(0)), SC_VEC3(SC_FI
 };
 
 static struct scene SCENES[] = {
-    {sizeof(SCENE1), SCENE1},
-    {sizeof(SCENE2), SCENE2},
-    {sizeof(SCENE3), SCENE3},
-    {sizeof(SCENE4), SCENE4},
-}
+        { sizeof(SCENE1), SCENE1 },
+        { sizeof(SCENE2), SCENE2 },
+        { sizeof(SCENE3), SCENE3 },
+        { sizeof(SCENE4), SCENE4 },
+};
+
+#define SCENE SCENE2
 
 int renderloop(SDL_Window *window, SDL_GLContext context) {
     unsigned int width = WIDTH;
@@ -427,7 +430,7 @@ int renderloop(SDL_Window *window, SDL_GLContext context) {
 
     glViewport(0, 0, width, height);
     //glClearColor(0x8A / 255.0f, 0xFF / 255.0f, 0xC1 / 255.0f, 1);
-    glClearColor(0.9, 0.9, 0.9, 1);
+    glClearColor(0.9f, 0.9f, 0.9f, 1);
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -455,6 +458,7 @@ int renderloop(SDL_Window *window, SDL_GLContext context) {
     // instead of 16.
     int waiterror = 0;
     Uint32 ticks_start = SDL_GetTicks();
+    const Uint32 ticks_first = ticks_start;
     for (;;) {
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
@@ -471,8 +475,8 @@ int renderloop(SDL_Window *window, SDL_GLContext context) {
             }
         }
         glClear(GL_COLOR_BUFFER_BIT);
-        glUniform1i(ufrm_millis, ticks_start);
-        camera = mkcamera(ticks_start);
+        glUniform1i(ufrm_millis, ticks_start - ticks_first);
+        camera = mkcamera(ticks_start - ticks_first);
         glUniformMatrix4fv(ufrm_camera, 1, 0, &camera.c[0].v[0]);
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
         SDL_GL_SwapWindow(window);
@@ -517,7 +521,7 @@ void audio_callback(void *userdata, Uint8 *stream, int len) {
         }
         hz = noteshz[taudigits[n]];
         double t = ((s * hz) % 44100) / 44099.0;
-        buf[i] = (Sint16)(sin(t * TAU) * 0x7fff);
+        buf[i] = (Sint16)(sin(t * TAU) * 0x2000);
         as->samples = s;
         as->note = n;
     }

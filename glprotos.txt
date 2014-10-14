@@ -16,8 +16,8 @@ GetShaderiv
 GetUniformLocation
 LinkProgram
 ShaderSource
+Uniform1f
 Uniform1i
-Uniform1fv
 Uniform4fv
 UniformMatrix4fv
 UseProgram
