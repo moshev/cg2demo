@@ -329,13 +329,13 @@ static float smootherstep(float x) {
 }
 
 static const uint8_t SCENES[] = {
-SCENESPEC(0, 0, 0, 30,
+SCENESPEC(0, 0, 0, 2,
 SC_MIN(
   SC_SPHERE(SC_VEC3(SC_FIXED(-0.25), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.25)),
   SC_SPHERE(SC_VEC3(SC_FIXED(0.25), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.25))
 )),
 
-SCENESPEC(-0.25, 0, 0, 20,
+SCENESPEC(-0.25, 0, 0, 2,
 SC_MIN(
   SC_MIX(
     SC_SPHERE(SC_VEC3(SC_TIME2(SC_FIXED(3)), SC_FIXED(0), SC_FIXED(-0.0)), SC_FIXED(0.2)),
@@ -362,14 +362,14 @@ SC_MIN(
   )
 )),
 
-SCENESPEC(0.5, 0, 0, 2,
+SCENESPEC(0.5, 0, 0, 16,
 SC_MIX(
   SC_SPHERE(SC_VEC3(SC_TIME2(SC_FIXED(2.4)), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.2)),
   SC_CYLINDER_CAP(SC_VEC3(SC_FIXED(0.1), SC_FIXED(0), SC_FIXED(0)), SC_VEC3(SC_FIXED(0.9), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.1)),
   SC_TIME2(SC_FIXED(1.2)),
 )),
 
-SCENESPEC(0.5, 0, 0, 2,
+SCENESPEC(0.5, 0, 0, 16,
 SC_MIX(
 SC_MIX(SC_TORUS(SC_VEC3(SC_FIXED(-0.1), SC_FIXED(0), SC_FIXED(0)), SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(1)), SC_FIXED(0.2), SC_FIXED(0.1)),
          SC_SPHERE(SC_VEC3(SC_TIME2(SC_FIXED(4)), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.08)),
@@ -378,7 +378,7 @@ SC_MIX(SC_TORUS(SC_VEC3(SC_FIXED(-0.1), SC_FIXED(0), SC_FIXED(0)), SC_VEC3(SC_FI
   SC_SMOOTH(SC_FIXED(0.6), SC_FIXED(1), SC_TIME2(SC_FIXED(4)))
 )),
 
-SCENESPEC(0, 0, 0, 2,
+SCENESPEC(0, 0, 0, 32,
 SC_MIX(
     SC_TILED(SC_VEC3(SC_FIXED(0.2), SC_FIXED(0.2), SC_FIXED(0.2)),
             SC_CUBE(SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.1))),
@@ -424,9 +424,10 @@ static void switch_scene(GLuint prog, unsigned width, unsigned height) {
 }
 
 static int renderloop(SDL_Window *window, SDL_GLContext context) {
-    unsigned int width = WIDTH;
-    unsigned int height = HEIGHT;
+    unsigned int width;
+    unsigned int height;
     mat4 camera;
+    SDL_GetWindowSize(window, (int *)&width, (int *)&height);
 
     glViewport(0, 0, width, height);
     //glClearColor(0x8A / 255.0f, 0xFF / 255.0f, 0xC1 / 255.0f, 1);
@@ -449,6 +450,7 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
     LOGF("total scenes size: %d", (int)sizeof(SCENES));
     
     int scene = 0;
+    nscenes = 2;
     switch_scene(progs[scene], width, height);
 
     GLuint vao, buf;
