@@ -32,13 +32,6 @@ static GLfloat RECTANGLE[] = {
     -1, 1
 };
 
-/* shader attribute and uniforms */
-static GLint attr_p;
-static GLint ufrm_width;
-static GLint ufrm_height;
-static GLint ufrm_millis;
-static GLint ufrm_camera;
-
 static uint8_t *taudigits;
 static const size_t ntaudigits = 1280;
 
@@ -316,11 +309,6 @@ static GLuint create_program(const char *vs, size_t szvs, const char *fs, size_t
     glAttachShader(prog, fsid);
     glLinkProgram(prog);
     check_program(prog);
-    attr_p = glGetAttribLocation(prog, "p");
-    ufrm_width = glGetUniformLocation(prog, "width");
-    ufrm_height = glGetUniformLocation(prog, "height");
-    ufrm_millis = glGetUniformLocation(prog, "millis");
-    ufrm_camera = glGetUniformLocation(prog, "camera");
     return prog;
 }
 
@@ -329,65 +317,7 @@ static float smootherstep(float x) {
 }
 
 static const uint8_t SCENES[] = {
-SCENESPEC(0, 0, 0, 2,
-SC_MIN(
-  SC_SPHERE(SC_VEC3(SC_FIXED(-0.25), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.25)),
-  SC_SPHERE(SC_VEC3(SC_FIXED(0.25), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.25))
-)),
-
-SCENESPEC(-0.25, 0, 0, 2,
-SC_MIN(
-  SC_MIX(
-    SC_SPHERE(SC_VEC3(SC_TIME2(SC_FIXED(3)), SC_FIXED(0), SC_FIXED(-0.0)), SC_FIXED(0.2)),
-    SC_CUBE(SC_VEC3(SC_FIXED(0.2), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.5)),
-    SC_TIME2(SC_FIXED(16))),
-  SC_MIN(
-//    SC_MIN(
-      SC_PLANE(SC_VEC3(SC_FIXED(0), SC_FIXED(-3), SC_FIXED(0)),
-               SC_VEC3(SC_FIXED(0), SC_FIXED(1), SC_FIXED(0))),
-//      SC_PLANE(SC_VEC3(SC_FIXED(0), SC_FIXED(4), SC_FIXED(0)),
-    //           SC_VEC3(SC_FIXED(0), SC_FIXED(-1), SC_FIXED(0)))
-    //),
-    SC_MIX(
-      SC_TORUS(SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(-2.3)),
-               SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(1)),
-               SC_CLAMP(SC_SMOOTH(SC_FIXED(0.1), SC_FIXED(0.9), SC_TIME2(SC_FIXED(3))), SC_FIXED(0.25), SC_FIXED(0.6)),
-               SC_FIXED(0.2)),
-      SC_MIN(SC_CUBE3(SC_VEC3(SC_FIXED(0.0), SC_FIXED(0.25), SC_FIXED(-2.3)),
-                      SC_VEC3(SC_FIXED(0.25), SC_FIXED(0.25), SC_FIXED(0.2))),
-             SC_CUBE3(SC_VEC3(SC_FIXED(0.0), SC_FIXED(0.75), SC_FIXED(-2.3)),
-                      SC_VEC3(SC_FIXED(0.25), SC_FIXED(0.25), SC_FIXED(0.2)))),
-      SC_TIME2(SC_FIXED(11))
-    )
-  )
-)),
-
-SCENESPEC(0.5, 0, 0, 16,
-SC_MIX(
-  SC_SPHERE(SC_VEC3(SC_TIME2(SC_FIXED(2.4)), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.2)),
-  SC_CYLINDER_CAP(SC_VEC3(SC_FIXED(0.1), SC_FIXED(0), SC_FIXED(0)), SC_VEC3(SC_FIXED(0.9), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.1)),
-  SC_TIME2(SC_FIXED(1.2)),
-)),
-
-SCENESPEC(0.5, 0, 0, 16,
-SC_MIX(
-SC_MIX(SC_TORUS(SC_VEC3(SC_FIXED(-0.1), SC_FIXED(0), SC_FIXED(0)), SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(1)), SC_FIXED(0.2), SC_FIXED(0.1)),
-         SC_SPHERE(SC_VEC3(SC_TIME2(SC_FIXED(4)), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.08)),
-         SC_SMOOTH(SC_FIXED(0.03), SC_FIXED(0.4), SC_TIME2(SC_FIXED(4)))),
-  SC_CUBE(SC_VEC3(SC_FIXED(1), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.2)),
-  SC_SMOOTH(SC_FIXED(0.6), SC_FIXED(1), SC_TIME2(SC_FIXED(4)))
-)),
-
-SCENESPEC(0, 0, 0, 32,
-SC_MIX(
-    SC_TILED(SC_VEC3(SC_FIXED(0.2), SC_FIXED(0.2), SC_FIXED(0.2)),
-            SC_CUBE(SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.1))),
-    SC_TORUS(SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(0)),
-             SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(1)),
-             SC_CLAMP(SC_SMOOTH(SC_FIXED(0.1), SC_FIXED(0.9), SC_TIME2(SC_FIXED(3))), SC_FIXED(0.25), SC_FIXED(0.6)),
-             SC_FIXED(0.2)),
-    SC_CLAMP(SC_TIME2(SC_FIXED(10)), SC_FIXED(0.05), SC_FIXED(1.0))
-))
+#include "scenespecs.inc"
 };
 
 static mat4 mkcamera(Uint32 ticks, mat4 additional) {
@@ -397,7 +327,7 @@ static mat4 mkcamera(Uint32 ticks, mat4 additional) {
     rotf = smootherstep(rotf);
 
     //return mkrotationm4(mkv3(0, 1, 0), trf * TAU);
-    /*
+    ///*
     return mulm4(
         mulm4(
             additional,
@@ -405,9 +335,9 @@ static mat4 mkcamera(Uint32 ticks, mat4 additional) {
         ),
         mkrotationm4(normalizev3(mkv3(1.0f + cosf(trf * TAU), 0.5f * sinf(trf * TAU), 0)), trf * TAU)
     );
-    */
     //*/
-    ///*
+    //*/
+    /*
     return mkm4identity();
     /*
     mkv4(1, 0, 0, 0),
@@ -417,10 +347,22 @@ static mat4 mkcamera(Uint32 ticks, mat4 additional) {
     */
 }
 
-static void switch_scene(GLuint prog, unsigned width, unsigned height) {
-    glUseProgram(prog);
-    glUniform1i(ufrm_width, width);
-    glUniform1i(ufrm_height, height);
+struct program {
+    GLuint id;
+    GLint attr_p;
+    GLint ufrm_width;
+    GLint ufrm_height;
+    GLint ufrm_millis;
+    GLint ufrm_camera;
+};
+
+static void switch_scene(struct program *prog, unsigned width, unsigned height) {
+    glUseProgram(prog->id);
+    glUniform1i(prog->ufrm_width, width);
+    glUniform1i(prog->ufrm_height, height);
+    glEnableVertexAttribArray(prog->attr_p);
+    glVertexAttribPointer(prog->attr_p, 2, GL_FLOAT, 0, 0, 0);
+
 }
 
 static int renderloop(SDL_Window *window, SDL_GLContext context) {
@@ -442,25 +384,28 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
         LOG("error splitting scenes");
         exit(1);
     }
-    GLuint *progs = (GLuint *)malloc(nscenes * sizeof(GLuint));
+    struct program *progs;
+    progs = (struct program *)malloc(nscenes * sizeof(struct program));
     for (int i = 0; i < nscenes; i++) {
-        progs[i] = create_program_from_scene(scenes[i].data, scenes[i].datasz);
+        progs[i].id = create_program_from_scene(scenes[i].data, scenes[i].datasz);
+        progs[i].attr_p = glGetAttribLocation(progs[i].id, "p");
+        progs[i].ufrm_width = glGetUniformLocation(progs[i].id, "width");
+        progs[i].ufrm_height = glGetUniformLocation(progs[i].id, "height");
+        progs[i].ufrm_millis = glGetUniformLocation(progs[i].id, "millis");
+        progs[i].ufrm_camera = glGetUniformLocation(progs[i].id, "camera");
     }
 
     LOGF("total scenes size: %d", (int)sizeof(SCENES));
     
-    int scene = 0;
-    nscenes = 2;
-    switch_scene(progs[scene], width, height);
-
     GLuint vao, buf;
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
     glGenBuffers(1, &buf);
     glBindBuffer(GL_ARRAY_BUFFER, buf);
     glBufferData(GL_ARRAY_BUFFER, sizeof(RECTANGLE), RECTANGLE, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(attr_p);
-    glVertexAttribPointer(attr_p, 2, GL_FLOAT, 0, 0, 0);
+
+    int scene = 0;
+    switch_scene(&progs[scene], width, height);
 
     // to keep precise 60fps
     // every third frame will be 17ms
@@ -473,7 +418,7 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
         SDL_Event event;
         if ((SDL_GetTicks() - scene_start) / 1000 > scenes[scene].duration) {
             scene = (scene + 1) % nscenes;
-            switch_scene(progs[scene], width, height);
+            switch_scene(&progs[scene], width, height);
             scene_start = SDL_GetTicks();
         }
         while (SDL_PollEvent(&event)) {
@@ -483,16 +428,18 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
                 if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
                     width = event.window.data1;
                     height = event.window.data2;
-                    glUniform1i(ufrm_width, width);
-                    glUniform1i(ufrm_height, height);
+                    glUniform1i(progs[scene].ufrm_width, width);
+                    glUniform1i(progs[scene].ufrm_height, height);
                     glViewport(0, 0, width, height);
                 }
             }
         }
         glClear(GL_COLOR_BUFFER_BIT);
-        glUniform1i(ufrm_millis, ticks_start - ticks_first);
-        camera = mkcamera(ticks_start - ticks_first, mkm4identity());
-        glUniformMatrix4fv(ufrm_camera, 1, 0, &camera.c[0].v[0]);
+        if (progs[scene].ufrm_millis > 0) {
+            glUniform1i(progs[scene].ufrm_millis, ticks_start - scene_start);
+        }
+        camera = mkcamera(ticks_start - ticks_first, mktranslationm4(scenes[scene].camera_translation));
+        glUniformMatrix4fv(progs[scene].ufrm_camera, 1, 0, &camera.c[0].v[0]);
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
         SDL_GL_SwapWindow(window);
         Uint32 allotted = 16;
