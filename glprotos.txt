@@ -17,6 +17,7 @@ GetUniformLocation
 LinkProgram
 ShaderSource
 Uniform1i
+Uniform1fv
 Uniform4fv
 UniformMatrix4fv
 UseProgram
