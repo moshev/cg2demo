@@ -6,6 +6,11 @@
 
 #include "scene.h"
 
+struct scene {
+    size_t datasz;
+    const uint8_t *data;
+};
+
 /*
 prefix meaning:
 df - distance function

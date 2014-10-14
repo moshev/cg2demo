@@ -15,12 +15,12 @@
 
 #include "protodef.inc"
 
-const unsigned int WIDTH = 1024;
-const unsigned int HEIGHT = 768;
 FILE *flog;
+static const unsigned int WIDTH = 1024;
+static const unsigned int HEIGHT = 768;
 
 /* rectangle */
-GLfloat RECTANGLE[] = {
+static GLfloat RECTANGLE[] = {
     -1, -1,
     1, -1,
     1, 1,
@@ -28,14 +28,21 @@ GLfloat RECTANGLE[] = {
 };
 
 /* shader attribute and uniforms */
-GLint attr_p;
-GLint ufrm_width;
-GLint ufrm_height;
-GLint ufrm_millis;
-GLint ufrm_camera;
+static GLint attr_p;
+static GLint ufrm_width;
+static GLint ufrm_height;
+static GLint ufrm_millis;
+static GLint ufrm_camera;
 
-uint8_t *taudigits;
-const size_t ntaudigits = 1280;
+static uint8_t *taudigits;
+static const size_t ntaudigits = 1280;
+
+static const char *vertex_glsl;
+static size_t vertex_glslsz;
+static const char *fragment_pre_glsl;
+static size_t fragment_pre_glslsz;
+static const char *fragment_post_glsl;
+static size_t fragment_post_glslsz;
 
 int renderloop(SDL_Window *window, SDL_GLContext context);
 
@@ -135,6 +142,19 @@ int main(int argc, char *argv[]) {
 
 #include "protoget.inc"
 
+    if (!get_vertex_shader(&vertex_glsl, &vertex_glslsz)) {
+        LOG("error reading vertex shader source\n");
+        exit(1);
+    }
+    if (!get_fragment_shader_pre(&fragment_pre_glsl, &fragment_pre_glslsz)) {
+        LOG("error reading fragment shader pre-scene part source\n");
+        exit(1);
+    }
+    if (!get_fragment_shader_post(&fragment_post_glsl, &fragment_post_glslsz)) {
+        LOG("error reading fragment shader post-scene part source\n");
+        exit(1);
+    }
+
     taudigits = (uint8_t *)malloc(ntaudigits);
     // gen tau
     for (size_t i = 0; i < ntaudigits; i++) {
@@ -206,18 +226,6 @@ GLuint create_program_from_files(const char *vspath, const char *fspath) {
 }
 
 GLuint create_program_from_scene(const uint8_t *scene, size_t scenesz) {
-    char *vs;
-    size_t vssz;
-    char *fspre;
-    size_t fspresz;
-    char *fspost;
-    size_t fspostsz;
-    if (!read_file("vertex.glsl", &vs, &vssz) ||
-        !read_file("fragment_pre.glsl", &fspre, &fspresz) ||
-        !read_file("fragment_post.glsl", &fspost, &fspostsz)) {
-        LOG("Error reading shader source");
-        exit(1);
-    }
     char *fsscene;
     size_t fsscenesz;
     if (!parse_scene(scene, scenesz, &fsscene, &fsscenesz)) {
@@ -225,24 +233,20 @@ GLuint create_program_from_scene(const uint8_t *scene, size_t scenesz) {
         exit(1);
     }
     char *fs;
-    size_t fssz = fspresz + fsscenesz + fspostsz + 1;
+    size_t fssz = fragment_pre_glsl + fsscenesz + fragment_post_glsl + 1;
     fs = (char *)malloc(fssz);
     if (!fs) {
         LOG("Error malloc");
         exit(1);
     }
-    memcpy(fs, fspre, fspresz);
-    memcpy(fs + fspresz, fsscene, fsscenesz);
-    memcpy(fs + fspresz + fsscenesz, fspost, fspostsz);
+    memcpy(fs, fragment_pre_glsl, fragment_pre_glslsz);
+    memcpy(fs + fragment_pre_glslsz, fsscene, fsscenesz);
+    memcpy(fs + fragment_pre_glslsz + fsscenesz, fragment_post_glsl, fragment_post_glslsz);
     fs[fssz - 1] = '\0';
     LOGF("generated shader:\n-----\n%.*s\n------\n", (int)fssz, fs);
 
-    GLuint prog = create_program(vs, vssz, fs, fssz);
-    free(fs);
+    GLuint prog = create_program(vertex_glsl, vertex_glslsz, fs, fssz);
     free(fsscene);
-    free(fspost);
-    free(fspre);
-    free(vs);
     return prog;
 }
 
@@ -409,7 +413,12 @@ SC_MIX(SC_TORUS(SC_VEC3(SC_FIXED(-0.1), SC_FIXED(0), SC_FIXED(0)), SC_VEC3(SC_FI
 )
 };
 
-#define SCENE SCENE2
+static struct scene SCENES[] = {
+    {sizeof(SCENE1), SCENE1},
+    {sizeof(SCENE2), SCENE2},
+    {sizeof(SCENE3), SCENE3},
+    {sizeof(SCENE4), SCENE4},
+}
 
 int renderloop(SDL_Window *window, SDL_GLContext context) {
     unsigned int width = WIDTH;

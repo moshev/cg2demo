@@ -8,11 +8,12 @@
 #define LOG(str) fputs(str, flog); fflush(flog)
 #define LOGF(fmt, ...) fprintf(flog, fmt, __VA_ARGS__); fflush(flog)
 #else
-#define LOG(str) 
-#define LOGF(fmt, ...) 
+#define LOG(str)
+#define LOGF(fmt, ...)
 #endif
 
 extern FILE *flog;
+int read_file(const char *path, char **text, size_t *sz);
 
 #include "protodecl.inc"
 
