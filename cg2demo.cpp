@@ -377,6 +377,15 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
+    for (size_t i = 0; i < sizeof(SCENES); i++) {
+        uint8_t c = SCENES[i];
+        if (((c >= 'A') && (c <= 'Z')) || ((c >= 'a') && (c <= 'z')) || ((c >= '0') && (c <= '9'))) {
+            LOGF("%c", (char)c);
+        } else {
+            LOGF("%02x", SCENES[i]);
+        }
+    }
+
     LOG("");
     struct scene *scenes;
     size_t nscenes;
@@ -404,7 +413,7 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
     glBindBuffer(GL_ARRAY_BUFFER, buf);
     glBufferData(GL_ARRAY_BUFFER, sizeof(RECTANGLE), RECTANGLE, GL_STATIC_DRAW);
 
-    int scene = 2;
+    int scene = 0;
     switch_scene(&progs[scene], width, height);
 
     // to keep precise 60fps

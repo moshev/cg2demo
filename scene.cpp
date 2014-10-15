@@ -230,7 +230,7 @@ static int parse_df(const uint8_t **scene, size_t *scenesz, char **shader, size_
         APPENDSTR(_rparen);
         return 1;
     }
-    LOGF("Unknown DF: %c", df);
+    LOGF("Unknown DF: %x", (unsigned)df);
     return 0;
 }
 
@@ -239,14 +239,15 @@ static int parse_gf(const uint8_t **scene, size_t *scenesz, char **shader, size_
         LOG("No bytes left for GF");
         return 0;
     }
-    enum generic_func gf = (enum generic_func) CONSUME1;
-    if (GF_NUMBER) {
+    uint8_t u8gf = CONSUME1;
+    if (u8gf & (uint8_t)GF_NUMBER) {
         // put back
         (*scene)--;
         (*scenesz)++;
         PARSE_NUM;
         return 1;
     }
+    enum generic_func gf = (enum generic_func) u8gf;
     switch (gf) {
     case GF_CLAMP:
         APPENDSTR("clamp");
@@ -331,7 +332,7 @@ static int parse_gf(const uint8_t **scene, size_t *scenesz, char **shader, size_
         APPENDSTR("z");
         return 1;
     }
-    LOGF("Unknown GF: %c", gf);
+    LOGF("Unknown GF: %x", (unsigned)gf);
     return 0;
 }
 
@@ -353,7 +354,7 @@ static int parse_vf(const uint8_t **scene, size_t *scenesz, char **shader, size_
         APPENDSTR(_rparen);
         return 1;
     }
-    LOGF("Unknown VF: %c", vf);
+    LOGF("Unknown VF: %x", (unsigned)vf);
     return 0;
 }
 

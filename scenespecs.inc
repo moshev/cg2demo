@@ -2,24 +2,23 @@
 // Suggested editors for this file: sublime text, vim, etc.
 // visual studio fucks up the formatting (╯°□°）╯︵ ┻━┻)
 
-#define scv_my_t 10000
-SCENESPEC(0, 0, 1, scv_my_t,
+SCENESPEC(0, 0, 0, 12000,
 SC_MIX(
   SC_MIX(
     SC_CUBE3(SC_VEC3(SC_FIXED(0), SC_FIXED(0.25), SC_FIXED(0)),
-             SC_VEC3(SC_FIXED(0.4), SC_FIXED(0.25), SC_FIXED(0.25))),
+             SC_VEC3(SC_FIXED(0.4), SC_FIXED(0.4), SC_FIXED(0.05))),
     SC_CUBE3(SC_VEC3(SC_FIXED(0), SC_FIXED(-0.25), SC_FIXED(0)),
              SC_VEC3(SC_FIXED(0.25), SC_FIXED(0.5), SC_FIXED(0.25))),
-    SC_SMOOTH(-0.25, 0.25, SC_PY)
+    SC_SMOOTH(SC_FIXED(-0.25), SC_FIXED(0.25), SC_PY)
   ),
   SC_MIX(
     SC_SPHERE(SC_VEC3(SC_FIXED(0), SC_FIXED(0.25), SC_FIXED(0)), SC_FIXED(0.4)),
     SC_CYLINDER_CAP(SC_VEC3(SC_FIXED(0), SC_FIXED(0.25), SC_FIXED(0)),
                     SC_VEC3(SC_FIXED(0), SC_FIXED(-0.25), SC_FIXED(0)),
                     SC_FIXED(0.2)),
-    SC_SMOOTH(-0.25, 0.25, SC_PY)
+    SC_SMOOTH(SC_FIXED(-0.25), SC_FIXED(0.25), SC_PY)
   ),
-  SC_SMOOTH(SC_FIXED(0.45), SC_FIXED(0.65), SC_TIME(scv_my_t))
+  SC_SMOOTH(SC_FIXED(0.45), SC_FIXED(0.65), SC_TIME(SC_FIXED(12)))
 )),
 
 SCENESPEC(0, 0, 0, 15000,
