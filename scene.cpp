@@ -229,6 +229,16 @@ static int parse_df(const uint8_t **scene, size_t *scenesz, char **shader, size_
         PARSE_GF;
         APPENDSTR(_rparen);
         return 1;
+    case DF_ORIGINAL_MIX:
+        APPENDSTR("mix");
+        APPENDSTR(_lparen);
+        PARSE_DF;
+        APPENDSTR(_comma);
+        PARSE_DF;
+        APPENDSTR(_comma);
+        PARSE_GF;
+        APPENDSTR(_rparen);
+        return 1;
     }
     LOGF("Unknown DF: %x", (unsigned)df);
     return 0;
@@ -277,6 +287,16 @@ static int parse_gf(const uint8_t **scene, size_t *scenesz, char **shader, size_
         return 1;
     case GF_MIX:
         APPENDSTR("mixfix");
+        APPENDSTR(_lparen);
+        PARSE_GF;
+        APPENDSTR(_comma);
+        PARSE_GF;
+        APPENDSTR(_comma);
+        PARSE_GF;
+        APPENDSTR(_rparen);
+        return 1;
+    case GF_ORIGINAL_MIX:
+        APPENDSTR("mix");
         APPENDSTR(_lparen);
         PARSE_GF;
         APPENDSTR(_comma);
@@ -367,7 +387,7 @@ size_t parse_scene(const uint8_t *scene, size_t scenesz, char **shader, size_t *
     const uint8_t *scene_in = scene;
     size_t scenesz_in = scenesz;
     if (!parse_df(&scene_in, &scenesz_in, nullptr, &needed)) {
-        LOG("error parsing scene");
+        LOGF("error parsing scene at byte %d", (int)(scenesz - scenesz_in) - 1);
         return 0;
     }
     if (!shader) {
@@ -405,6 +425,7 @@ int split_scenes(const uint8_t *scenes, size_t scenessz, struct scene **parsed, 
         scene_in += 8;
         if (!parse_df(&scene_in, &scenesz_in, nullptr, &tmp)) {
             LOGF("Couldn't parse scene %d", (int)n);
+            LOGF("At byte %d", (int)(scenessz - scenesz_in) - 1);
             return 0;
         }
         n++;

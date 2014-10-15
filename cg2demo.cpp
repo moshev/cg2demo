@@ -333,7 +333,7 @@ static mat4 mkcamera(Uint32 ticks, mat4 additional) {
             additional,
             mkrotationm4(mkv3(0, 1, 0), rotf * TAU)
         ),
-        mkrotationm4(normalizev3(mkv3(0.5f + 0.5f * cosf(trf * TAU), 0, 0.5f + 0.5f * sinf(trf * TAU))), trf * TAU)
+        mkrotationm4(normalizev3(mkv3(0.5f + 0.5f * cosf(trf * TAU), 1.0f, 0.5f + 0.5f * sinf(trf * TAU))), trf * TAU)
     );
     //*/
     //*/
@@ -413,6 +413,10 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
     glBindBuffer(GL_ARRAY_BUFFER, buf);
     glBufferData(GL_ARRAY_BUFFER, sizeof(RECTANGLE), RECTANGLE, GL_STATIC_DRAW);
 
+    for (int i = 0; i < nscenes; i++) {
+        switch_scene(&progs[i], width, height);
+    }
+
     int scene = 0;
     switch_scene(&progs[scene], width, height);
 
@@ -445,7 +449,7 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
         }
         glClear(GL_COLOR_BUFFER_BIT);
         if (progs[scene].ufrm_millis > 0) {
-            glUniform1i(progs[scene].ufrm_millis, ticks_start - ticks_first);
+            glUniform1i(progs[scene].ufrm_millis, ticks_start - scene_start);
         }
         camera = mkcamera(ticks_start - ticks_first, mktranslationm4(scenes[scene].camera_translation));
         glUniformMatrix4fv(progs[scene].ufrm_camera, 1, 0, &camera.c[0].v[0]);

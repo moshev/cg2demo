@@ -40,6 +40,7 @@ struct _lo {
 #define SC_CYLINDER_CAP(v3A, v3B, gfradius) DF_CYLINDER_CAP, v3A, v3B, gfradius
 #define SC_PLANE(v3P, v3N) DF_PLANE, v3P, v3N
 #define SC_MIX(A, B, C) DF_MIX, A, B, C
+#define SC_OMIX(A, B, C) DF_ORIGINAL_MIX, A, B, C
 #define SC_MIN(A, B) DF_MIN, A, B
 #define SC_MAX(A, B) DF_MAX, A, B
 #define SC_FIXED(f) (uint8_t)(GF_NUMBER | _hi<(int)((f) * 256)>::v), _lo<(int)((f) * 256)>::v

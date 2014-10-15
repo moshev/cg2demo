@@ -1,7 +1,80 @@
 // vim: sw=2 ts=8 et
 // Suggested editors for this file: sublime text, vim, etc.
 // visual studio fucks up the formatting (╯°□°）╯︵ ┻━┻)
+
+SCENESPEC(0, 0, 0, 1500,
+SC_MIN(SC_MIN(
+  SC_SPHERE(SC_VEC3(SC_FIXED(0),
+                    SC_OMIX(SC_FIXED(-0.4),
+                            SC_FIXED(0.4),
+                            SC_SMOOTH(SC_FIXED(0.16666), SC_FIXED(0.32222), SC_TIME(SC_FIXED(1.5)))),
+                    SC_FIXED(0)),
+            SC_FIXED(0.3)),
+  SC_TORUS(SC_VEC3(SC_FIXED(0), SC_OMIX(SC_FIXED(-2),
+                                        SC_FIXED(2),
+                                        SC_TIME2(SC_FIXED(2))),
+                   SC_FIXED(0)),
+           SC_VEC3(SC_FIXED(0), SC_FIXED(1), SC_FIXED(0)),
+           SC_FIXED(0.8), SC_FIXED(0.2))),
+  SC_CUBE(SC_VEC3(SC_FIXED(0), SC_FIXED(-0.4), SC_FIXED(0)), SC_FIXED(0.4))
+)),
+
+SCENESPEC(1, 0, 0, 1500,
+SC_MIN(SC_MIN(
+  SC_SPHERE(SC_VEC3(SC_FIXED(0),
+                    SC_OMIX(SC_FIXED(-0.4),
+                            SC_FIXED(0.4),
+                            SC_SMOOTH(SC_FIXED(0.16666), SC_FIXED(0.32222), SC_TIME(SC_FIXED(1.5)))),
+                    SC_FIXED(0)),
+            SC_FIXED(0.3)),
+  SC_TORUS(SC_VEC3(SC_FIXED(0), SC_OMIX(SC_FIXED(-2),
+                                        SC_FIXED(2),
+                                        SC_TIME2(SC_FIXED(2))),
+                   SC_FIXED(0)),
+           SC_VEC3(SC_FIXED(0), SC_FIXED(1), SC_FIXED(0)),
+           SC_FIXED(0.8), SC_FIXED(0.2))),
+  SC_CUBE(SC_VEC3(SC_FIXED(0), SC_FIXED(-0.4), SC_FIXED(0)), SC_FIXED(0.4))
+)),
+
+SCENESPEC(0, 0, 0, 1500,
+SC_MIN(SC_MIN(
+  SC_SPHERE(SC_VEC3(SC_FIXED(0), SC_FIXED(0.4), SC_FIXED(0)),
+            SC_FIXED(0.3)),
+  SC_TORUS(SC_VEC3(SC_FIXED(0), SC_OMIX(SC_FIXED(-2),
+                                        SC_FIXED(2),
+                                        SC_TIME2(SC_FIXED(2))),
+                   SC_FIXED(0)),
+           SC_VEC3(SC_FIXED(0), SC_FIXED(1), SC_FIXED(0)),
+           SC_FIXED(0.8), SC_FIXED(0.2))),
+  SC_CUBE(SC_VEC3(SC_FIXED(0), SC_FIXED(-0.4), SC_FIXED(0)), SC_FIXED(0.4))
+)
+),
+
+SCENESPEC(0, 0, 0, 5000,
+SC_MAX(
+  SC_TILED(SC_VEC3(SC_FIXED(0.2), SC_FIXED(0.2), SC_FIXED(100)),
+    SC_CUBE(SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.1))
+  ),
+  SC_CUBE(SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(0)), SC_OMIX(SC_FIXED(0.12), SC_FIXED(20),
+                                                                  SC_SMOOTH(SC_FIXED(0.2), SC_FIXED(1.0), SC_TIME(SC_FIXED(5)))))
+)
+),
+
+// TORUSES
+SCENESPEC(0, 0, 0, 60000,
+SC_MIX(
+  SC_TILED(SC_VEC3(SC_FIXED(0.2), SC_FIXED(0.2), SC_FIXED(100)),
+    SC_CUBE(SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.1))
+  ),
+  SC_TORUS(SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(0)),
+           SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(1)),
+           SC_CLAMP(SC_SMOOTH(SC_FIXED(0.1), SC_FIXED(0.9), SC_TIME2(SC_FIXED(3))),
+                    SC_FIXED(0.25), SC_FIXED(0.6)),
+           SC_FIXED(0.2)),
+  SC_SMOOTH(SC_FIXED(0.15), SC_FIXED(0.9), SC_TIME2(SC_FIXED(12)))
+)),
 /*
+
 SCENESPEC(0, -0.5, 0, 12000,
 SC_MIX(
   SC_MIX(
@@ -88,21 +161,10 @@ SC_MIX(
   SC_SMOOTH(SC_FIXED(0.6), SC_FIXED(1), SC_TIME2(SC_FIXED(4)))
 )),
 
-SCENESPEC(0, 0, 0, 32000,
-SC_MIX(
-  SC_TILED(SC_VEC3(SC_FIXED(0.2), SC_FIXED(0.2), SC_FIXED(100)),
-    SC_CUBE(SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.1))
-  ),
-  SC_TORUS(SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(0)),
-           SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(1)),
-           SC_CLAMP(SC_SMOOTH(SC_FIXED(0.1), SC_FIXED(0.9), SC_TIME2(SC_FIXED(3))),
-                    SC_FIXED(0.25), SC_FIXED(0.6)),
-           SC_FIXED(0.2)),
-  SC_SMOOTH(SC_FIXED(0.15), SC_FIXED(0.9), SC_TIME2(SC_FIXED(12)))
-)),
 */
 
 // TEST SCENE
+/*
 SCENESPEC(0, 0, 0, 30000,
 SC_MIN(SC_MIN(
   SC_SPHERE(SC_VEC3(SC_FIXED(0), SC_FIXED(0.4), SC_FIXED(0)), SC_FIXED(0.3)),
@@ -110,3 +172,4 @@ SC_MIN(SC_MIN(
            SC_FIXED(0.8), SC_FIXED(0.2))),
   SC_CUBE(SC_VEC3(SC_FIXED(0), SC_FIXED(-0.4), SC_FIXED(0)), SC_FIXED(0.4))
 ))
+*/

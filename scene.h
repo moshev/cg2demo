@@ -20,10 +20,13 @@ enum distance_func {
     DF_TILED = '#',
     // mix, distance_func, distance_func, generic_func
     DF_MIX = 'X',
+    // original mix
+    // ...if you're into that kind of stuff
+    DF_ORIGINAL_MIX = 'M',
     // min, distance_func, distance_func
-    DF_MIN = 'm',
+    DF_MIN = '<',
     // max, distance_func, distance_func
-    DF_MAX = 'M',
+    DF_MAX = '>',
 };
 
 enum generic_func {
@@ -41,6 +44,9 @@ enum generic_func {
     GF_CLAMP = 'C',
     // mix, generic_func, generic_func, generic_func
     GF_MIX = DF_MIX,
+    // original mix
+    // ...if you're into that kind of stuff
+    GF_ORIGINAL_MIX = DF_ORIGINAL_MIX,
     // min, generic_func, generic_func
     GF_MIN = DF_MIN,
     // max, generic_func, generic_func
