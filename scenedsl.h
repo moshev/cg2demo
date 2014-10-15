@@ -47,6 +47,9 @@ struct _lo {
 #define SC_TIME2(n) GF_TIME2, n
 #define SC_CLAMP(gfarg, gfmin, gfmax) GF_CLAMP, gfarg, gfmin, gfmax
 #define SC_SMOOTH(gfmin, gfmax, gfarg) GF_SMOOTH, gfmin, gfmax, gfarg
+#define SC_PX GF_PDOTX
+#define SC_PY GF_PDOTY
+#define SC_PZ GF_PDOTZ
 
 
 #endif

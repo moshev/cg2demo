@@ -404,7 +404,7 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
     glBindBuffer(GL_ARRAY_BUFFER, buf);
     glBufferData(GL_ARRAY_BUFFER, sizeof(RECTANGLE), RECTANGLE, GL_STATIC_DRAW);
 
-    int scene = 0;
+    int scene = 2;
     switch_scene(&progs[scene], width, height);
 
     // to keep precise 60fps
@@ -416,10 +416,10 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
     Uint32 scene_start = ticks_start;
     for (;;) {
         SDL_Event event;
-        if ((SDL_GetTicks() - scene_start) / 1000 > scenes[scene].duration) {
+        if (ticks_start - scene_start > scenes[scene].duration) {
+            scene_start = scene_start + scenes[scene].duration;
             scene = (scene + 1) % nscenes;
             switch_scene(&progs[scene], width, height);
-            scene_start = SDL_GetTicks();
         }
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {

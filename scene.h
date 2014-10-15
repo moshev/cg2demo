@@ -43,6 +43,12 @@ enum generic_func {
     GF_MIN = DF_MIN,
     // max, generic_func, generic_func
     GF_MAX = DF_MAX,
+    // p.x
+    GF_PDOTX = '0',
+    // p.y
+    GF_PDOTY = '1',
+    // p.z
+    GF_PDOTZ = '2',
 };
 
 enum vec_func {

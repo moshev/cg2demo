@@ -61,6 +61,7 @@ static int parse_vf(const uint8_t **scene, size_t *scenesz, char **shader, size_
 
 static const char _comma[] = ", ";
 static const char __p[] = "p";
+static const char _dot[] = ".";
 static const char *_p = __p;
 static const char _cube[] = "cube";
 static const char _tile[] = "tile";
@@ -303,6 +304,21 @@ static int parse_gf(const uint8_t **scene, size_t *scenesz, char **shader, size_
         APPENDSTR(_multhousand);
         APPENDSTR(_rparen);
         APPENDSTR(_rparen);
+        return 1;
+    case GF_PDOTX:
+        APPENDSTR(_p);
+        APPENDSTR(_dot);
+        APPENDSTR("x");
+        return 1;
+    case GF_PDOTY:
+        APPENDSTR(_p);
+        APPENDSTR(_dot);
+        APPENDSTR("y");
+        return 1;
+    case GF_PDOTZ:
+        APPENDSTR(_p);
+        APPENDSTR(_dot);
+        APPENDSTR("z");
         return 1;
     }
     LOGF("Unknown GF: %c", gf);
