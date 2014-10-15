@@ -421,7 +421,7 @@ int split_scenes(const uint8_t *scenes, size_t scenessz, struct scene **parsed, 
         float ty = (int16_t)(scene_in[2] * 256 + scene_in[3]) / 256.0f;
         float tz = (int16_t)(scene_in[4] * 256 + scene_in[5]) / 256.0f;
         unsigned duration = (unsigned)(scene_in[6] * 256 + scene_in[7]);
-        LOGF("Scene %d %f %f %f %d", n, tx, ty, tz, duration);
+        LOGF("Scene %d %f %f %f %d", (int)n, tx, ty, tz, (int)duration);
         p[n].camera_translation = mkv3(tx, ty, tz);
         p[n].duration = duration;
         scenesz_in -= 8;
