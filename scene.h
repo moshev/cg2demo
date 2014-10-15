@@ -28,7 +28,9 @@ enum distance_func {
 
 enum generic_func {
     // literal number
-    GF_NUMBER = 'F',
+    // this one is a bitmask, actually
+    // if high bit set - then first byte of number
+    GF_NUMBER = 0x80,
     // time, period
     GF_TIME = 'T',
     // time2 (oscillating), period

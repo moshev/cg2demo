@@ -38,6 +38,11 @@ static inline int parse_num(const uint8_t **scene, size_t *scenesz, char **shade
     uint16_t x = 0;
     x |= ((uint16_t)CONSUME1) << 8;
     x |= ((uint16_t)CONSUME1) & 0xFF;
+    // have to clear high bit if not set
+    // the number is technically a 15-bit number
+    if (!(x & 0x4000)) {
+        x = x & 0x7fff;
+    }
     float f = (float)(int16_t)x;
     f /= 256.0;
     // haha, no snprintf and no ftoa in MSVS
@@ -49,7 +54,7 @@ static inline int parse_num(const uint8_t **scene, size_t *scenesz, char **shade
     return 1;
 }
 
-#define PARSE_NUM parse_num(scene, scenesz, shader, shadersz)
+#define PARSE_NUM do { if (!parse_num(scene, scenesz, shader, shadersz)) return 0; } while (0)
 
 #define PARSE_DF do { if (!parse_df(scene, scenesz, shader, shadersz)) return 0; } while (0)
 #define PARSE_GF do { if (!parse_gf(scene, scenesz, shader, shadersz)) return 0; } while (0)
@@ -61,8 +66,9 @@ static int parse_vf(const uint8_t **scene, size_t *scenesz, char **shader, size_
 
 static const char _comma[] = ", ";
 static const char __p[] = "p";
-static const char _dot[] = ".";
+// used for indirection when tiled
 static const char *_p = __p;
+static const char _dot[] = ".";
 static const char _cube[] = "cube";
 static const char _tile[] = "tile";
 static const char _normalize[] = "normalize";
@@ -234,6 +240,13 @@ static int parse_gf(const uint8_t **scene, size_t *scenesz, char **shader, size_
         return 0;
     }
     enum generic_func gf = (enum generic_func) CONSUME1;
+    if (GF_NUMBER) {
+        // put back
+        (*scene)--;
+        (*scenesz)++;
+        PARSE_NUM;
+        return 1;
+    }
     switch (gf) {
     case GF_CLAMP:
         APPENDSTR("clamp");
@@ -270,9 +283,6 @@ static int parse_gf(const uint8_t **scene, size_t *scenesz, char **shader, size_
         APPENDSTR(_comma);
         PARSE_GF;
         APPENDSTR(_rparen);
-        return 1;
-    case GF_NUMBER:
-        PARSE_NUM;
         return 1;
     case GF_SMOOTH:
         APPENDSTR("smoothstep");
