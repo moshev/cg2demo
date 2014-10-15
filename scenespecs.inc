@@ -3,50 +3,42 @@
 // visual studio fucks up the formatting (╯°□°）╯︵ ┻━┻)
 
 SCENESPEC(0, 0, 0, 1500,
-SC_MIN(SC_MIN(
+SC_MIN(
   SC_SPHERE(SC_VEC3(SC_FIXED(0),
                     SC_OMIX(SC_FIXED(-0.4),
                             SC_FIXED(0.4),
-                            SC_SMOOTH(SC_FIXED(0.16666), SC_FIXED(0.32222), SC_TIME(SC_FIXED(1.5)))),
+                            SC_SMOOTH(SC_FIXED(0.16666), SC_FIXED(0.32222), SC_TIME2(SC_FIXED(1.5)))),
                     SC_FIXED(0)),
             SC_FIXED(0.3)),
-  SC_TORUS(SC_VEC3(SC_FIXED(0), SC_OMIX(SC_FIXED(-2),
-                                        SC_FIXED(2),
-                                        SC_TIME2(SC_FIXED(2))),
-                   SC_FIXED(0)),
-           SC_VEC3(SC_FIXED(0), SC_FIXED(1), SC_FIXED(0)),
-           SC_FIXED(0.8), SC_FIXED(0.2))),
   SC_CUBE(SC_VEC3(SC_FIXED(0), SC_FIXED(-0.4), SC_FIXED(0)), SC_FIXED(0.4))
 )),
 
-SCENESPEC(1, 0, 0, 1500,
-SC_MIN(SC_MIN(
+SCENESPEC(0, 0, 0, 2250,
+SC_MIN(
   SC_SPHERE(SC_VEC3(SC_FIXED(0),
-                    SC_OMIX(SC_FIXED(-0.4),
-                            SC_FIXED(0.4),
-                            SC_SMOOTH(SC_FIXED(0.16666), SC_FIXED(0.32222), SC_TIME(SC_FIXED(1.5)))),
+                    SC_OMIX(SC_FIXED(-0.2),
+                            SC_FIXED(0.2),
+                            SC_SMOOTH(SC_FIXED(0.16666), SC_FIXED(0.32222), SC_TIME2(SC_FIXED(1.5)))),
                     SC_FIXED(0)),
-            SC_FIXED(0.3)),
-  SC_TORUS(SC_VEC3(SC_FIXED(0), SC_OMIX(SC_FIXED(-2),
-                                        SC_FIXED(2),
-                                        SC_TIME2(SC_FIXED(2))),
-                   SC_FIXED(0)),
-           SC_VEC3(SC_FIXED(0), SC_FIXED(1), SC_FIXED(0)),
-           SC_FIXED(0.8), SC_FIXED(0.2))),
-  SC_CUBE(SC_VEC3(SC_FIXED(0), SC_FIXED(-0.4), SC_FIXED(0)), SC_FIXED(0.4))
+            SC_FIXED(0.15)),
+  SC_CUBE(SC_VEC3(SC_FIXED(0), SC_FIXED(-0.2), SC_FIXED(0)), SC_FIXED(0.2))
 )),
 
-SCENESPEC(0, 0, 0, 1500,
-SC_MIN(SC_MIN(
-  SC_SPHERE(SC_VEC3(SC_FIXED(0), SC_FIXED(0.4), SC_FIXED(0)),
-            SC_FIXED(0.3)),
-  SC_TORUS(SC_VEC3(SC_FIXED(0), SC_OMIX(SC_FIXED(-2),
-                                        SC_FIXED(2),
-                                        SC_TIME2(SC_FIXED(2))),
-                   SC_FIXED(0)),
-           SC_VEC3(SC_FIXED(0), SC_FIXED(1), SC_FIXED(0)),
-           SC_FIXED(0.8), SC_FIXED(0.2))),
-  SC_CUBE(SC_VEC3(SC_FIXED(0), SC_FIXED(-0.4), SC_FIXED(0)), SC_FIXED(0.4))
+SCENESPEC(0, 0, 0, 3000,
+SC_MIN(
+  SC_SPHERE(SC_VEC3(SC_FIXED(0), SC_OMIX(SC_FIXED(0.4), SC_FIXED(0.0), SC_TIME(SC_FIXED(3))), SC_FIXED(0)),
+            SC_OMIX(SC_FIXED(0.3), SC_FIXED(0.8), SC_TIME(SC_FIXED(3)))),
+  SC_CUBE(SC_VEC3(SC_FIXED(0),
+                  SC_OMIX(SC_FIXED(-0.4), SC_FIXED(0.0), SC_TIME(SC_FIXED(3))),
+                  SC_FIXED(0)), SC_FIXED(0.4))
+)
+),
+
+SCENESPEC(0, 0, 0, 3000,
+SC_MIX(
+  SC_SPHERE(SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.8)),
+  SC_CUBE(SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.1)),
+  SC_TIME(SC_FIXED(3))
 )
 ),
 
@@ -61,7 +53,7 @@ SC_MAX(
 ),
 
 // TORUSES
-SCENESPEC(0, 0, 0, 60000,
+SCENESPEC(0, 0, 0, 30000,
 SC_MIX(
   SC_TILED(SC_VEC3(SC_FIXED(0.2), SC_FIXED(0.2), SC_FIXED(100)),
     SC_CUBE(SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.1))
