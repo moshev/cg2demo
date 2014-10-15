@@ -333,7 +333,7 @@ static mat4 mkcamera(Uint32 ticks, mat4 additional) {
             additional,
             mkrotationm4(mkv3(0, 1, 0), rotf * TAU)
         ),
-        mkrotationm4(normalizev3(mkv3(1.0f + cosf(trf * TAU), 0.5f * sinf(trf * TAU), 0)), trf * TAU)
+        mkrotationm4(normalizev3(mkv3(0.5f + 0.5f * cosf(trf * TAU), 0, 0.5f + 0.5f * sinf(trf * TAU))), trf * TAU)
     );
     //*/
     //*/
@@ -373,7 +373,7 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
 
     glViewport(0, 0, width, height);
     //glClearColor(0x8A / 255.0f, 0xFF / 255.0f, 0xC1 / 255.0f, 1);
-    glClearColor(0.9f, 0.9f, 0.9f, 1);
+    glClearColor(0.70f, 0.70f, 0.70f, 1);
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 

@@ -1,14 +1,14 @@
 // vim: sw=2 ts=8 et
 // Suggested editors for this file: sublime text, vim, etc.
 // visual studio fucks up the formatting (╯°□°）╯︵ ┻━┻)
-
-SCENESPEC(0, 0, 0, 12000,
+/*
+SCENESPEC(0, -0.5, 0, 12000,
 SC_MIX(
   SC_MIX(
     SC_CUBE3(SC_VEC3(SC_FIXED(0), SC_FIXED(0.25), SC_FIXED(0)),
-             SC_VEC3(SC_FIXED(0.4), SC_FIXED(0.4), SC_FIXED(0.05))),
-    SC_CUBE3(SC_VEC3(SC_FIXED(0), SC_FIXED(-0.25), SC_FIXED(0)),
-             SC_VEC3(SC_FIXED(0.25), SC_FIXED(0.5), SC_FIXED(0.25))),
+             SC_VEC3(SC_FIXED(0.4), SC_FIXED(0.05), SC_FIXED(0.4))),
+    SC_CUBE3(SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(0)),
+             SC_VEC3(SC_FIXED(0.2), SC_FIXED(0.5), SC_FIXED(0.2))),
     SC_SMOOTH(SC_FIXED(-0.25), SC_FIXED(0.25), SC_PY)
   ),
   SC_MIX(
@@ -100,3 +100,13 @@ SC_MIX(
            SC_FIXED(0.2)),
   SC_SMOOTH(SC_FIXED(0.15), SC_FIXED(0.9), SC_TIME2(SC_FIXED(12)))
 )),
+*/
+
+// TEST SCENE
+SCENESPEC(0, 0, 0, 30000,
+SC_MIN(SC_MIN(
+  SC_SPHERE(SC_VEC3(SC_FIXED(0), SC_FIXED(0.4), SC_FIXED(0)), SC_FIXED(0.3)),
+  SC_TORUS(SC_VEC3(SC_FIXED(0), SC_FIXED(-0.4), SC_FIXED(0)), SC_VEC3(SC_FIXED(0), SC_FIXED(1), SC_FIXED(0)),
+           SC_FIXED(0.8), SC_FIXED(0.2))),
+  SC_CUBE(SC_VEC3(SC_FIXED(0), SC_FIXED(-0.4), SC_FIXED(0)), SC_FIXED(0.4))
+))

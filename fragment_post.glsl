@@ -69,7 +69,8 @@ vec3 texmex(vec3 p, vec3 n) {
     //return mix(srgb(89, 132, 50), srgb(148, 174, 22), sblue);
     //return mix(srgb(246, 200, 44), srgb(250, 236, 147), sblue);
     //return vec3(t, 0.3 + 0.4 * timing2(12345));
-    return vec3(1.0 - t.x, 1.0 - t.x - t.y, 1.0 - t.x - t.y);
+    float c = distance(vec2(0.5, 0.5), t) * 1.8;
+    return vec3(1.0, 1.0 - c, 1.0 - c);
 }
 
 const vec3 light1 = normalize(vec3(-0.0, -0.2, -0.0));
@@ -87,14 +88,23 @@ vec3 shade(vec3 p) {
     float factor3 = (1.0 - step(0.01, dot(m3.xyz, m3.xyz)) * m3.w) * dot(n, light3);
 
     vec3 c = texmex(p, n);
+
+/*
+    vec3 light1c = vec3(1, 1, 1);
+    vec3 light2c = vec3(1, 1, 1);
+    vec3 light3c = vec3(1, 1, 1);
+*/
+    vec3 light1c = vec3(0.9, 0.1, 0.1);
+    vec3 light2c = vec3(0.1, 0.9, 0.1);
+    vec3 light3c = vec3(0.1, 0.1, 0.9);
     // no light shadows only
 //   return c * ((2.0 - m1.w - m2.w) * 2.0 / 3.0 + 1.0 / 3.0);
     // three lights
      return min((
-     max(factor1, 0.0) +
-     max(factor2, 0.0) +
-     max(factor3, 0.0)
-     ) * 0.333333333333 * c, c);
+     max(factor1, 0.0) * light1c +
+     max(factor2, 0.0) * light2c +
+     max(factor3, 0.0) * light3c
+     ) / (light1c + light2c + light3c) * c, c);
     // debug shadows
 //    return vec3(m1.w, m2.w, 0.0);
 }
@@ -123,7 +133,7 @@ vec4 go(vec3 p, vec3 ray) {
 
 void main() {
     //rand_state = uint(millis) + uint((pixelcenter.x + pixelcenter.y) * 1000);
-    vec3 p = vec3(0.0, 0.0, 3.0);
+    vec3 p = vec3(0.0, 0.0, 2.0);
     vec3 t = vec3(pixelcenter, 1.0);
     int i;
 
