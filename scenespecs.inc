@@ -7,7 +7,7 @@ SC_MIN(
   SC_SPHERE(SC_VEC3(SC_FIXED(0),
                     SC_OMIX(SC_FIXED(-0.4),
                             SC_FIXED(0.4),
-                            SC_SMOOTH(SC_FIXED(0.16666), SC_FIXED(0.32222), SC_TIME2(SC_FIXED(1.5)))),
+                            SC_SMOOTH(SC_FIXED(0.06666), SC_FIXED(0.52222), SC_TIME2(SC_FIXED(1.5)))),
                     SC_FIXED(0)),
             SC_FIXED(0.3)),
   SC_CUBE(SC_VEC3(SC_FIXED(0), SC_FIXED(-0.4), SC_FIXED(0)), SC_FIXED(0.4))
@@ -18,7 +18,7 @@ SC_MIN(
   SC_SPHERE(SC_VEC3(SC_FIXED(0),
                     SC_OMIX(SC_FIXED(-0.2),
                             SC_FIXED(0.2),
-                            SC_SMOOTH(SC_FIXED(0.16666), SC_FIXED(0.32222), SC_TIME2(SC_FIXED(1.5)))),
+                            SC_SMOOTH(SC_FIXED(0.06666), SC_FIXED(0.52222), SC_TIME2(SC_FIXED(1.5)))),
                     SC_FIXED(0)),
             SC_FIXED(0.15)),
   SC_CUBE(SC_VEC3(SC_FIXED(0), SC_FIXED(-0.2), SC_FIXED(0)), SC_FIXED(0.2))
@@ -42,6 +42,7 @@ SC_MIX(
 )
 ),
 
+// grid appear
 SCENESPEC(0, 0, 0, 5000,
 SC_MAX(
   SC_TILED(SC_VEC3(SC_FIXED(0.2), SC_FIXED(0.2), SC_FIXED(100)),
@@ -53,7 +54,7 @@ SC_MAX(
 ),
 
 // TORUSES
-SCENESPEC(0, 0, 0, 12000,
+SCENESPEC(0, 0, 0, 21000,
 SC_MIX(
   SC_TILED(SC_VEC3(SC_FIXED(0.2), SC_FIXED(0.2), SC_FIXED(100)),
     SC_CUBE(SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.1))
@@ -63,11 +64,12 @@ SC_MIX(
            SC_CLAMP(SC_SMOOTH(SC_FIXED(0.1), SC_FIXED(0.9), SC_TIME2(SC_FIXED(3))),
                     SC_FIXED(0.25), SC_FIXED(0.6)),
            SC_FIXED(0.2)),
-  SC_SMOOTH(SC_FIXED(0.15), SC_FIXED(0.9), SC_TIME2(SC_FIXED(12)))
+  SC_SMOOTH(SC_FIXED(0.15), SC_FIXED(0.9), SC_TIME2(SC_FIXED(21)))
 )
 ),
 
-SCENESPEC(0, 0, 0, 2000,
+// transition to robots
+SCENESPEC(0, 0, 0, 4000,
 SC_MIX(
     SC_TILED(SC_VEC3(SC_FIXED(0.2), SC_FIXED(0.2), SC_FIXED(100)),
       SC_CUBE(SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.1))
@@ -75,22 +77,23 @@ SC_MIX(
     SC_MIN(
       SC_MIN(
         SC_CUBE3(SC_VEC3(SC_FIXED(0), SC_FIXED(0.5),
-                        SC_OMIX(SC_FIXED(0), SC_FIXED(0.3), SC_TIME(SC_FIXED(2)))),
+                        SC_OMIX(SC_FIXED(0), SC_FIXED(0.3), SC_TIME(SC_FIXED(4)))),
                  SC_VEC3(SC_FIXED(0.25), SC_FIXED(0.5), SC_FIXED(0.25))),
         SC_TORUS(SC_VEC3(SC_FIXED(0), SC_FIXED(0),
-                         SC_OMIX(SC_FIXED(0), SC_FIXED(-0.3), SC_TIME(SC_FIXED(2)))),
+                         SC_OMIX(SC_FIXED(0), SC_FIXED(-0.3), SC_TIME(SC_FIXED(4)))),
                  SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(1)),
                  SC_FIXED(0.25),
                  SC_FIXED(0.2)),
       ),
       SC_PLANE(SC_VEC3(SC_FIXED(0), SC_OMIX(SC_FIXED(0), SC_FIXED(-2), SC_SMOOTH(SC_FIXED(0), SC_FIXED(0.5),
-                                                                                   SC_TIME(SC_FIXED(2)))), SC_FIXED(0)),
+                                                                                   SC_TIME(SC_FIXED(4)))), SC_FIXED(0)),
                SC_VEC3(SC_FIXED(0.1), SC_FIXED(1), SC_FIXED(0.1)))
   ),
-  SC_TIME(SC_FIXED(2))
+  SC_TIME(SC_FIXED(4))
 )
 ),
 
+// robots
 SCENESPEC(0, 0, 0, 11000,
 SC_MIN(
   SC_PLANE(SC_VEC3(SC_FIXED(0), SC_FIXED(-2), SC_FIXED(0)),
@@ -124,17 +127,18 @@ SC_MIN(
 )
 ),
 
-SCENESPEC(0, 0, 0, 2000,
+// transition to only plane
+SCENESPEC(0, 0, 0, 4000,
 SC_MIN(
-  SC_PLANE(SC_VEC3(SC_FIXED(0), SC_OMIX(SC_FIXED(-2), SC_FIXED(0), SC_TIME(SC_FIXED(2))), SC_FIXED(0)),
+  SC_PLANE(SC_VEC3(SC_FIXED(0), SC_OMIX(SC_FIXED(-2), SC_FIXED(0), SC_TIME(SC_FIXED(4))), SC_FIXED(0)),
            SC_VEC3(SC_FIXED(0.1), SC_FIXED(1), SC_FIXED(0.1))),
   SC_MIN(
     SC_MIX(
-      SC_MIN(SC_CUBE3(SC_VEC3(SC_FIXED(0.0), SC_OMIX(SC_FIXED(0.25), SC_FIXED(-0.7), SC_TIME(SC_FIXED(2))), SC_FIXED(0.3)),
+      SC_MIN(SC_CUBE3(SC_VEC3(SC_FIXED(0.0), SC_OMIX(SC_FIXED(0.25), SC_FIXED(-0.7), SC_TIME(SC_FIXED(4))), SC_FIXED(0.3)),
                       SC_VEC3(SC_FIXED(0.25), SC_FIXED(0.25), SC_FIXED(0.2))),
-             SC_CUBE3(SC_VEC3(SC_FIXED(0.0), SC_OMIX(SC_FIXED(0.75), SC_FIXED(-0.7), SC_TIME(SC_FIXED(2))), SC_FIXED(0.3)),
+             SC_CUBE3(SC_VEC3(SC_FIXED(0.0), SC_OMIX(SC_FIXED(0.75), SC_FIXED(-0.7), SC_TIME(SC_FIXED(4))), SC_FIXED(0.3)),
                       SC_VEC3(SC_FIXED(0.25), SC_FIXED(0.25), SC_FIXED(0.2)))),
-      SC_TORUS(SC_VEC3(SC_FIXED(0), SC_OMIX(SC_FIXED(0), SC_FIXED(-0.7), SC_TIME(SC_FIXED(2))), SC_FIXED(0.3)),
+      SC_TORUS(SC_VEC3(SC_FIXED(0), SC_OMIX(SC_FIXED(0), SC_FIXED(-0.7), SC_TIME(SC_FIXED(4))), SC_FIXED(0.3)),
                SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(1)),
                SC_CLAMP(SC_SMOOTH(SC_FIXED(0.1), SC_FIXED(0.9), SC_TIME2(SC_FIXED(3))),
                                   SC_FIXED(0.25), SC_FIXED(0.6)),
@@ -142,14 +146,14 @@ SC_MIN(
       SC_TIME2(SC_FIXED(11))
     ),
     SC_MIX(
-      SC_TORUS(SC_VEC3(SC_FIXED(0), SC_OMIX(SC_FIXED(0), SC_FIXED(-0.7), SC_TIME(SC_FIXED(2))), SC_FIXED(-0.3)),
+      SC_TORUS(SC_VEC3(SC_FIXED(0), SC_OMIX(SC_FIXED(0), SC_FIXED(-0.7), SC_TIME(SC_FIXED(4))), SC_FIXED(-0.3)),
                SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(1)),
                SC_CLAMP(SC_SMOOTH(SC_FIXED(0.1), SC_FIXED(0.9), SC_TIME2(SC_FIXED(3))),
                                   SC_FIXED(0.25), SC_FIXED(0.6)),
                SC_FIXED(0.2)),
-      SC_MIN(SC_CUBE3(SC_VEC3(SC_FIXED(0.0), SC_OMIX(SC_FIXED(0.25), SC_FIXED(-0.7), SC_TIME(SC_FIXED(2))), SC_FIXED(-0.3)),
+      SC_MIN(SC_CUBE3(SC_VEC3(SC_FIXED(0.0), SC_OMIX(SC_FIXED(0.25), SC_FIXED(-0.7), SC_TIME(SC_FIXED(4))), SC_FIXED(-0.3)),
                       SC_VEC3(SC_FIXED(0.25), SC_FIXED(0.25), SC_FIXED(0.2))),
-             SC_CUBE3(SC_VEC3(SC_FIXED(0.0), SC_OMIX(SC_FIXED(0.75), SC_FIXED(-0.7), SC_TIME(SC_FIXED(2))), SC_FIXED(-0.3)),
+             SC_CUBE3(SC_VEC3(SC_FIXED(0.0), SC_OMIX(SC_FIXED(0.75), SC_FIXED(-0.7), SC_TIME(SC_FIXED(4))), SC_FIXED(-0.3)),
                       SC_VEC3(SC_FIXED(0.25), SC_FIXED(0.25), SC_FIXED(0.2)))),
       SC_TIME2(SC_FIXED(11))
     )
@@ -157,18 +161,20 @@ SC_MIN(
 )
 ),
 
-SCENESPEC(0, 0, 0, 1500,
+// plane to cubes
+SCENESPEC(0, 0, 0, 2500,
 SC_MIX(
   SC_PLANE(SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(0)),
            SC_VEC3(SC_FIXED(0.1), SC_FIXED(1), SC_FIXED(0.1))),
   SC_TILED(SC_VEC3(SC_FIXED(1), SC_FIXED(100), SC_FIXED(1)),
     SC_CUBE(SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.2))
   ),
-  SC_TIME(SC_FIXED(1.5))
+  SC_TIME(SC_FIXED(2.5))
 )
 ),
 
-SCENESPEC(0, 0, 0, 6000,
+// cubes to mushrooms, hold mushrooms
+SCENESPEC(0, 0, 0, 8000,
 SC_MIX(
   SC_TILED(SC_VEC3(SC_FIXED(1), SC_FIXED(100), SC_FIXED(1)),
     SC_CUBE(SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.2))
@@ -182,11 +188,11 @@ SC_MIX(
       SC_SMOOTH(SC_FIXED(0.20), SC_FIXED(0.25), SC_PY)
     )
   ),
-  SC_SMOOTH(SC_FIXED(0), SC_FIXED(0.7), SC_TIME(SC_FIXED(6)))
+  SC_SMOOTH(SC_FIXED(0), SC_FIXED(0.5), SC_TIME(SC_FIXED(8)))
 )
 ),
 
-SCENESPEC(0.5, 0, 0.5, 1500,
+SCENESPEC(0.5, 0, 0.5, 2600,
 SC_MIX(
   SC_TILED(SC_VEC3(SC_FIXED(0.1), SC_FIXED(100), SC_FIXED(0.1)),
     SC_MIX(
@@ -199,11 +205,11 @@ SC_MIX(
   ),
   SC_MIN(
     SC_SPHERE(SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(1)),
-              SC_OMIX(SC_FIXED(1), SC_FIXED(0.12), SC_TIME(SC_FIXED(1.5)))),
+              SC_OMIX(SC_FIXED(1), SC_FIXED(0.12), SC_TIME(SC_FIXED(2.6)))),
     SC_SPHERE(SC_VEC3(SC_FIXED(1), SC_FIXED(0), SC_FIXED(0)),
-              SC_OMIX(SC_FIXED(1), SC_FIXED(0.12), SC_TIME(SC_FIXED(1.5))))
+              SC_OMIX(SC_FIXED(1), SC_FIXED(0.12), SC_TIME(SC_FIXED(2.6))))
   ),
-  SC_TIME(SC_FIXED(1.5))
+  SC_TIME(SC_FIXED(2.6))
 )
 ),
 
@@ -291,7 +297,7 @@ SC_MIX(
 )
 ),
 
-SCENESPEC(0, 0, 0, 25000,
+SCENESPEC(0, 0, 0, 26500,
 SC_MIX(
   SC_TORUS(SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(0)),
            SC_VEC3(SC_FIXED(0), SC_FIXED(1), SC_FIXED(0)),
@@ -357,7 +363,7 @@ SC_MIX(
       SC_FIXED(0.65)
     )
   ),
-  SC_SMOOTH(SC_FIXED(0.0), SC_FIXED(0.6), SC_TIME(SC_FIXED(25)))
+  SC_SMOOTH(SC_FIXED(0.0), SC_FIXED(0.586), SC_TIME(SC_FIXED(26.5)))
 )
 ),
 
