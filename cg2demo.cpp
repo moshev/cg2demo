@@ -440,7 +440,7 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
             }
         }
         glClear(GL_COLOR_BUFFER_BIT);
-        if (progs[scene].ufrm_millis > 0) {
+        if (progs[scene].ufrm_millis >= 0) {
             glUniform1i(progs[scene].ufrm_millis, ticks_start - scene_start);
         }
         camera = mkcamera(ticks_start - ticks_first, mktranslationm4(scenes[scene].camera_translation));
