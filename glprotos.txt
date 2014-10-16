@@ -1,5 +1,6 @@
 AttachShader
 BindBuffer
+BindSampler
 BindVertexArray
 BufferData
 CompileShader
@@ -7,6 +8,7 @@ CreateProgram
 CreateShader
 EnableVertexAttribArray
 GenBuffers
+GenSamplers
 GenVertexArrays
 GetAttribLocation
 GetProgramInfoLog
@@ -15,6 +17,7 @@ GetShaderInfoLog
 GetShaderiv
 GetUniformLocation
 LinkProgram
+SamplerParameteri
 ShaderSource
 Uniform1f
 Uniform1i

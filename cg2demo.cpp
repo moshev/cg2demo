@@ -22,6 +22,7 @@
 #include "scene.h"
 #include "scenedsl.h"
 #include "shaders.h"
+#include "text.h"
 
 #include "protodef.inc"
 
@@ -50,6 +51,8 @@ static const char *fragment_pre_glsl;
 static size_t fragment_pre_glslsz;
 static const char *fragment_post_glsl;
 static size_t fragment_post_glslsz;
+static const char *fragment_text_glsl;
+static size_t fragment_text_glslsz;
 
 static int renderloop(SDL_Window *window, SDL_GLContext context);
 
@@ -160,6 +163,10 @@ int main(int argc, char *argv[]) {
         LOG("error reading fragment shader post-scene part source");
         exit(1);
     }
+    if (!get_fragment_shader_text(&fragment_text_glsl, &fragment_text_glslsz)) {
+        LOG("error reading fragment shader text-scene source");
+        exit(1);
+    }
 
     taudigits = (uint8_t *)malloc(ntaudigits);
     // gen tau
@@ -237,6 +244,25 @@ static GLuint create_program_from_scene(const uint8_t *scene, size_t scenesz) {
 
     GLuint prog = create_program(vertex_glsl, vertex_glslsz, fs, fssz);
     free(fsscene);
+    free(fs);
+    return prog;
+}
+
+static GLuint create_text_program() {
+    char *fs;
+    size_t fssz = fragment_pre_glslsz + fragment_text_glslsz + 1;
+    fs = (char *)malloc(fssz);
+    if (!fs) {
+        LOG("Error malloc");
+        exit(1);
+    }
+    memcpy(fs, fragment_pre_glsl, fragment_pre_glslsz);
+    memcpy(fs + fragment_pre_glslsz, fragment_text_glsl, fragment_text_glslsz);
+    fs[fssz - 1] = '\0';
+    LOGF("generated shader:\n-----\n%.*s\n------\n", (int)fssz, fs);
+
+    GLuint prog = create_program(vertex_glsl, vertex_glslsz, fs, fssz);
+    free(fs);
     return prog;
 }
 
@@ -385,8 +411,25 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
         LOG("error splitting scenes");
         exit(1);
     }
+    // make room for text
+    {
+        struct scene *tmpscenes = scenes;
+        scenes = nullptr;
+        scenes = (struct scene *)malloc(sizeof(struct scene) * (nscenes + 1));
+        if (!scenes) {
+            LOG("Error malloc");
+            exit(1);
+        }
+        memcpy(scenes, tmpscenes, sizeof(struct scene) * nscenes);
+        scenes[nscenes].camera_translation = mkv3(0, 0, 0);
+        scenes[nscenes].duration = 2000;
+        scenes[nscenes].data = nullptr;
+        scenes[nscenes].datasz = 0;
+        free(tmpscenes);
+    }
     struct program *progs;
-    progs = (struct program *)malloc(nscenes * sizeof(struct program));
+    // +1 for the starting text scene
+    progs = (struct program *)malloc((nscenes + 1) * sizeof(struct program));
     for (size_t i = 0; i < nscenes; i++) {
         progs[i].id = create_program_from_scene(scenes[i].data, scenes[i].datasz);
         progs[i].attr_p = glGetAttribLocation(progs[i].id, "p");
@@ -395,6 +438,31 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
         progs[i].ufrm_millis = glGetUniformLocation(progs[i].id, "millis");
         progs[i].ufrm_camera = glGetUniformLocation(progs[i].id, "camera");
     }
+
+    // initialise the text scene
+    progs[nscenes].id = create_text_program();
+    progs[nscenes].attr_p = glGetAttribLocation(progs[nscenes].id, "p");
+    progs[nscenes].ufrm_width = glGetUniformLocation(progs[nscenes].id, "width");
+    progs[nscenes].ufrm_height = glGetUniformLocation(progs[nscenes].id, "height");
+    progs[nscenes].ufrm_millis = glGetUniformLocation(progs[nscenes].id, "millis");
+    // reuse like a BOSS
+    progs[nscenes].ufrm_camera = glGetUniformLocation(progs[nscenes].id, "textsampler");
+
+    struct text_tex img;
+    if (!render_text(&img)) {
+        LOG("Error render text");
+        exit(1);
+    }
+
+    GLuint img_texid;
+    GLuint img_sampler;
+    glGenTextures(1, &img_texid);
+    glBindTexture(GL_TEXTURE_2D, img_texid);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, img.width, img.height, 0, GL_RED, GL_UNSIGNED_BYTE, img.data);
+
+    glGenSamplers(1, &img_sampler);
+    glBindSampler(0, img_sampler);
+    glSamplerParameteri(img_sampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     LOGF("total scenes size: %d", (int)sizeof(SCENES));
 
@@ -409,8 +477,9 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
         switch_scene(&progs[i], width, height);
     }
 
-    int scene = 0;
+    size_t scene = nscenes;
     switch_scene(&progs[scene], width, height);
+    glUniform1i(progs[scene].ufrm_camera, 0);
 
     // to keep precise 60fps
     // every third frame will be 17ms
@@ -423,7 +492,10 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
         SDL_Event event;
         if (ticks_start - scene_start >= scenes[scene].duration) {
             scene_start = scene_start + scenes[scene].duration;
-            scene = (scene + 1) % nscenes;
+            scene = scene + 1;
+            if (scene >= nscenes) {
+                scene = 0;
+            }
             switch_scene(&progs[scene], width, height);
         }
         while (SDL_PollEvent(&event)) {
@@ -443,8 +515,10 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
         if (progs[scene].ufrm_millis >= 0) {
             glUniform1i(progs[scene].ufrm_millis, ticks_start - scene_start);
         }
-        camera = mkcamera(ticks_start - ticks_first, mktranslationm4(scenes[scene].camera_translation));
-        glUniformMatrix4fv(progs[scene].ufrm_camera, 1, 0, &camera.c[0].v[0]);
+        if (scene < nscenes) {
+            camera = mkcamera(ticks_start - ticks_first, mktranslationm4(scenes[scene].camera_translation));
+            glUniformMatrix4fv(progs[scene].ufrm_camera, 1, 0, &camera.c[0].v[0]);
+        }
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
         SDL_GL_SwapWindow(window);
         Uint32 allotted = 16;

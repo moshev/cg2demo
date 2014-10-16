@@ -348,3 +348,17 @@ static const char fragment_post_glsl[] =
 	"\n";
 static const size_t fragment_post_glslsz = sizeof(fragment_post_glsl) - 1;
 
+// fragment_text.glsl
+static const char fragment_text_glsl[] =
+	"uniform sampler2D textsampler;\n"
+	"\n"
+	"void main() {\n"
+	"    vec2 t = (p + vec3(1.0, 1.0, 0.0)).xy / 2;\n"
+	"    float d = texture(textsampler, t);\n"
+	"    vec4 result = vec4(d, d, d, 1.0);\n"
+	"    color = pow(result / 1.0, vec4(g, g, g, 1.0));\n"
+	"}\n"
+	"\n"
+	"\n";
+static const size_t fragment_text_glslsz = sizeof(fragment_text_glsl) - 1;
+

@@ -81,6 +81,8 @@ int pow2(int x) {
     return x;
 }
 
+static const int line_height = 7;
+
 int main(int argc, char *argv[]) {
     printf("%d bytes\n", (int)sizeof(text));
     int w = 0;
@@ -99,7 +101,7 @@ int main(int argc, char *argv[]) {
         if (linew > w) {
             w = linew;
         }
-        h += 6;
+        h += line_height;
         nlines++;
     }
     w = pow2(w);
@@ -123,7 +125,7 @@ int main(int argc, char *argv[]) {
         // 0x4924 - leftmost vertical bar
         linew += kerndist(prev, 0x4924);
         int x = (w - linew + 1) / 2;
-        int y = (h - nlines * 6) / 2 + line * 6;
+        int y = (h - nlines * line_height) / 2 + line * line_height;
         prev = 0;
         for (; i < ntext && text[i]; i++) {
             int dist = kerndist(prev, text[i]);

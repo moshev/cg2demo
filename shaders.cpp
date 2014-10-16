@@ -52,3 +52,18 @@ int get_fragment_shader_post(const char **fspost, size_t *fspostsz) {
 #endif
 }
 
+int get_fragment_shader_text(const char **fstext, size_t *fstextsz) {
+#if defined(NDEBUG)
+    *fstext = fragment_text_glsl;
+    *fstextsz = fragment_text_glslsz;
+    return 1;
+#else
+    char *source;
+    int result = read_file("fragment_text.glsl", &source, fstextsz);
+    if (result) {
+        *fstext = source;
+    }
+    return result;
+#endif
+}
+
