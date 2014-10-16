@@ -1,9 +1,6 @@
 #if !defined(CG2DEMO_H)
 #define CG2DEMO_H
 
-#if defined(GL_GLEXT_PROTOTYPES)
-#undef GL_GLEXT_PROTOTYPES
-#endif
 #include <SDL_opengl.h>
 #include <stdio.h>
 

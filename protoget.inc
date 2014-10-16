@@ -1,3 +1,29 @@
+#if defined(__MACOSX__)
+glAttachShader = (glAttachShaderProcPtr) SDL_GL_GetProcAddress("glAttachShader");
+glBindBuffer = (glBindBufferProcPtr) SDL_GL_GetProcAddress("glBindBuffer");
+glBindVertexArray = (glBindVertexArrayProcPtr) SDL_GL_GetProcAddress("glBindVertexArray");
+glBufferData = (glBufferDataProcPtr) SDL_GL_GetProcAddress("glBufferData");
+glCompileShader = (glCompileShaderProcPtr) SDL_GL_GetProcAddress("glCompileShader");
+glCreateProgram = (glCreateProgramProcPtr) SDL_GL_GetProcAddress("glCreateProgram");
+glCreateShader = (glCreateShaderProcPtr) SDL_GL_GetProcAddress("glCreateShader");
+glEnableVertexAttribArray = (glEnableVertexAttribArrayProcPtr) SDL_GL_GetProcAddress("glEnableVertexAttribArray");
+glGenBuffers = (glGenBuffersProcPtr) SDL_GL_GetProcAddress("glGenBuffers");
+glGenVertexArrays = (glGenVertexArraysProcPtr) SDL_GL_GetProcAddress("glGenVertexArrays");
+glGetAttribLocation = (glGetAttribLocationProcPtr) SDL_GL_GetProcAddress("glGetAttribLocation");
+glGetProgramInfoLog = (glGetProgramInfoLogProcPtr) SDL_GL_GetProcAddress("glGetProgramInfoLog");
+glGetProgramiv = (glGetProgramivProcPtr) SDL_GL_GetProcAddress("glGetProgramiv");
+glGetShaderInfoLog = (glGetShaderInfoLogProcPtr) SDL_GL_GetProcAddress("glGetShaderInfoLog");
+glGetShaderiv = (glGetShaderivProcPtr) SDL_GL_GetProcAddress("glGetShaderiv");
+glGetUniformLocation = (glGetUniformLocationProcPtr) SDL_GL_GetProcAddress("glGetUniformLocation");
+glLinkProgram = (glLinkProgramProcPtr) SDL_GL_GetProcAddress("glLinkProgram");
+glShaderSource = (glShaderSourceProcPtr) SDL_GL_GetProcAddress("glShaderSource");
+glUniform1f = (glUniform1fProcPtr) SDL_GL_GetProcAddress("glUniform1f");
+glUniform1i = (glUniform1iProcPtr) SDL_GL_GetProcAddress("glUniform1i");
+glUniform4fv = (glUniform4fvProcPtr) SDL_GL_GetProcAddress("glUniform4fv");
+glUniformMatrix4fv = (glUniformMatrix4fvProcPtr) SDL_GL_GetProcAddress("glUniformMatrix4fv");
+glUseProgram = (glUseProgramProcPtr) SDL_GL_GetProcAddress("glUseProgram");
+glVertexAttribPointer = (glVertexAttribPointerProcPtr) SDL_GL_GetProcAddress("glVertexAttribPointer");
+#else
 glAttachShader = (PFNGLATTACHSHADERPROC) SDL_GL_GetProcAddress("glAttachShader");
 glBindBuffer = (PFNGLBINDBUFFERPROC) SDL_GL_GetProcAddress("glBindBuffer");
 glBindVertexArray = (PFNGLBINDVERTEXARRAYPROC) SDL_GL_GetProcAddress("glBindVertexArray");
@@ -22,3 +48,4 @@ glUniform4fv = (PFNGLUNIFORM4FVPROC) SDL_GL_GetProcAddress("glUniform4fv");
 glUniformMatrix4fv = (PFNGLUNIFORMMATRIX4FVPROC) SDL_GL_GetProcAddress("glUniformMatrix4fv");
 glUseProgram = (PFNGLUSEPROGRAMPROC) SDL_GL_GetProcAddress("glUseProgram");
 glVertexAttribPointer = (PFNGLVERTEXATTRIBPOINTERPROC) SDL_GL_GetProcAddress("glVertexAttribPointer");
+#endif

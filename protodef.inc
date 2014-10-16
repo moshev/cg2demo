@@ -1,3 +1,29 @@
+#if defined(__MACOSX__)
+glAttachShaderProcPtr glAttachShader;
+glBindBufferProcPtr glBindBuffer;
+glBindVertexArrayProcPtr glBindVertexArray;
+glBufferDataProcPtr glBufferData;
+glCompileShaderProcPtr glCompileShader;
+glCreateProgramProcPtr glCreateProgram;
+glCreateShaderProcPtr glCreateShader;
+glEnableVertexAttribArrayProcPtr glEnableVertexAttribArray;
+glGenBuffersProcPtr glGenBuffers;
+glGenVertexArraysProcPtr glGenVertexArrays;
+glGetAttribLocationProcPtr glGetAttribLocation;
+glGetProgramInfoLogProcPtr glGetProgramInfoLog;
+glGetProgramivProcPtr glGetProgramiv;
+glGetShaderInfoLogProcPtr glGetShaderInfoLog;
+glGetShaderivProcPtr glGetShaderiv;
+glGetUniformLocationProcPtr glGetUniformLocation;
+glLinkProgramProcPtr glLinkProgram;
+glShaderSourceProcPtr glShaderSource;
+glUniform1fProcPtr glUniform1f;
+glUniform1iProcPtr glUniform1i;
+glUniform4fvProcPtr glUniform4fv;
+glUniformMatrix4fvProcPtr glUniformMatrix4fv;
+glUseProgramProcPtr glUseProgram;
+glVertexAttribPointerProcPtr glVertexAttribPointer;
+#else
 PFNGLATTACHSHADERPROC glAttachShader;
 PFNGLBINDBUFFERPROC glBindBuffer;
 PFNGLBINDVERTEXARRAYPROC glBindVertexArray;
@@ -22,3 +48,4 @@ PFNGLUNIFORM4FVPROC glUniform4fv;
 PFNGLUNIFORMMATRIX4FVPROC glUniformMatrix4fv;
 PFNGLUSEPROGRAMPROC glUseProgram;
 PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer;
+#endif
