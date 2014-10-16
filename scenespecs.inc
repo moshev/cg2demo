@@ -83,10 +83,13 @@ SC_MIX(
                          SC_OMIX(SC_FIXED(0), SC_FIXED(-0.3), SC_TIME(SC_FIXED(4)))),
                  SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(1)),
                  SC_FIXED(0.25),
-                 SC_FIXED(0.2)),
+                 SC_FIXED(0.2))
       ),
-      SC_PLANE(SC_VEC3(SC_FIXED(0), SC_OMIX(SC_FIXED(0), SC_FIXED(-2), SC_SMOOTH(SC_FIXED(0), SC_FIXED(0.5),
-                                                                                   SC_TIME(SC_FIXED(4)))), SC_FIXED(0)),
+      SC_PLANE(SC_VEC3(SC_FIXED(0),
+                       SC_OMIX(SC_FIXED(0), SC_FIXED(-2), SC_SMOOTH(SC_FIXED(0),
+                                                                    SC_FIXED(0.5),
+                                                                    SC_TIME(SC_FIXED(4)))),
+                       SC_FIXED(0)),
                SC_VEC3(SC_FIXED(0.1), SC_FIXED(1), SC_FIXED(0.1)))
   ),
   SC_TIME(SC_FIXED(4))
