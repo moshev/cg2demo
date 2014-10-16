@@ -414,8 +414,9 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
     glGenTextures(1, &img_texid);
     glBindTexture(GL_TEXTURE_2D, img_texid);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, img.width, img.height, 0, GL_RED, GL_UNSIGNED_BYTE, img.data);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_LOD, 0);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_LOD, 0);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 
     LOG("");
     struct scene *scenes;
@@ -436,10 +437,10 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
         memcpy(scenes, tmpscenes, sizeof(struct scene) * nscenes);
         free(tmpscenes);
     }
-	scenes[nscenes].camera_translation = mkv3(0, 0, 0);
-	scenes[nscenes].duration = 20000;
-	scenes[nscenes].data = nullptr;
-	scenes[nscenes].datasz = 0;
+    scenes[nscenes].camera_translation = mkv3(0, 0, 0);
+    scenes[nscenes].duration = 200000;
+    scenes[nscenes].data = nullptr;
+    scenes[nscenes].datasz = 0;
     struct program *progs;
     // +1 for the starting text scene
     progs = (struct program *)malloc((nscenes + 1) * sizeof(struct program));

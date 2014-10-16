@@ -172,6 +172,7 @@
     <ClCompile Include="math3d.h" />
     <ClCompile Include="scene.cpp" />
     <ClCompile Include="shaders.cpp" />
+    <ClCompile Include="text.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cg2demo.h" />
@@ -180,6 +181,7 @@
     <ClInclude Include="scenedsl.h" />
     <ClInclude Include="scenespecs.inc" />
     <ClInclude Include="shaders.h" />
+    <ClInclude Include="text.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="protodecl.inc" />
