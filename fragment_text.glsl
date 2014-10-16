@@ -2,8 +2,8 @@ uniform sampler2D textsampler;
 
 void main() {
     vec2 t = (pixelcenter + vec2(1.0, 1.0)) / 2;
-    float f = smoothstep(0, 0.5, timing(8000));
-    float e = mix(0.15, 0.0, pow(f, 2));
+//    float f = smoothstep(0, 0.5, timing(8000));
+//    float e = mix(0.15, 0.0, pow(f, 2));
 //    float d = textureGrad(textsampler, t, vec2(e, e), vec2(e, e)).x;
 	//float d = textureLod(textsampler, t, e).x;
     //d = smoothstep(0.01, 0.02, d);
@@ -20,7 +20,7 @@ void main() {
       textureGrad(textsampler, clamp(t + dy, 0, 1), grad, grad)) * 0.25;
 */
 	//t = mod(t, pow(2, (1 - f) * (-2)));
-	f = timing(6000);
+	float f = timing(6000);
 	float coming = smoothstep(0, 0.4, f);
 	float going = smoothstep(0.6, 1, f);
 	vec2 t1 = pow(t, vec2(coming, coming));
