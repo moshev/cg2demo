@@ -1,0 +1,4 @@
+The demo might need a few seconds to start, please be patient.
+See CREDITS.txt for credits
+
+You can browse the repo history at https://github.com/moshev/cg2demo

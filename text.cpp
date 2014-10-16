@@ -84,6 +84,20 @@ static int pow2(int x) {
     return x << 1;
 }
 
+#if 0
+static bool check_neighbour(uint8_t *mydist, uint8_t neighbourdist) {
+    if (neighbourdist == 255) {
+        return false;
+    }
+    if (*mydist > neighbourdist + 1) {
+        *mydist = neighbourdist + 1;
+        return true;
+    } else {
+        return false;
+    }
+}
+#endif
+
 static const int line_height = 7;
 
 int render_text(struct text_tex *tex) {
@@ -141,6 +155,32 @@ int render_text(struct text_tex *tex) {
             prev = text[i];
         }
     }
+#if 0
+    // unfortunately this is mostly bullshit
+    // now compute signed distance fields
+    bool changes = false;
+    do {
+        changes = false;
+        for (size_t y = 0; y < h; y++) {
+            for(size_t x = 0; x < w; x++) {
+                uint8_t *pmydist = img + y * w + x;
+                if (x > 0) {
+                    changes = changes || check_neighbour(pmydist, img[y * w + (x - 1)]);
+                }
+                if (x < w) {
+                    changes = changes || check_neighbour(pmydist, img[y * w + (x + 1)]);
+                }
+                if (y > 0) {
+                    changes = changes || check_neighbour(pmydist, img[(y - 1) * w + x]);
+                }
+                if (y < h) {
+                    changes = changes || check_neighbour(pmydist, img[(y + 1) * w + x]);
+                }
+            }
+        }
+    } while (changes);
+#endif
+
 #if !defined(NDEBUG)
 	FILE *imgraw = fopen("img.raw", "wb");
 	fwrite(img, 1, w * h, imgraw);
