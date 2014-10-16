@@ -1,7 +1,7 @@
 CC=gcc
-CFLAGS=-std=c11 -Wall -Werror -march=native -O3
+CFLAGS=-std=c11 -Wall -Werror -march=native -Og -g
 LDFLAGS=-lm
 
-mushroom: main.o
-	${CC} ${LDFLAGS} -o mushroom main.o
+texttest: texttest.o
+	${CC} ${LDFLAGS} -o texttest texttest.o
 
