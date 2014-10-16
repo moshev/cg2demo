@@ -27,6 +27,8 @@ enum distance_func {
     DF_MIN = '<',
     // max, distance_func, distance_func
     DF_MAX = '>',
+    // negative DF
+    DF_NEGATIVE = '-',
 };
 
 enum generic_func {

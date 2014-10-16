@@ -239,6 +239,14 @@ static int parse_df(const uint8_t **scene, size_t *scenesz, char **shader, size_
         PARSE_GF;
         APPENDSTR(_rparen);
         return 1;
+    case DF_NEGATIVE:
+        APPENDSTR(_lparen);
+        APPENDSTR("-");
+        APPENDSTR(_lparen);
+        PARSE_DF;
+        APPENDSTR(_rparen);
+        APPENDSTR(_rparen);
+        return 1;
     }
     LOGF("Unknown DF: %x", (unsigned)df);
     return 0;

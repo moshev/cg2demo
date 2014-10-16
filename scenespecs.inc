@@ -2,6 +2,68 @@
 // Suggested editors for this file: sublime text, vim, etc.
 // visual studio fucks up the formatting (╯°□°）╯︵ ┻━┻)
 
+SCENESPEC(0, 0, 0, 60000,
+SC_MIN(SC_MIN(SC_MIN(SC_MIN(SC_MIN(SC_MIN(SC_MIN(SC_MIN(
+  SC_MAX(
+    SC_MIN(
+      // torso
+      SC_MAX(
+        SC_CYLINDER_CAP(SC_VEC3(SC_FIXED(0), SC_FIXED(0.55), SC_FIXED(0)),
+                        SC_VEC3(SC_FIXED(0), SC_FIXED(-0.55), SC_FIXED(0)),
+                        SC_FIXED(0.6)),
+        SC_PLANE(SC_VEC3(SC_FIXED(0), SC_FIXED(-1), SC_FIXED(0)),
+                 SC_VEC3(SC_FIXED(0), SC_FIXED(-1), SC_FIXED(0)))
+      ),
+      SC_MIN(
+        // eye1
+        SC_SPHERE(SC_VEC3(SC_FIXED(-0.26), SC_FIXED(0.7), SC_FIXED(0.5)), SC_FIXED(0.2)),
+        // eye2
+        SC_SPHERE(SC_VEC3(SC_FIXED(0.26), SC_FIXED(0.7), SC_FIXED(0.5)), SC_FIXED(0.2)) 
+      )
+    ),
+    SC_MAX(
+      SC_NEGATIVE(SC_SPHERE(SC_VEC3(SC_FIXED(-0.48), SC_FIXED(0.88), SC_FIXED(1.26)), SC_FIXED(0.8))),
+      SC_NEGATIVE(SC_SPHERE(SC_VEC3(SC_FIXED(0.48), SC_FIXED(0.88), SC_FIXED(1.26)), SC_FIXED(0.8)))
+    )
+  ),
+  // arm1
+  SC_TORUS(SC_VEC3(SC_FIXED(-0.35), SC_FIXED(-0.1), SC_FIXED(0)),
+           SC_VEC3(SC_FIXED(0), SC_FIXED(0.1), SC_FIXED(1)),
+           SC_FIXED(0.5),
+           SC_FIXED(0.1))),
+  // arm2
+  SC_TORUS(SC_VEC3(SC_FIXED(0.35), SC_FIXED(-0.1), SC_FIXED(0)),
+           SC_VEC3(SC_FIXED(0), SC_FIXED(0.1), SC_FIXED(1)),
+           SC_FIXED(0.5),
+           SC_FIXED(0.1))),
+  // leg1
+  SC_CYLINDER_CAP(SC_VEC3(SC_FIXED(-0.4), SC_FIXED(0), SC_FIXED(0)),
+                  SC_VEC3(SC_FIXED(-0.4), SC_FIXED(-1.8), SC_FIXED(0)),
+                  SC_FIXED(0.1))),
+  // leg2
+  SC_CYLINDER_CAP(SC_VEC3(SC_FIXED(0.4), SC_FIXED(0), SC_FIXED(0)),
+                  SC_VEC3(SC_FIXED(0.4), SC_FIXED(-1.8), SC_FIXED(0)),
+                  SC_FIXED(0.1))),
+  // moustache
+  SC_CYLINDER_CAP(SC_VEC3(SC_FIXED(-0.2), SC_FIXED(0.5), SC_FIXED(0.56)),
+                  SC_VEC3(SC_FIXED(0.2), SC_FIXED(0.5), SC_FIXED(0.56)),
+                  SC_FIXED(0.11))),
+  SC_CYLINDER_CAP(SC_VEC3(SC_FIXED(-0.205), SC_FIXED(0.495), SC_FIXED(0.56)),
+                  SC_VEC3(SC_FIXED(-0.205), SC_FIXED(0.2), SC_FIXED(0.56)),
+                  SC_FIXED(0.115))),
+  SC_CYLINDER_CAP(SC_VEC3(SC_FIXED(0.205), SC_FIXED(0.495), SC_FIXED(0.56)),
+                  SC_VEC3(SC_FIXED(0.205), SC_FIXED(0.2), SC_FIXED(0.56)),
+                  SC_FIXED(0.115))),
+  // nose..
+  SC_MIX(
+    SC_CUBE3(SC_VEC3(SC_FIXED(0), SC_FIXED(0.4), SC_FIXED(0.58)),
+             SC_VEC3(SC_FIXED(0.15), SC_FIXED(0.06), SC_FIXED(0.1))),
+    SC_SPHERE(SC_VEC3(SC_FIXED(0), SC_FIXED(0.4), SC_FIXED(0.54)), SC_FIXED(0.2)),
+    SC_FIXED(0.65)
+  ))
+),
+
+/*
 SCENESPEC(0, 0, 0, 1500,
 SC_MIN(
   SC_SPHERE(SC_VEC3(SC_FIXED(0),
@@ -27,7 +89,7 @@ SC_MIN(
 SCENESPEC(0, 0, 0, 3000,
 SC_MIN(
   SC_SPHERE(SC_VEC3(SC_FIXED(0), SC_OMIX(SC_FIXED(0.4), SC_FIXED(0.0), SC_TIME(SC_FIXED(3))), SC_FIXED(0)),
-            SC_OMIX(SC_FIXED(0.3), SC_FIXED(0.8), SC_TIME(SC_FIXED(3)))),
+            SC_OMIX(SC_FIXED(0.3), SC_FIXED(0.8), SC_SMOOTH(SC_FIXED(0), SC_FIXED(0.4), SC_TIME(SC_FIXED(3))))),
   SC_CUBE(SC_VEC3(SC_FIXED(0),
                   SC_OMIX(SC_FIXED(-0.4), SC_FIXED(0.0), SC_TIME(SC_FIXED(3))),
                   SC_FIXED(0)), SC_FIXED(0.4))
@@ -67,59 +129,245 @@ SC_MIX(
 )
 ),
 
-SCENESPEC(0, 0, 0, 5000,
-SC_MIN(
-  SC_MIX(
-      SC_TILED(SC_VEC3(SC_FIXED(0.2), SC_FIXED(0.2), SC_FIXED(100)),
-        SC_CUBE(SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.1))
+SCENESPEC(0, 0, 0, 2000,
+SC_MIX(
+    SC_TILED(SC_VEC3(SC_FIXED(0.2), SC_FIXED(0.2), SC_FIXED(100)),
+      SC_CUBE(SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.1))
+    ),
+    SC_MIN(
+      SC_MIN(
+        SC_CUBE3(SC_VEC3(SC_FIXED(0), SC_FIXED(0.5),
+                        SC_OMIX(SC_FIXED(0), SC_FIXED(0.3), SC_TIME(SC_FIXED(2)))),
+                 SC_VEC3(SC_FIXED(0.25), SC_FIXED(0.5), SC_FIXED(0.25))),
+        SC_TORUS(SC_VEC3(SC_FIXED(0), SC_FIXED(0),
+                         SC_OMIX(SC_FIXED(0), SC_FIXED(-0.3), SC_TIME(SC_FIXED(2)))),
+                 SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(1)),
+                 SC_FIXED(0.25),
+                 SC_FIXED(0.2)),
       ),
-      SC_CUBE(SC_VEC3(SC_OMIX(SC_FIXED(0), SC_FIXED(0.2), SC_SMOOTH(SC_FIXED(0.2), SC_FIXED(1.0),
-                                                                    SC_TIME(SC_FIXED(5)))),
-                      SC_FIXED(0),
-                      SC_OMIX(SC_FIXED(0), SC_FIXED(0.6), SC_TIME(SC_FIXED(5)))), SC_FIXED(0.5)),
-      SC_TIME(SC_FIXED(5))
+      SC_PLANE(SC_VEC3(SC_FIXED(0), SC_OMIX(SC_FIXED(0), SC_FIXED(-2), SC_SMOOTH(SC_FIXED(0), SC_FIXED(0.5),
+                                                                                   SC_TIME(SC_FIXED(2)))), SC_FIXED(0)),
+               SC_VEC3(SC_FIXED(0.1), SC_FIXED(1), SC_FIXED(0.1)))
   ),
-  SC_PLANE(SC_VEC3(SC_FIXED(0), SC_OMIX(SC_FIXED(-10), SC_FIXED(-2), SC_SMOOTH(SC_FIXED(0), SC_FIXED(0.5), SC_TIME(SC_FIXED(5)))), SC_FIXED(0)),
-           SC_VEC3(SC_FIXED(0.1), SC_FIXED(1), SC_FIXED(0.1)))
+  SC_TIME(SC_FIXED(2))
 )
 ),
 
-SCENESPEC(0, 0, 0, 32000,
+SCENESPEC(0, 0, 0, 11000,
 SC_MIN(
+  SC_PLANE(SC_VEC3(SC_FIXED(0), SC_FIXED(-2), SC_FIXED(0)),
+           SC_VEC3(SC_FIXED(0.1), SC_FIXED(1), SC_FIXED(0.1))),
   SC_MIN(
-    SC_PLANE(SC_VEC3(SC_FIXED(0), SC_FIXED(-2), SC_FIXED(0)),
-             SC_VEC3(SC_FIXED(0.1), SC_FIXED(1), SC_FIXED(0.1))),
     SC_MIX(
-      SC_TORUS(SC_VEC3(SC_FIXED(0), SC_FIXED(0),
-                       SC_OMIX(SC_FIXED(-2.3), SC_FIXED(0), SC_SMOOTH(SC_FIXED(0.4), SC_FIXED(0.6),
-                                                                      SC_TIME2(SC_FIXED(5))))),
+      SC_MIN(SC_CUBE3(SC_VEC3(SC_FIXED(0.0), SC_FIXED(0.25), SC_FIXED(0.3)),
+                      SC_VEC3(SC_FIXED(0.25), SC_FIXED(0.25), SC_FIXED(0.2))),
+             SC_CUBE3(SC_VEC3(SC_FIXED(0.0), SC_FIXED(0.75), SC_FIXED(0.3)),
+                      SC_VEC3(SC_FIXED(0.25), SC_FIXED(0.25), SC_FIXED(0.2)))),
+      SC_TORUS(SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(0.3)),
+               SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(1)),
+               SC_CLAMP(SC_SMOOTH(SC_FIXED(0.1), SC_FIXED(0.9), SC_TIME2(SC_FIXED(2.4))),
+                                  SC_FIXED(0.25), SC_FIXED(0.6)),
+               SC_FIXED(0.2)),
+      SC_TIME2(SC_FIXED(11))
+    ),
+    SC_MIX(
+      SC_TORUS(SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(-0.3)),
+               SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(1)),
+               SC_CLAMP(SC_SMOOTH(SC_FIXED(0.1), SC_FIXED(0.9), SC_TIME2(SC_FIXED(2.4))),
+                                  SC_FIXED(0.25), SC_FIXED(0.6)),
+               SC_FIXED(0.2)),
+      SC_MIN(SC_CUBE3(SC_VEC3(SC_FIXED(0.0), SC_FIXED(0.25), SC_FIXED(-0.3)),
+                      SC_VEC3(SC_FIXED(0.25), SC_FIXED(0.25), SC_FIXED(0.2))),
+             SC_CUBE3(SC_VEC3(SC_FIXED(0.0), SC_FIXED(0.75), SC_FIXED(-0.3)),
+                      SC_VEC3(SC_FIXED(0.25), SC_FIXED(0.25), SC_FIXED(0.2)))),
+      SC_TIME2(SC_FIXED(11))
+    )
+  )
+)
+),
+
+SCENESPEC(0, 0, 0, 2000,
+SC_MIN(
+  SC_PLANE(SC_VEC3(SC_FIXED(0), SC_OMIX(SC_FIXED(-2), SC_FIXED(0), SC_TIME(SC_FIXED(2))), SC_FIXED(0)),
+           SC_VEC3(SC_FIXED(0.1), SC_FIXED(1), SC_FIXED(0.1))),
+  SC_MIN(
+    SC_MIX(
+      SC_MIN(SC_CUBE3(SC_VEC3(SC_FIXED(0.0), SC_OMIX(SC_FIXED(0.25), SC_FIXED(-0.7), SC_TIME(SC_FIXED(2))), SC_FIXED(0.3)),
+                      SC_VEC3(SC_FIXED(0.25), SC_FIXED(0.25), SC_FIXED(0.2))),
+             SC_CUBE3(SC_VEC3(SC_FIXED(0.0), SC_OMIX(SC_FIXED(0.75), SC_FIXED(-0.7), SC_TIME(SC_FIXED(2))), SC_FIXED(0.3)),
+                      SC_VEC3(SC_FIXED(0.25), SC_FIXED(0.25), SC_FIXED(0.2)))),
+      SC_TORUS(SC_VEC3(SC_FIXED(0), SC_OMIX(SC_FIXED(0), SC_FIXED(-0.7), SC_TIME(SC_FIXED(2))), SC_FIXED(0.3)),
                SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(1)),
                SC_CLAMP(SC_SMOOTH(SC_FIXED(0.1), SC_FIXED(0.9), SC_TIME2(SC_FIXED(3))),
                                   SC_FIXED(0.25), SC_FIXED(0.6)),
                SC_FIXED(0.2)),
-      SC_MIN(SC_CUBE3(SC_VEC3(SC_FIXED(0.0), SC_FIXED(0.25),
-                              SC_OMIX(SC_FIXED(-2.3), SC_FIXED(0), SC_SMOOTH(SC_FIXED(0.4), SC_FIXED(0.6),
-                                                                      SC_TIME2(SC_FIXED(5))))),
+      SC_TIME2(SC_FIXED(11))
+    ),
+    SC_MIX(
+      SC_TORUS(SC_VEC3(SC_FIXED(0), SC_OMIX(SC_FIXED(0), SC_FIXED(-0.7), SC_TIME(SC_FIXED(2))), SC_FIXED(-0.3)),
+               SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(1)),
+               SC_CLAMP(SC_SMOOTH(SC_FIXED(0.1), SC_FIXED(0.9), SC_TIME2(SC_FIXED(3))),
+                                  SC_FIXED(0.25), SC_FIXED(0.6)),
+               SC_FIXED(0.2)),
+      SC_MIN(SC_CUBE3(SC_VEC3(SC_FIXED(0.0), SC_OMIX(SC_FIXED(0.25), SC_FIXED(-0.7), SC_TIME(SC_FIXED(2))), SC_FIXED(-0.3)),
                       SC_VEC3(SC_FIXED(0.25), SC_FIXED(0.25), SC_FIXED(0.2))),
-             SC_CUBE3(SC_VEC3(SC_FIXED(0.0), SC_FIXED(0.75),
-                      SC_OMIX(SC_FIXED(-2.3), SC_FIXED(0), SC_SMOOTH(SC_FIXED(0.4), SC_FIXED(0.6),
-                                                                      SC_TIME2(SC_FIXED(5))))),
+             SC_CUBE3(SC_VEC3(SC_FIXED(0.0), SC_OMIX(SC_FIXED(0.75), SC_FIXED(-0.7), SC_TIME(SC_FIXED(2))), SC_FIXED(-0.3)),
                       SC_VEC3(SC_FIXED(0.25), SC_FIXED(0.25), SC_FIXED(0.2)))),
       SC_TIME2(SC_FIXED(11))
     )
+  )
+)
+),
+
+SCENESPEC(0, 0, 0, 1500,
+SC_MIX(
+  SC_PLANE(SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(0)),
+           SC_VEC3(SC_FIXED(0.1), SC_FIXED(1), SC_FIXED(0.1))),
+  SC_TILED(SC_VEC3(SC_FIXED(1), SC_FIXED(100), SC_FIXED(1)),
+    SC_CUBE(SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.2))
+  ),
+  SC_TIME(SC_FIXED(1.5))
+)
+),
+
+SCENESPEC(0, 0, 0, 6000,
+SC_MIX(
+  SC_TILED(SC_VEC3(SC_FIXED(1), SC_FIXED(100), SC_FIXED(1)),
+    SC_CUBE(SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.2))
+  ),
+  SC_TILED(SC_VEC3(SC_FIXED(0.1), SC_FIXED(100), SC_FIXED(0.1)),
+    SC_MIX(
+      SC_CYLINDER_CAP(SC_VEC3(SC_FIXED(0), SC_FIXED(0.12), SC_FIXED(0)),
+                      SC_VEC3(SC_FIXED(0), SC_FIXED(0.2), SC_FIXED(0)),
+                      SC_FIXED(0.03)),
+      SC_SPHERE(SC_VEC3(SC_FIXED(0), SC_FIXED(0.25), SC_FIXED(0)), SC_FIXED(0.09)),
+      SC_SMOOTH(SC_FIXED(0.20), SC_FIXED(0.25), SC_PY)
+    )
+  ),
+  SC_SMOOTH(SC_FIXED(0), SC_FIXED(0.7), SC_TIME(SC_FIXED(6)))
+)
+),
+
+SCENESPEC(0.5, 0, 0.5, 1500,
+SC_MIX(
+  SC_TILED(SC_VEC3(SC_FIXED(0.1), SC_FIXED(100), SC_FIXED(0.1)),
+    SC_MIX(
+      SC_CYLINDER_CAP(SC_VEC3(SC_FIXED(0), SC_FIXED(0.12), SC_FIXED(0)),
+                      SC_VEC3(SC_FIXED(0), SC_FIXED(0.2), SC_FIXED(0)),
+                      SC_FIXED(0.03)),
+      SC_SPHERE(SC_VEC3(SC_FIXED(0), SC_FIXED(0.25), SC_FIXED(0)), SC_FIXED(0.09)),
+      SC_SMOOTH(SC_FIXED(0.20), SC_FIXED(0.25), SC_PY)
+    )
+  ),
+  SC_MIN(
+    SC_SPHERE(SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(1)),
+              SC_OMIX(SC_FIXED(1), SC_FIXED(0.12), SC_TIME(SC_FIXED(1.5)))),
+    SC_SPHERE(SC_VEC3(SC_FIXED(1), SC_FIXED(0), SC_FIXED(0)),
+              SC_OMIX(SC_FIXED(1), SC_FIXED(0.12), SC_TIME(SC_FIXED(1.5))))
+  ),
+  SC_TIME(SC_FIXED(1.5))
+)
+),
+
+SCENESPEC(0.5, 0, 0.5, 24000,
+SC_MIX(
+SC_MIN(
+  SC_MIX(
+    SC_SPHERE(SC_VEC3(SC_TIME(SC_FIXED(1.2)), SC_FIXED(0), SC_FIXED(0)),
+              SC_FIXED(0.12)),
+    SC_CYLINDER_CAP(SC_VEC3(SC_FIXED(0.1), SC_FIXED(0), SC_FIXED(0)),
+                    SC_VEC3(SC_FIXED(0.9), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.1)),
+    SC_TIME2(SC_FIXED(1.2))
   ),
   SC_MIX(
-      SC_CUBE(SC_VEC3(SC_OMIX(SC_FIXED(0.2), SC_FIXED(1.5), SC_SMOOTH(SC_FIXED(0.4), SC_FIXED(0.6),
-                                                                      SC_TIME2(SC_FIXED(5)))),
-                      SC_FIXED(0), SC_FIXED(0.6)), SC_FIXED(0.5)),
-      SC_SPHERE(SC_VEC3(SC_OMIX(SC_FIXED(0.5), SC_TIME2(SC_FIXED(3)), SC_SMOOTH(SC_FIXED(0.4), SC_FIXED(0.6),
-                                                                      SC_TIME2(SC_FIXED(5)))),
-                        SC_FIXED(0), SC_FIXED(0.6)), SC_FIXED(0.2)),
-      SC_TIME2(SC_FIXED(16))
+    SC_SPHERE(SC_VEC3(SC_OMIX(SC_FIXED(1), SC_FIXED(0), SC_TIME(SC_FIXED(1.2))), SC_FIXED(0), SC_FIXED(1)),
+              SC_FIXED(0.12)),
+    SC_CYLINDER_CAP(SC_VEC3(SC_FIXED(0.1), SC_FIXED(0), SC_FIXED(1)),
+                    SC_VEC3(SC_FIXED(0.9), SC_FIXED(0), SC_FIXED(1)), SC_FIXED(0.1)),
+    SC_TIME2(SC_FIXED(1.2))
   )
-)),
+),
+SC_MIN(
+  SC_MIX(
+    SC_SPHERE(SC_VEC3(SC_FIXED(1), SC_FIXED(0), SC_TIME(SC_FIXED(1.2))),
+              SC_FIXED(0.12)),
+    SC_CYLINDER_CAP(SC_VEC3(SC_FIXED(1), SC_FIXED(0), SC_FIXED(0.1)),
+                    SC_VEC3(SC_FIXED(1), SC_FIXED(0), SC_FIXED(0.9)), SC_FIXED(0.1)),
+    SC_TIME2(SC_FIXED(1.2))
+  ),
+  SC_MIX(
+    SC_SPHERE(SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_OMIX(SC_FIXED(1), SC_FIXED(0), SC_TIME(SC_FIXED(1.2)))),
+              SC_FIXED(0.12)),
+    SC_CYLINDER_CAP(SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(0.1)),
+                    SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(0.9)), SC_FIXED(0.1)),
+    SC_TIME2(SC_FIXED(1.2))
+  )
+),
+SC_SMOOTH(SC_FIXED(0.5001), SC_FIXED(0.4999), SC_TIME(SC_FIXED(2.4)))
+)
+),
 
 /*
+SCENESPEC(0.5, 0, 0.5, 60000,
+SC_MIN(
+  SC_CUBE(SC_VEC3(SC_FIXED(0.5), SC_FIXED(0), SC_FIXED(0.5)), SC_FIXED(0.2)),
+  SC_MIN(
+  SC_SPHERE(SC_VEC3(
+              SC_SMOOTH(SC_FIXED(0.5), SC_FIXED(1), SC_TIME(SC_FIXED(2))),
+              SC_FIXED(0),
+              SC_SMOOTH(SC_FIXED(0), SC_FIXED(0.5), SC_TIME(SC_FIXED(2)))
+            ),
+            SC_FIXED(0.2)),
+  SC_SPHERE(SC_VEC3(
+              SC_OMIX(SC_FIXED(1), SC_FIXED(0), SC_SMOOTH(SC_FIXED(0.5), SC_FIXED(1), SC_TIME(SC_FIXED(2)))),
+              SC_FIXED(0),
+              SC_OMIX(SC_FIXED(1), SC_FIXED(0), SC_SMOOTH(SC_FIXED(0), SC_FIXED(0.5), SC_TIME(SC_FIXED(2))))
+            ),
+            SC_FIXED(0.2))
+  )
+)
+),
+
+/*
+SCENESPEC(0.5, 0, 0, 2400,
+SC_MIX(
+  SC_SPHERE(SC_VEC3(SC_TIME2(SC_FIXED(2.4)), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.2)),
+  SC_CYLINDER_CAP(SC_VEC3(SC_FIXED(0.1), SC_FIXED(0), SC_FIXED(0)), SC_VEC3(SC_FIXED(0.9), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.1)),
+  SC_TIME2(SC_FIXED(1.2)),
+)
+),
+
+/*
+SCENESPEC(0.5, 0, 0, 2400,
+SC_MIX(
+  SC_SPHERE(SC_VEC3(SC_TIME2(SC_FIXED(2.4)), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.2)),
+  SC_CYLINDER_CAP(SC_VEC3(SC_FIXED(0.1), SC_FIXED(0), SC_FIXED(0)), SC_VEC3(SC_FIXED(0.9), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.1)),
+  SC_TIME2(SC_FIXED(1.2)),
+)),
+
+SCENESPEC(0.5, 0, 0, 1200,
+SC_MIX(
+  SC_MIX(
+      SC_SPHERE(SC_VEC3(SC_TIME2(SC_FIXED(2.4)), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.2)),
+      SC_CUBE(SC_VEC3(SC_TIME2(SC_FIXED(2.4)), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.2)),
+      SC_SMOOTH(SC_FIXED(0.5), SC_FIXED(1.0), SC_TIME2(SC_FIXED(2.4)))
+  ),
+  SC_CYLINDER_CAP(SC_VEC3(SC_FIXED(0.1), SC_FIXED(0), SC_FIXED(0)), SC_VEC3(SC_FIXED(0.9), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.1)),
+  SC_TIME2(SC_FIXED(1.2))
+)),
+
+SCENESPEC(0.5, 0, 0, 16000,
+SC_MIX(
+  SC_CUBE(SC_VEC3(SC_FIXED(1), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.2)),
+  SC_MIX(
+    SC_SPHERE(SC_VEC3(SC_OMIX(SC_FIXED(1), SC_FIXED(0), SC_TIME2(SC_FIXED(4))), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.08)),
+    SC_TORUS(SC_VEC3(SC_FIXED(-0.1), SC_FIXED(0), SC_FIXED(0)),
+             SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(1)),
+             SC_FIXED(0.2), SC_FIXED(0.1)),
+    SC_SMOOTH(SC_FIXED(0.6), SC_FIXED(1), SC_TIME2(SC_FIXED(4)))
+  ),
+  SC_SMOOTH(SC_FIXED(0.03), SC_FIXED(0.4), SC_TIME2(SC_FIXED(4)))
+)),
 
 SCENESPEC(0, -0.5, 0, 12000,
 SC_MIX(
@@ -170,41 +418,6 @@ SC_MIN(
       SC_CUBE(SC_VEC3(SC_FIXED(0.2), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.5)),
       SC_TIME2(SC_FIXED(16))
   )
-)),
-
-// make sure this starts at
-// a multiple of 2400!
-SCENESPEC(0.5, 0, 0, 2400,
-SC_MIX(
-  SC_SPHERE(SC_VEC3(SC_TIME2(SC_FIXED(2.4)), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.2)),
-  SC_CYLINDER_CAP(SC_VEC3(SC_FIXED(0.1), SC_FIXED(0), SC_FIXED(0)), SC_VEC3(SC_FIXED(0.9), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.1)),
-  SC_TIME2(SC_FIXED(1.2)),
-)),
-
-SCENESPEC(0.5, 0, 0, 1200,
-SC_MIX(
-  SC_MIX(
-      SC_SPHERE(SC_VEC3(SC_TIME2(SC_FIXED(2.4)), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.2)),
-      SC_CUBE(SC_VEC3(SC_TIME2(SC_FIXED(2.4)), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.2)),
-      SC_SMOOTH(SC_FIXED(0.5), SC_FIXED(1.0), SC_TIME2(SC_FIXED(2.4)))
-  ),
-  SC_CYLINDER_CAP(SC_VEC3(SC_FIXED(0.1), SC_FIXED(0), SC_FIXED(0)), SC_VEC3(SC_FIXED(0.9), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.1)),
-  SC_TIME2(SC_FIXED(1.2))
-)),
-
-SCENESPEC(0.5, 0, 0, 2400,
-  SC_CUBE(SC_VEC3(SC_FIXED(1), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.2))
-),
-
-SCENESPEC(0.5, 0, 0, 16000,
-SC_MIX(
-  SC_MIX(
-    SC_TORUS(SC_VEC3(SC_FIXED(-0.1), SC_FIXED(0), SC_FIXED(0)), SC_VEC3(SC_FIXED(0), SC_FIXED(0), SC_FIXED(1)), SC_FIXED(0.2), SC_FIXED(0.1)),
-    SC_SPHERE(SC_VEC3(SC_TIME2(SC_FIXED(4)), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.08)),
-    SC_SMOOTH(SC_FIXED(0.03), SC_FIXED(0.4), SC_TIME2(SC_FIXED(4)))
-  ),
-  SC_CUBE(SC_VEC3(SC_FIXED(1), SC_FIXED(0), SC_FIXED(0)), SC_FIXED(0.2)),
-  SC_SMOOTH(SC_FIXED(0.6), SC_FIXED(1), SC_TIME2(SC_FIXED(4)))
 )),
 
 */

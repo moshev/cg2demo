@@ -429,7 +429,7 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
     Uint32 scene_start = ticks_start;
     for (;;) {
         SDL_Event event;
-        if (ticks_start - scene_start > scenes[scene].duration) {
+        if (ticks_start - scene_start >= scenes[scene].duration) {
             scene_start = scene_start + scenes[scene].duration;
             scene = (scene + 1) % nscenes;
             switch_scene(&progs[scene], width, height);
