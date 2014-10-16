@@ -134,8 +134,8 @@ vec4 go(vec3 p, vec3 ray) {
 
 void main() {
     //rand_state = uint(millis) + uint((pixelcenter.x + pixelcenter.y) * 1000);
-    vec3 p = vec3(0.0, 0.0, 1.35);
-    vec3 t = vec3(pixelcenter, 0.9);
+    vec3 p = vec3(0.0, 0.0, 1.3);
+    vec3 t = vec3(pixelcenter, 0.98);
     int i;
 
     light3_pos = (camera * vec4(light3_pos, 1.0)).xyz;
