@@ -404,6 +404,19 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
         }
     }
 
+    struct text_tex img;
+    if (!render_text(&img)) {
+        LOG("Error render text");
+        exit(1);
+    }
+
+    GLuint img_texid;
+    glGenTextures(1, &img_texid);
+    glBindTexture(GL_TEXTURE_2D, img_texid);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, img.width, img.height, 0, GL_RED, GL_UNSIGNED_BYTE, img.data);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_LOD, 0);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+
     LOG("");
     struct scene *scenes;
     size_t nscenes;
@@ -421,12 +434,12 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
             exit(1);
         }
         memcpy(scenes, tmpscenes, sizeof(struct scene) * nscenes);
-        scenes[nscenes].camera_translation = mkv3(0, 0, 0);
-        scenes[nscenes].duration = 2000;
-        scenes[nscenes].data = nullptr;
-        scenes[nscenes].datasz = 0;
         free(tmpscenes);
     }
+	scenes[nscenes].camera_translation = mkv3(0, 0, 0);
+	scenes[nscenes].duration = 20000;
+	scenes[nscenes].data = nullptr;
+	scenes[nscenes].datasz = 0;
     struct program *progs;
     // +1 for the starting text scene
     progs = (struct program *)malloc((nscenes + 1) * sizeof(struct program));
@@ -447,22 +460,6 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
     progs[nscenes].ufrm_millis = glGetUniformLocation(progs[nscenes].id, "millis");
     // reuse like a BOSS
     progs[nscenes].ufrm_camera = glGetUniformLocation(progs[nscenes].id, "textsampler");
-
-    struct text_tex img;
-    if (!render_text(&img)) {
-        LOG("Error render text");
-        exit(1);
-    }
-
-    GLuint img_texid;
-    GLuint img_sampler;
-    glGenTextures(1, &img_texid);
-    glBindTexture(GL_TEXTURE_2D, img_texid);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, img.width, img.height, 0, GL_RED, GL_UNSIGNED_BYTE, img.data);
-
-    glGenSamplers(1, &img_sampler);
-    glBindSampler(0, img_sampler);
-    glSamplerParameteri(img_sampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     LOGF("total scenes size: %d", (int)sizeof(SCENES));
 

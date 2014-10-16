@@ -75,10 +75,13 @@ static void blitchar(uint8_t *img, int stride, uint16_t ch) {
 }
 
 static int pow2(int x) {
+	if (!(x & (x - 1))) {
+		return x;
+	}
     while (x & (x - 1)) {
-        x &= x - 1;
+        x = x & (x - 1);
     }
-    return x;
+    return x << 1;
 }
 
 static const int line_height = 7;
@@ -112,7 +115,7 @@ int render_text(struct text_tex *tex) {
     if (h < w) {
         h = w;
     }
-    LOGF("Text texture width : %d\nheight: %d", w, h);
+    LOGF("Text texture width : %d; height: %d", w, h);
     uint8_t *img = (uint8_t *)malloc(w * h);
     if (!img) {
         LOG("Error malloc");
@@ -134,10 +137,15 @@ int render_text(struct text_tex *tex) {
         for (; i < ntext && text[i]; i++) {
             int dist = kerndist(prev, text[i]);
             x += dist;
-            blitchar(img + (h - y) * w + x, w, text[i]);
+            blitchar(img + (h - y) * w + x, -w, text[i]);
             prev = text[i];
         }
     }
+#if !defined(NDEBUG)
+	FILE *imgraw = fopen("img.raw", "wb");
+	fwrite(img, 1, w * h, imgraw);
+	fclose(imgraw);
+#endif
     tex->width = w;
     tex->height = h;
     tex->data = img;

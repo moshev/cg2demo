@@ -18,6 +18,7 @@ GetShaderiv
 GetUniformLocation
 LinkProgram
 SamplerParameteri
+SamplerParameterf
 ShaderSource
 Uniform1f
 Uniform1i

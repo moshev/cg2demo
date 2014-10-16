@@ -19,6 +19,7 @@ glGetShaderiv = (PFNGLGETSHADERIVPROC) SDL_GL_GetProcAddress("glGetShaderiv");
 glGetUniformLocation = (PFNGLGETUNIFORMLOCATIONPROC) SDL_GL_GetProcAddress("glGetUniformLocation");
 glLinkProgram = (PFNGLLINKPROGRAMPROC) SDL_GL_GetProcAddress("glLinkProgram");
 glSamplerParameteri = (PFNGLSAMPLERPARAMETERIPROC) SDL_GL_GetProcAddress("glSamplerParameteri");
+glSamplerParameterf = (PFNGLSAMPLERPARAMETERFPROC) SDL_GL_GetProcAddress("glSamplerParameterf");
 glShaderSource = (PFNGLSHADERSOURCEPROC) SDL_GL_GetProcAddress("glShaderSource");
 glUniform1f = (PFNGLUNIFORM1FPROC) SDL_GL_GetProcAddress("glUniform1f");
 glUniform1i = (PFNGLUNIFORM1IPROC) SDL_GL_GetProcAddress("glUniform1i");
