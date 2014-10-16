@@ -1,7 +1,12 @@
 #if !defined(CG2DEMO_H)
 #define CG2DEMO_H
 
+#if defined(__MACOSX__)
+#include <OpenGL/gl3.h>
+#else
 #include <SDL_opengl.h>
+#endif
+
 #include <stdio.h>
 
 #if defined(NDEBUG)

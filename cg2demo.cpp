@@ -10,7 +10,12 @@
 #include <memory.h>
 #include <errno.h>
 #include <SDL.h>
+
+#if defined(__MACOSX__)
+#include <OpenGL/gl3.h>
+#else
 #include <SDL_opengl.h>
+#endif
 
 #include "cg2demo.h"
 #include "math3d.h"
