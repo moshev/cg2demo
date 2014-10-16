@@ -1,10 +1,14 @@
+#if defined(_WINDOWS)
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <tchar.h>
+#endif
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <malloc.h>
 #include <memory.h>
-#include <tchar.h>
+#include <errno.h>
 #include <SDL.h>
 #include <SDL_opengl.h>
 
@@ -50,7 +54,6 @@ static void check_program(GLuint id);
 /* exits with error status and logs error if shader wasn't successfully compiled */
 static void check_shader(GLuint id);
 
-static GLuint create_program_from_files(const char *vspath, const char *fspath);
 static GLuint create_program(const char *vs, size_t szvs, const char *fs, size_t szfs);
 
 // http://en.wikipedia.org/wiki/Modular_exponentiation#Right-to-left_binary_method
@@ -205,23 +208,6 @@ int read_file(const char *path, char **text, size_t *sz) {
     *text = buf;
     *sz = (size);
     return 1;
-}
-
-static GLuint create_program_from_files(const char *vspath, const char *fspath) {
-    char *vs, *fs;
-    size_t szvs, szfs;
-    if (!read_file(vspath, &vs, &szvs)) {
-        LOG("error reading vertex shader source");
-        exit(1);
-    }
-    if (!read_file(fspath, &fs, &szfs)) {
-        LOG("error reading fragment shader source");
-        exit(1);
-    }
-    GLuint prog = create_program(vs, szvs, fs, szfs);
-    free(vs);
-    free(fs);
-    return prog;
 }
 
 static GLuint create_program_from_scene(const uint8_t *scene, size_t scenesz) {
@@ -396,7 +382,7 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
     }
     struct program *progs;
     progs = (struct program *)malloc(nscenes * sizeof(struct program));
-    for (int i = 0; i < nscenes; i++) {
+    for (size_t i = 0; i < nscenes; i++) {
         progs[i].id = create_program_from_scene(scenes[i].data, scenes[i].datasz);
         progs[i].attr_p = glGetAttribLocation(progs[i].id, "p");
         progs[i].ufrm_width = glGetUniformLocation(progs[i].id, "width");
@@ -406,7 +392,7 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
     }
 
     LOGF("total scenes size: %d", (int)sizeof(SCENES));
-    
+
     GLuint vao, buf;
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
@@ -414,7 +400,7 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
     glBindBuffer(GL_ARRAY_BUFFER, buf);
     glBufferData(GL_ARRAY_BUFFER, sizeof(RECTANGLE), RECTANGLE, GL_STATIC_DRAW);
 
-    for (int i = 0; i < nscenes; i++) {
+    for (size_t i = 0; i < nscenes; i++) {
         switch_scene(&progs[i], width, height);
     }
 
