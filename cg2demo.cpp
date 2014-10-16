@@ -160,6 +160,7 @@ int main(int argc, char *argv[]) {
     }
     SDL_PauseAudio(0);
 
+    SDL_MaximizeWindow(window);
     // main loop
     int result = renderloop(window, context);
     SDL_DestroyWindow(window);
