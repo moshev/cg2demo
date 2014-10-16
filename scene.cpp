@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <errno.h>
 
 #include "cg2demo.h"
 #include "scene.h"
@@ -258,15 +259,15 @@ static int parse_gf(const uint8_t **scene, size_t *scenesz, char **shader, size_
         return 0;
     }
     uint8_t u8gf = CONSUME1;
-    if (u8gf & (uint8_t)GF_NUMBER) {
+    // if number bit set, set token to number
+    enum generic_func gf = (enum generic_func) (u8gf & GF_NUMBER ? GF_NUMBER : u8gf);
+    switch (gf) {
+    case GF_NUMBER:
         // put back
         (*scene)--;
         (*scenesz)++;
         PARSE_NUM;
         return 1;
-    }
-    enum generic_func gf = (enum generic_func) u8gf;
-    switch (gf) {
     case GF_CLAMP:
         APPENDSTR("clamp");
         APPENDSTR(_lparen);
