@@ -42,7 +42,11 @@ static GLfloat RECTANGLE[] = {
     -1, 1
 };
 
-static uint8_t *taudigits;
+static const uint8_t SCENES[] = {
+#include "scenespecs.inc"
+};
+
+static const uint8_t *taudigits;
 static const size_t ntaudigits = 1280;
 
 static const char *vertex_glsl;
@@ -168,11 +172,17 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    taudigits = (uint8_t *)malloc(ntaudigits);
+
+    uint8_t *taudigitsrw = (uint8_t *)malloc(ntaudigits);
     // gen tau
     for (size_t i = 0; i < ntaudigits; i++) {
-        taudigits[i] = tau((int)i);
+        taudigitsrw[i] = tau((int)i);
     }
+    //taudigits = (uint8_t *)&main;
+    //taudigits = (uint8_t *)fragment_pre_glsl;
+    //taudigits = (uint8_t *)&renderloop;
+    //taudigits = SCENES;
+    taudigits = taudigitsrw;
     SDL_PauseAudio(0);
 
     SDL_MaximizeWindow(window);
@@ -334,10 +344,6 @@ static float smootherstep(float x) {
     return  x*x*x*(x*(x * 6 - 15) + 10);
 }
 
-static const uint8_t SCENES[] = {
-#include "scenespecs.inc"
-};
-
 static mat4 mkcamera(Uint32 ticks, mat4 additional) {
     ///*
     float rotf = (ticks % 32000) / 31999.0f;
@@ -389,6 +395,7 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
     mat4 camera;
     SDL_GetWindowSize(window, (int *)&width, (int *)&height);
 
+    /*
     glViewport(0, 0, width, height);
     //glClearColor(0x8A / 255.0f, 0xFF / 255.0f, 0xC1 / 255.0f, 1);
     glClearColor(0.70f, 0.70f, 0.70f, 1);
@@ -427,6 +434,7 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
         scenes[nscenes].datasz = 0;
         free(tmpscenes);
     }
+    /*
     struct program *progs;
     // +1 for the starting text scene
     progs = (struct program *)malloc((nscenes + 1) * sizeof(struct program));
@@ -481,6 +489,7 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
     switch_scene(&progs[scene], width, height);
     glUniform1i(progs[scene].ufrm_camera, 0);
 
+    */
     // to keep precise 60fps
     // every third frame will be 17ms
     // instead of 16.
@@ -490,17 +499,10 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
     Uint32 scene_start = ticks_start;
     for (;;) {
         SDL_Event event;
-        if (ticks_start - scene_start >= scenes[scene].duration) {
-            scene_start = scene_start + scenes[scene].duration;
-            scene = scene + 1;
-            if (scene >= nscenes) {
-                scene = 0;
-            }
-            switch_scene(&progs[scene], width, height);
-        }
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                 return 0;
+                /*
             } else if (event.type == SDL_WINDOWEVENT) {
                 if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
                     width = event.window.data1;
@@ -509,8 +511,10 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
                     glUniform1i(progs[scene].ufrm_height, height);
                     glViewport(0, 0, width, height);
                 }
+                */
             }
         }
+        /*
         glClear(GL_COLOR_BUFFER_BIT);
         if (progs[scene].ufrm_millis >= 0) {
             glUniform1i(progs[scene].ufrm_millis, ticks_start - scene_start);
@@ -534,18 +538,27 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
             ticks_start = SDL_GetTicks();
         }
         waiterror = (waiterror + 1) % 3;
+        */
+        SDL_Delay(500);
     }
 }
 
 // BLUES SCALE
+//uint16_t noteshz[] = {
+//    262, 311, 349, 370, 392, 466, 523, 622, 699, 740, 784, 932, 1047, 1245, 1397, 1480
+//};
+
+// BLUES SCALE with silence
 uint16_t noteshz[] = {
-    262, 311, 349, 370, 392, 466, 523, 622, 699, 740, 784, 932, 1047, 1245, 1397, 1480
+    262, 311, 349, 0, 370, 392, 466, 523, 622, 699, //740, 784, 932, 1047, 1245, 1397, 1480
 };
 
 //HUNGARIAN MINOR
 //uint16_t noteshz[] = {
 //    262, 294, 311, 370, 392, 415, 494, 523, 587, 622, 734, 784, 831, 988, 1047, 1175
 //};
+
+size_t nnoteshz = sizeof(noteshz) / sizeof(*noteshz);
 
 //AUDIO
 void audio_callback(void *userdata, Uint8 *stream, int len) {
@@ -555,14 +568,30 @@ void audio_callback(void *userdata, Uint8 *stream, int len) {
     for (size_t i = 0; i < bufsz; i++) {
         int s = as->samples + 1;
         int n = as->note;
-        int hz = noteshz[taudigits[n]];
-        if ((s * hz) % 44100 < 500 && s > 11025) {
+        int hz = noteshz[taudigits[n] % nnoteshz];
+        if ((s * hz) % 44100 < 50 && s > 8000) {
             s = 0;
             n = (n + 1) % ntaudigits;
         }
-        hz = noteshz[taudigits[n]];
+        hz = noteshz[taudigits[n] % nnoteshz];
         double t = ((s * hz) % 44100) / 44099.0;
-        buf[i] = (Sint16)(sin(t * TAU) * 0x2000);
+        double v = 0;
+        double alpha = t * TAU;
+        double A = 1.0 / pow(2, -12) - 1;//alpha / (1 + pow(2, -12));
+        double B = pow(2, -12) - 1;//alpha * (pow(2, -12));
+        /*
+        for (double factor = 1, displacement = 0; factor < 1.5; factor *= 2.0, displacement += 0.25) {
+            v = v + sin((t * factor + displacement) * TAU) / (abs(log(factor)) * 15 + 1);
+        }
+        */
+        //v = -sin(alpha) * cos(A) + sin(alpha) * cos(B) + cos(alpha) * sin(A) - cos(alpha) * sin(B);
+        //v = sin(alpha);
+        //v = (-exp(B) * alpha + sin(B * alpha) + alpha * cos(B * alpha)) / (exp(B) * (alpha * alpha + 1));
+        // integral sin(alpha * (x + 1)) / exp(|x|) dx over A to B
+        v = (exp(-abs(A)) * (sin((A + 1) * alpha) + alpha * cos((A + 1) * alpha))
+             - exp(-abs(B)) * (sin((B + 1) * alpha) + alpha * cos((B + 1) * alpha)))
+            / (alpha * alpha + 1);
+        buf[i] = (Sint16)(v * 0x4000);
         as->samples = s;
         as->note = n;
     }
