@@ -111,9 +111,10 @@ vec3 shade(vec3 p) {
 
 vec4 go(vec3 p, vec3 ray) {
     // wavy effect1
+    
     /*
-    float phi = TAU * 3 * timing2(15000) * (timing2(10000) + ray.x + ray.y);
-    p.z += sin(phi) * cos(phi) * 0.2;
+    float phi = TAU * 2 * (ray.x + ray.y);
+    p.z += sin(phi) * cos(phi) * 0.01;
     */
 
     // wavy effect2
@@ -133,8 +134,8 @@ vec4 go(vec3 p, vec3 ray) {
 
 void main() {
     //rand_state = uint(millis) + uint((pixelcenter.x + pixelcenter.y) * 1000);
-    vec3 p = vec3(0.0, 0.0, 2.0);
-    vec3 t = vec3(pixelcenter, 1.0);
+    vec3 p = vec3(0.0, 0.0, 1.3);
+    vec3 t = vec3(pixelcenter, 0.98);
     int i;
 
     light3_pos = (camera * vec4(light3_pos, 1.0)).xyz;

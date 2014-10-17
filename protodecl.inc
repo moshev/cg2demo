@@ -19,6 +19,7 @@ extern PFNGLGETSHADERIVPROC glGetShaderiv;
 extern PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation;
 extern PFNGLLINKPROGRAMPROC glLinkProgram;
 extern PFNGLSAMPLERPARAMETERIPROC glSamplerParameteri;
+extern PFNGLSAMPLERPARAMETERFPROC glSamplerParameterf;
 extern PFNGLSHADERSOURCEPROC glShaderSource;
 extern PFNGLUNIFORM1FPROC glUniform1f;
 extern PFNGLUNIFORM1IPROC glUniform1i;

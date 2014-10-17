@@ -31,6 +31,8 @@ FILE *flog;
 /* read file into memory, return 1 on success, 0 on failure */
 int read_file(const char *path, char **text, size_t *sz);
 
+static const bool movie = false;
+
 static const unsigned int WIDTH = 1024;
 static const unsigned int HEIGHT = 768;
 
@@ -411,6 +413,36 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
         }
     }
 
+    struct text_tex img;
+    if (!render_text(&img)) {
+        LOG("Error render text");
+        exit(1);
+    }
+
+    GLuint img_texid;
+    glGenTextures(1, &img_texid);
+    glBindTexture(GL_TEXTURE_2D, img_texid);
+    for (int level = 0; img.width > 0 && img.height > 0; level++) {
+        glTexImage2D(GL_TEXTURE_2D, level, GL_RED, img.width, img.height, 0, GL_RED, GL_UNSIGNED_BYTE, img.data);
+        size_t w2 = img.width / 2;
+        size_t h2 = img.height / 2;
+        for (size_t y = 0; y < h2; y++) {
+            for (size_t x = 0; x < w2; x++) {
+                img.data[y * w2 + x] = (uint8_t)(
+                    0.25 * (
+                    (double)img.data[2 * y * img.width + 2 * x] +
+                    (double)img.data[2 * y * img.width + 2 * x + 1] +
+                    (double)img.data[(2 * y + 1) * img.width + 2 * x] +
+                    (double)img.data[(2 * y + 1) * img.width + 2 * x + 1]
+                    ));
+            }
+        }
+        img.width = w2;
+        img.height = h2;
+    }
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
     LOG("");
     struct scene *scenes;
     size_t nscenes;
@@ -428,12 +460,12 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
             exit(1);
         }
         memcpy(scenes, tmpscenes, sizeof(struct scene) * nscenes);
-        scenes[nscenes].camera_translation = mkv3(0, 0, 0);
-        scenes[nscenes].duration = 2000;
-        scenes[nscenes].data = nullptr;
-        scenes[nscenes].datasz = 0;
         free(tmpscenes);
     }
+    scenes[nscenes].camera_translation = mkv3(0, 0, 0);
+    scenes[nscenes].duration = 6000;
+    scenes[nscenes].data = nullptr;
+    scenes[nscenes].datasz = 0;
     struct program *progs;
     // +1 for the starting text scene
     progs = (struct program *)malloc((nscenes + 1) * sizeof(struct program));
@@ -454,22 +486,6 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
     progs[nscenes].ufrm_millis = glGetUniformLocation(progs[nscenes].id, "millis");
     // reuse like a BOSS
     progs[nscenes].ufrm_camera = glGetUniformLocation(progs[nscenes].id, "textsampler");
-
-    struct text_tex img;
-    if (!render_text(&img)) {
-        LOG("Error render text");
-        exit(1);
-    }
-
-    GLuint img_texid;
-    GLuint img_sampler;
-    glGenTextures(1, &img_texid);
-    glBindTexture(GL_TEXTURE_2D, img_texid);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, img.width, img.height, 0, GL_RED, GL_UNSIGNED_BYTE, img.data);
-
-    glGenSamplers(1, &img_sampler);
-    glBindSampler(0, img_sampler);
-    glSamplerParameteri(img_sampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     LOGF("total scenes size: %d", (int)sizeof(SCENES));
 
@@ -493,7 +509,8 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
     // instead of 17.
     int waiterror = 0;
     Uint32 ticks_start = SDL_GetTicks();
-    const Uint32 ticks_first = ticks_start;
+    // bleh. offset with first scene to put back camera on track
+    const Uint32 ticks_first = ticks_start + scenes[nscenes].duration;
     Uint32 scene_start = ticks_start;
 	taudigits = (uint8_t *)&window;
 	ntaudigits = 128;
@@ -526,15 +543,19 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
         if (waiterror != 2) {
             allotted++;
         }
-        Uint32 ticks_end = SDL_GetTicks();
-        Uint32 frametime = ticks_end - ticks_start;
-        if (frametime < allotted) {
-            SDL_Delay(allotted - frametime);
-            ticks_start += allotted;
+        if (!movie) {
+            Uint32 ticks_end = SDL_GetTicks();
+            Uint32 frametime = ticks_end - ticks_start;
+            if (frametime < allotted) {
+                SDL_Delay(allotted - frametime);
+                ticks_start += allotted;
+            } else {
+                ticks_start = SDL_GetTicks();
+            }
+            waiterror = (waiterror + 1) % 3;
         } else {
-            ticks_start = SDL_GetTicks();
+            ticks_start += allotted;
         }
-        waiterror = (waiterror + 1) % 3;
     }
 }
 
