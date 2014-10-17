@@ -47,7 +47,7 @@ static const uint8_t SCENES[] = {
 };
 
 static const uint8_t *taudigits;
-static const size_t ntaudigits = 1280;
+static size_t ntaudigits = 1280;
 
 static const char *vertex_glsl;
 static size_t vertex_glslsz;
@@ -182,7 +182,8 @@ int main(int argc, char *argv[]) {
     //taudigits = (uint8_t *)fragment_pre_glsl;
     //taudigits = (uint8_t *)&renderloop;
     //taudigits = SCENES;
-    taudigits = taudigitsrw;
+    //taudigits = taudigitsrw;
+	taudigits = (uint8_t *)&taudigits;
     SDL_PauseAudio(0);
 
     SDL_MaximizeWindow(window);
@@ -395,7 +396,6 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
     mat4 camera;
     SDL_GetWindowSize(window, (int *)&width, (int *)&height);
 
-    /*
     glViewport(0, 0, width, height);
     //glClearColor(0x8A / 255.0f, 0xFF / 255.0f, 0xC1 / 255.0f, 1);
     glClearColor(0.70f, 0.70f, 0.70f, 1);
@@ -434,7 +434,6 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
         scenes[nscenes].datasz = 0;
         free(tmpscenes);
     }
-    /*
     struct program *progs;
     // +1 for the starting text scene
     progs = (struct program *)malloc((nscenes + 1) * sizeof(struct program));
@@ -489,20 +488,20 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
     switch_scene(&progs[scene], width, height);
     glUniform1i(progs[scene].ufrm_camera, 0);
 
-    */
     // to keep precise 60fps
-    // every third frame will be 17ms
-    // instead of 16.
+    // every third frame will be 16ms
+    // instead of 17.
     int waiterror = 0;
     Uint32 ticks_start = SDL_GetTicks();
     const Uint32 ticks_first = ticks_start;
     Uint32 scene_start = ticks_start;
+	taudigits = (uint8_t *)&window;
+	ntaudigits = 128;
     for (;;) {
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                 return 0;
-                /*
             } else if (event.type == SDL_WINDOWEVENT) {
                 if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
                     width = event.window.data1;
@@ -511,10 +510,8 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
                     glUniform1i(progs[scene].ufrm_height, height);
                     glViewport(0, 0, width, height);
                 }
-                */
             }
         }
-        /*
         glClear(GL_COLOR_BUFFER_BIT);
         if (progs[scene].ufrm_millis >= 0) {
             glUniform1i(progs[scene].ufrm_millis, ticks_start - scene_start);
@@ -526,7 +523,7 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
         SDL_GL_SwapWindow(window);
         Uint32 allotted = 16;
-        if (waiterror == 2) {
+        if (waiterror != 2) {
             allotted++;
         }
         Uint32 ticks_end = SDL_GetTicks();
@@ -538,8 +535,6 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
             ticks_start = SDL_GetTicks();
         }
         waiterror = (waiterror + 1) % 3;
-        */
-        SDL_Delay(500);
     }
 }
 
