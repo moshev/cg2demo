@@ -31,6 +31,8 @@ FILE *flog;
 /* read file into memory, return 1 on success, 0 on failure */
 int read_file(const char *path, char **text, size_t *sz);
 
+static const bool movie = false;
+
 static const unsigned int WIDTH = 1024;
 static const unsigned int HEIGHT = 768;
 
@@ -540,15 +542,19 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
         if (waiterror == 2) {
             allotted++;
         }
-        Uint32 ticks_end = SDL_GetTicks();
-        Uint32 frametime = ticks_end - ticks_start;
-        if (frametime < allotted) {
-            SDL_Delay(allotted - frametime);
-            ticks_start += allotted;
+        if (!movie) {
+            Uint32 ticks_end = SDL_GetTicks();
+            Uint32 frametime = ticks_end - ticks_start;
+            if (frametime < allotted) {
+                SDL_Delay(allotted - frametime);
+                ticks_start += allotted;
+            } else {
+                ticks_start = SDL_GetTicks();
+            }
+            waiterror = (waiterror + 1) % 3;
         } else {
-            ticks_start = SDL_GetTicks();
+            ticks_start += allotted;
         }
-        waiterror = (waiterror + 1) % 3;
     }
 }
 
