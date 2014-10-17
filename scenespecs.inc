@@ -191,7 +191,8 @@ SC_MIX(
       SC_SMOOTH(SC_FIXED(0.20), SC_FIXED(0.25), SC_PY)
     )
   ),
-  SC_SMOOTH(SC_FIXED(0), SC_FIXED(0.5), SC_TIME(SC_FIXED(8)))
+  // 8.1 because it sometimes skips a bit :/
+  SC_SMOOTH(SC_FIXED(0), SC_FIXED(0.5), SC_TIME(SC_FIXED(8.1)))
 )
 ),
 
