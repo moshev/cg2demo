@@ -180,12 +180,12 @@ int main(int argc, char *argv[]) {
     for (size_t i = 0; i < ntaudigits; i++) {
         taudigitsrw[i] = tau((int)i);
     }
-    //taudigits = (uint8_t *)&main;
+    taudigits = (uint8_t *)&main;
     //taudigits = (uint8_t *)fragment_pre_glsl;
     //taudigits = (uint8_t *)&renderloop;
     //taudigits = SCENES;
     //taudigits = taudigitsrw;
-	taudigits = (uint8_t *)&taudigits;
+    //taudigits = (uint8_t *)&taudigits;
     SDL_PauseAudio(0);
 
     SDL_MaximizeWindow(window);
@@ -512,10 +512,16 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
     // bleh. offset with first scene to put back camera on track
     const Uint32 ticks_first = ticks_start + scenes[nscenes].duration;
     Uint32 scene_start = ticks_start;
-	taudigits = (uint8_t *)&window;
-	ntaudigits = 128;
     for (;;) {
         SDL_Event event;
+        if (ticks_start - scene_start >= scenes[scene].duration) {
+            scene_start = scene_start + scenes[scene].duration;
+            scene = scene + 1;
+            if (scene >= nscenes) {
+                scene = 0;
+            }
+            switch_scene(&progs[scene], width, height);
+        }
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                 return 0;
@@ -537,7 +543,7 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
             camera = mkcamera(ticks_start - ticks_first, mktranslationm4(scenes[scene].camera_translation));
             glUniformMatrix4fv(progs[scene].ufrm_camera, 1, 0, &camera.c[0].v[0]);
         }
-        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+        //glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
         SDL_GL_SwapWindow(window);
         Uint32 allotted = 16;
         if (waiterror != 2) {
@@ -576,39 +582,101 @@ uint16_t noteshz[] = {
 
 size_t nnoteshz = sizeof(noteshz) / sizeof(*noteshz);
 
+static inline double clamp(double a, double min, double max) {
+    return
+        a < min ? min :
+        a > max ? max :
+                  a;
+}
+
+static inline double smoothstep(double min, double max, double a) {
+    if (a < min) {
+        return 0.0f;
+    }
+    if (a > max) {
+        return 1.0f;
+    }
+    double t = (a - min) / (max - min);
+    t = t * t * t * (t * (t * 6.0f - 15.0f) + 10.0f);
+    t = clamp(t, 0.0f, 1.0f);
+    return t;
+}
+
+static int audio_note_duration(int hz) {
+    //return (int)(log1p(hz) * 2000 + 1000);
+    return 11025;
+}
+
+static void audio_state_advance(audio_state *as, int samples) {
+    int s = as->samples + samples;
+    int n = as->note;
+    int hz = noteshz[taudigits[n] % nnoteshz];
+    int duration = audio_note_duration(hz);
+    while (s >= duration) {
+        s -= duration;
+        n = (n + 1) % ntaudigits;
+        hz = noteshz[taudigits[n] % nnoteshz];
+        duration = audio_note_duration(hz);
+    }
+    as->samples = s;
+    as->note = n;
+}
+
+static double audio_gen(const audio_state *as) {
+    double attack = 0.1;
+    double decay = 0.1;
+    int s = as->samples;
+    int n = as->note;
+    int hz = noteshz[taudigits[n] % nnoteshz];
+    int duration = audio_note_duration(hz);
+    double u = (double)s / duration;
+    double t = ((s * hz) % 44100) / 44099.0;
+    double v = 0;
+    double alpha = t * TAU;
+    double A = -0.5;//1.0 / pow(2, -12) - 1;//alpha / (1 + pow(2, -12));
+    double B = 0;//pow(2, -12) - 1;//alpha * (pow(2, -12));
+    /*
+       for (double factor = 1, displacement = 0; factor < 1.5; factor *= 2.0, displacement += 0.25) {
+       v = v + sin((t * factor + displacement) * TAU) / (abs(log(factor)) * 15 + 1);
+       }
+       */
+    //v = -sin(alpha) * cos(A) + sin(alpha) * cos(B) + cos(alpha) * sin(A) - cos(alpha) * sin(B);
+    //v = sin(alpha);
+    //v = (-exp(B) * alpha + sin(B * alpha) + alpha * cos(B * alpha)) / (exp(B) * (alpha * alpha + 1));
+    // integral sin(alpha * (x + 1)) / exp(|x|) dx over A to B
+    /*
+       v = (exp(-abs(A)) * (sin((A + 1) * alpha) + alpha * cos((A + 1) * alpha))
+       - exp(-abs(B)) * (sin((B + 1) * alpha) + alpha * cos((B + 1) * alpha)))
+       / (alpha * alpha + 1);
+       */
+    v = smoothstep(0, 0.5, t) * smoothstep(0, 0.5, 1 - t) * 2;
+    v *= smoothstep(0, attack, u);
+    v *= smoothstep(0, decay, 1 - u);
+    return v;
+}
+
 //AUDIO
 void audio_callback(void *userdata, Uint8 *stream, int len) {
     audio_state *as = (audio_state *)userdata;
     Sint16 *buf = (Sint16 *)stream;
     size_t bufsz = len / 2;
+    double overlap = 0;
     for (size_t i = 0; i < bufsz; i++) {
-        int s = as->samples + 1;
-        int n = as->note;
-        int hz = noteshz[taudigits[n] % nnoteshz];
-        if ((s * hz) % 44100 < 50 && s > 8000) {
-            s = 0;
-            n = (n + 1) % ntaudigits;
-        }
-        hz = noteshz[taudigits[n] % nnoteshz];
-        double t = ((s * hz) % 44100) / 44099.0;
         double v = 0;
-        double alpha = t * TAU;
-        double A = 1.0 / pow(2, -12) - 1;//alpha / (1 + pow(2, -12));
-        double B = pow(2, -12) - 1;//alpha * (pow(2, -12));
-        /*
-        for (double factor = 1, displacement = 0; factor < 1.5; factor *= 2.0, displacement += 0.25) {
-            v = v + sin((t * factor + displacement) * TAU) / (abs(log(factor)) * 15 + 1);
+        v = audio_gen(as);
+        int hz = noteshz[taudigits[as->note] % nnoteshz];
+        int duration = audio_note_duration(hz);
+        audio_state as_in = *as;
+        if (as->samples + (int)(duration * overlap) >= duration) {
+            audio_state_advance(&as_in, (int)(duration * overlap));
+            v += audio_gen(&as_in);
+            v /= 2;
         }
-        */
-        //v = -sin(alpha) * cos(A) + sin(alpha) * cos(B) + cos(alpha) * sin(A) - cos(alpha) * sin(B);
-        //v = sin(alpha);
-        //v = (-exp(B) * alpha + sin(B * alpha) + alpha * cos(B * alpha)) / (exp(B) * (alpha * alpha + 1));
-        // integral sin(alpha * (x + 1)) / exp(|x|) dx over A to B
-        v = (exp(-abs(A)) * (sin((A + 1) * alpha) + alpha * cos((A + 1) * alpha))
-             - exp(-abs(B)) * (sin((B + 1) * alpha) + alpha * cos((B + 1) * alpha)))
-            / (alpha * alpha + 1);
         buf[i] = (Sint16)(v * 0x4000);
-        as->samples = s;
-        as->note = n;
+        audio_state_advance(as, 1);
+        if (as->samples == 0) {
+            *as = as_in;
+            audio_state_advance(as, 1);
+        }
     }
 }
