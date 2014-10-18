@@ -102,6 +102,8 @@ static int tau(int n) {
 struct audio_state {
     unsigned samples;
     int note;
+	int scale;
+	int scalenotes;
 };
 
 static void audio_callback(void *userdata, Uint8 *stream, int len);
@@ -125,9 +127,7 @@ int main(int argc, char *argv[]) {
         LOG("FAILED TO INIT AUDIO");
         exit(1);
     }
-    audio_state as;
-    as.samples = 0;
-    as.note = 0;
+	audio_state as = { 0 };
     SDL_AudioSpec desired;
     desired.channels = 1;
     desired.format = AUDIO_S16;
@@ -182,9 +182,9 @@ int main(int argc, char *argv[]) {
     }
     //taudigits = (uint8_t *)&main;
     //taudigits = (uint8_t *)fragment_pre_glsl;
-    taudigits = (uint8_t *)&renderloop;
-    //taudigits = SCENES;
-    //taudigits = taudigitsrw;
+    //taudigits = (uint8_t *)&renderloop;
+    //taudigits = SCENES; ntaudigits = sizeof(SCENES);
+    taudigits = taudigitsrw;
     //taudigits = (uint8_t *)&taudigits;
     SDL_PauseAudio(0);
 
@@ -572,7 +572,7 @@ uint16_t noteshz_BLUES[] = {
 
 // BLUES SCALE with silence
 uint16_t noteshz_BLUES_SILENCE[] = {
-    262, 311, 349, 370, 0, 392, 466, 523, 622, 699, //740, 784, //932, 1047, 1245, 1397, 1480
+    262, 311, 349, 0, 370, 392, 466, 523, 622, 699, 740, 784, 932, 1047, 1245, 1397, 1480
 };
 
 //HUNGARIAN MINOR
@@ -581,10 +581,10 @@ uint16_t noteshz_HUNGARIAN[] = {
 };
 
 uint16_t noteshz_HUNGARIAN_SILENCE[] = {
-	262, 294, 311, 0, 370, 392, 415, 494, 523, 587, //622, 734, 784, 831, 988, 1047, 1175
+	262, 294, 311, 370, 392, 415, 494, 523, 587, 622, 734, 784, 831, 988, 1047, 1175
 };
 
-#define noteshz noteshz_BLUES_SILENCE
+#define noteshz noteshz_BLUES
 
 size_t nnoteshz = sizeof(noteshz) / sizeof(*noteshz);
 
@@ -609,13 +609,19 @@ static inline double smoothstep(double min, double max, double a) {
 }
 
 static int audio_note_duration(int hz) {
-    //return (int)(log1p(hz) * 2000 + 1000);
-    return 11025;
+    //return (int)(log1p((double)hz) * 2000 + 1000);
+    return 5555;
+    //return 11025;
+}
+
+static int audio_scale_duration(int scale) {
+    return scale == 0 ? 32 : 8;
 }
 
 static void audio_state_advance(audio_state *as, int samples) {
     int s = as->samples + samples;
     int n = as->note;
+    int t = as->scalenotes;
     int hz = noteshz[taudigits[n] % nnoteshz];
     int duration = audio_note_duration(hz);
     while (s >= duration) {
@@ -623,20 +629,38 @@ static void audio_state_advance(audio_state *as, int samples) {
         n = (n + 1) % ntaudigits;
         hz = noteshz[taudigits[n] % nnoteshz];
         duration = audio_note_duration(hz);
+        t++;
     }
+    duration = audio_scale_duration(as->scale);
+    while (t >= duration) {
+        t -= duration;
+        switch (as->scale) {
+        case 0:
+            as->scale = 7;
+            break;
+        case 7:
+            as->scale = 5;
+            break;
+        default:
+            as->scale = 0;
+            break;
+        }
+        duration = audio_scale_duration(as->scale);
+    }
+    as->scalenotes = t;
     as->samples = s;
     as->note = n;
 }
 
 static double audio_gen(const audio_state *as) {
     double attack = 0.1;
-    double decay = 0.35;
+    double decay = 0.8;
     int s = as->samples;
     int n = as->note;
-    int hz = noteshz[taudigits[n] % nnoteshz];
+    double hz = (n % 2 ? noteshz[(taudigits[n / 2] % (nnoteshz - 1)) + 1] : noteshz[0]) * pow(2, (as->scale) / 12.0);
     int duration = audio_note_duration(hz);
     double u = (double)s / duration;
-    double t = ((s * hz) % 44100) / 44099.0;
+    double t = ((int)(s * hz) % 44100) / 44099.0;
     double v = 0;
     double alpha = t * TAU;
     double A = -1.5;//1.0 / pow(2, -12) - 1;//alpha / (1 + pow(2, -12));
@@ -654,7 +678,7 @@ static double audio_gen(const audio_state *as) {
        v = (exp(-abs(A)) * (sin((A + 1) * alpha) + alpha * cos((A + 1) * alpha))
        - exp(-abs(B)) * (sin((B + 1) * alpha) + alpha * cos((B + 1) * alpha)))
        / (alpha * alpha + 1);
-       
+    
     //v = smoothstep(0, 0.5, t) * smoothstep(0, 0.5, 1 - t) * 2;
     v *= smoothstep(0, attack, u);
     v *= smoothstep(0, decay, 1 - u);
