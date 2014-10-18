@@ -180,9 +180,9 @@ int main(int argc, char *argv[]) {
     for (size_t i = 0; i < ntaudigits; i++) {
         taudigitsrw[i] = tau((int)i);
     }
-    taudigits = (uint8_t *)&main;
+    //taudigits = (uint8_t *)&main;
     //taudigits = (uint8_t *)fragment_pre_glsl;
-    //taudigits = (uint8_t *)&renderloop;
+    taudigits = (uint8_t *)&renderloop;
     //taudigits = SCENES;
     //taudigits = taudigitsrw;
     //taudigits = (uint8_t *)&taudigits;
@@ -566,19 +566,25 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
 }
 
 // BLUES SCALE
-//uint16_t noteshz[] = {
-//    262, 311, 349, 370, 392, 466, 523, 622, 699, 740, 784, 932, 1047, 1245, 1397, 1480
-//};
+uint16_t noteshz_BLUES[] = {
+    262, 311, 349, 370, 392, 466, 523, 622, 699, 740, 784, 932, 1047, 1245, 1397, 1480
+};
 
 // BLUES SCALE with silence
-uint16_t noteshz[] = {
-    262, 311, 349, 0, 370, 392, 466, 523, 622, 699, //740, 784, 932, 1047, 1245, 1397, 1480
+uint16_t noteshz_BLUES_SILENCE[] = {
+    262, 311, 349, 370, 0, 392, 466, 523, 622, 699, //740, 784, //932, 1047, 1245, 1397, 1480
 };
 
 //HUNGARIAN MINOR
-//uint16_t noteshz[] = {
-//    262, 294, 311, 370, 392, 415, 494, 523, 587, 622, 734, 784, 831, 988, 1047, 1175
-//};
+uint16_t noteshz_HUNGARIAN[] = {
+    262, 294, 311, 370, 392, 415, 494, 523, 587, 622, 734, 784, 831, 988, 1047, 1175
+};
+
+uint16_t noteshz_HUNGARIAN_SILENCE[] = {
+	262, 294, 311, 0, 370, 392, 415, 494, 523, 587, //622, 734, 784, 831, 988, 1047, 1175
+};
+
+#define noteshz noteshz_BLUES_SILENCE
 
 size_t nnoteshz = sizeof(noteshz) / sizeof(*noteshz);
 
@@ -624,7 +630,7 @@ static void audio_state_advance(audio_state *as, int samples) {
 
 static double audio_gen(const audio_state *as) {
     double attack = 0.1;
-    double decay = 0.1;
+    double decay = 0.35;
     int s = as->samples;
     int n = as->note;
     int hz = noteshz[taudigits[n] % nnoteshz];
@@ -633,8 +639,8 @@ static double audio_gen(const audio_state *as) {
     double t = ((s * hz) % 44100) / 44099.0;
     double v = 0;
     double alpha = t * TAU;
-    double A = -0.5;//1.0 / pow(2, -12) - 1;//alpha / (1 + pow(2, -12));
-    double B = 0;//pow(2, -12) - 1;//alpha * (pow(2, -12));
+    double A = -1.5;//1.0 / pow(2, -12) - 1;//alpha / (1 + pow(2, -12));
+    double B = 0.5;//pow(2, -12) - 1;//alpha * (pow(2, -12));
     /*
        for (double factor = 1, displacement = 0; factor < 1.5; factor *= 2.0, displacement += 0.25) {
        v = v + sin((t * factor + displacement) * TAU) / (abs(log(factor)) * 15 + 1);
@@ -644,12 +650,12 @@ static double audio_gen(const audio_state *as) {
     //v = sin(alpha);
     //v = (-exp(B) * alpha + sin(B * alpha) + alpha * cos(B * alpha)) / (exp(B) * (alpha * alpha + 1));
     // integral sin(alpha * (x + 1)) / exp(|x|) dx over A to B
-    /*
+    
        v = (exp(-abs(A)) * (sin((A + 1) * alpha) + alpha * cos((A + 1) * alpha))
        - exp(-abs(B)) * (sin((B + 1) * alpha) + alpha * cos((B + 1) * alpha)))
        / (alpha * alpha + 1);
-       */
-    v = smoothstep(0, 0.5, t) * smoothstep(0, 0.5, 1 - t) * 2;
+       
+    //v = smoothstep(0, 0.5, t) * smoothstep(0, 0.5, 1 - t) * 2;
     v *= smoothstep(0, attack, u);
     v *= smoothstep(0, decay, 1 - u);
     return v;
