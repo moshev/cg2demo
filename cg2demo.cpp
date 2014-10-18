@@ -31,7 +31,7 @@ FILE *flog;
 /* read file into memory, return 1 on success, 0 on failure */
 int read_file(const char *path, char **text, size_t *sz);
 
-static const bool movie = false;
+static const bool movie = true;
 
 static const unsigned int WIDTH = 1024;
 static const unsigned int HEIGHT = 768;
@@ -487,7 +487,7 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
     glBindVertexArray(vao);
     glGenBuffers(1, &buf);
     glBindBuffer(GL_ARRAY_BUFFER, buf);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(RECTANGLE), RECTANGLE, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(RECTANGLE), RECTANGLE, GL_STREAM_DRAW);
 
     for (size_t i = 0; i < nscenes; i++) {
         switch_scene(&progs[i], width, height);
@@ -497,6 +497,21 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
     switch_scene(&progs[scene], width, height);
     glUniform1i(progs[scene].ufrm_camera, 0);
 
+	/*
+    GLuint frontcopyRenderbuffer;
+    glGenRenderbuffers(1, &frontcopyRenderbuffer);
+    glBindRenderbuffer(GL_RENDERBUFFER, frontcopyRenderbuffer);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, width, height);
+    GLuint frontcopyFramebuffer;
+    glGenFramebuffers(1, &frontcopyFramebuffer);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, frontcopyFramebuffer);
+    glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, frontcopyRenderbuffer);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+    glReadBuffer(GL_BACK);
+    glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	*/
     // to keep precise 60fps
     // every third frame will be 17ms
     // instead of 16.
@@ -505,6 +520,15 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
     // bleh. offset with first scene to put back camera on track
     const Uint32 ticks_first = ticks_start + scenes[nscenes].duration;
     Uint32 scene_start = ticks_start;
+    unsigned nframes = 0;
+    Uint32 ticks_start_old = ticks_start;
+    Uint32 scene_start_old = scene_start;
+    size_t scene_old = scene;
+    float *rects = (float *)malloc(8 * height * sizeof(float));
+    if (!rects) {
+        LOG("error malloc");
+        exit(1);
+    }
     for (;;) {
         SDL_Event event;
         if (ticks_start - scene_start >= scenes[scene].duration) {
@@ -525,22 +549,132 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
                     glUniform1i(progs[scene].ufrm_width, width);
                     glUniform1i(progs[scene].ufrm_height, height);
                     glViewport(0, 0, width, height);
+                    free(rects);
+                    rects = (float *)malloc(8 * height * sizeof(float));
+                    if (!rects) {
+                        LOG("error malloc");
+                        exit(1);
+                    }
                 }
             }
         }
-        glClear(GL_COLOR_BUFFER_BIT);
-        if (progs[scene].ufrm_millis >= 0) {
-            glUniform1i(progs[scene].ufrm_millis, ticks_start - scene_start);
-        }
+        /*
         if (scene < nscenes) {
-            camera = mkcamera(ticks_start - ticks_first, mktranslationm4(scenes[scene].camera_translation));
-            glUniformMatrix4fv(progs[scene].ufrm_camera, 1, 0, &camera.c[0].v[0]);
+            // copy front to frontcopy
+            glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+            glReadBuffer(GL_FRONT);
+            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, frontcopyFramebuffer);
+            glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
         }
-        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+        */
+        glClear(GL_COLOR_BUFFER_BIT);
+		/*
+        Uint32 ticks_elapsed = ticks_start - ticks_start_old;
+        if (ticks_elapsed < height) {
+            glReadBuffer(GL_FRONT);
+            glBlitFramebuffer(0, ticks_elapsed, width, height,
+                              0, 0, width, height - ticks_elapsed,
+                              GL_COLOR_BUFFER_BIT, GL_NEAREST);
+            glFinish();
+        }
+		*/
+        ticks_start_old = ticks_start;
+        scene_start_old = scene_start;
+        scene_old = scene;
+		/*
+        ticks_start = ticks_start + height - ticks_elapsed;
+        if (ticks_start < ticks_start_old) {
+            ticks_start = ticks_start_old;
+        }
+        while (ticks_start - scene_start >= scenes[scene].duration) {
+            scene_start = scene_start + scenes[scene].duration;
+            scene = scene + 1;
+            if (scene >= nscenes) {
+                scene = 0;
+            }
+        }
+        if (scene != scene_old) {
+            switch_scene(&progs[scene], width, height);
+        }
+        ticks_elapsed = height / 2;
+		*/
+		/*
+        for (unsigned i = 0;
+                i < height; i++, ticks_start++) {
+            if (ticks_start - scene_start >= scenes[scene].duration) {
+                scene_start = scene_start + scenes[scene].duration;
+                scene = scene + 1;
+                if (scene >= nscenes) {
+                    scene = 0;
+                }
+                switch_scene(&progs[scene], width, height);
+            }
+            if (progs[scene].ufrm_millis >= 0) {
+                glUniform1i(progs[scene].ufrm_millis, ticks_start - scene_start);
+            }
+            if (scene < nscenes) {
+                camera = mkcamera(ticks_start - ticks_first, mktranslationm4(scenes[scene].camera_translation));
+                glUniformMatrix4fv(progs[scene].ufrm_camera, 1, 0, &camera.c[0].v[0]);
+            }
+            double factor = 2.0 / height;
+            RECTANGLE[1] = (i * factor) - 1;
+            RECTANGLE[3] = (i * factor) - 1;
+            RECTANGLE[5] = ((i + 1) * factor) - 1;
+            RECTANGLE[7] = ((i + 1) * factor) - 1;
+            glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(RECTANGLE), RECTANGLE);
+            glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+        }
+        ticks_start = ticks_start_old;
+        scene_start = scene_start_old;
+        scene = scene_old;
+        switch_scene(&progs[scene], width, height);
+        RECTANGLE[1] = -1;
+        RECTANGLE[3] = -1;
+        RECTANGLE[5] = 1;
+        RECTANGLE[7] = 1;
+		*/
+		if (progs[scene].ufrm_millis >= 0) {
+			glUniform1i(progs[scene].ufrm_millis, ticks_start - scene_start);
+		}
+		if (scene < nscenes) {
+			camera = mkcamera(ticks_start - ticks_first, mktranslationm4(scenes[scene].camera_translation));
+			glUniformMatrix4fv(progs[scene].ufrm_camera, 1, 0, &camera.c[0].v[0]);
+		}
+		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+        if (scene < nscenes) {
+            // copy frontcopy to back
+            //glBindFramebuffer(GL_READ_FRAMEBUFFER, frontcopyFramebuffer);
+            /*
+            unsigned factor = height / 20;
+            for (unsigned scanline = nframes % factor; scanline < height; scanline += factor) {
+                unsigned end = scanline + factor - 1;
+                if (end > height) {
+                    end = height;
+                }
+                glBlitFramebuffer(0, scanline, width, end, 0, scanline, width, end,
+                        GL_COLOR_BUFFER_BIT, GL_NEAREST);
+            }
+            */
+            /*
+            unsigned factor = 100;
+            unsigned scanline = (nframes % factor) * (height / factor);
+            unsigned end = scanline + height / factor;
+            if (scanline > 0) {
+                glBlitFramebuffer(0, 0, width, scanline, 0, 0, width, scanline,
+                        GL_COLOR_BUFFER_BIT, GL_NEAREST);
+            }
+            if (end < height) {
+                glBlitFramebuffer(0, end, width, height, 0, end, width, height,
+                        GL_COLOR_BUFFER_BIT, GL_NEAREST);
+            }
+            glFinish();
+            */
+        }
         SDL_GL_SwapWindow(window);
-        Uint32 allotted = 16;
+        Uint32 allotted = 17;
         if (waiterror == 2) {
-            allotted++;
+            allotted--;
         }
         if (!movie) {
             Uint32 ticks_end = SDL_GetTicks();
@@ -553,8 +687,10 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
             }
             waiterror = (waiterror + 1) % 3;
         } else {
+            waiterror = (waiterror + 1) % 3;
             ticks_start += allotted;
         }
+        nframes++;
     }
 }
 
