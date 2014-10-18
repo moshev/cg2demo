@@ -7,14 +7,16 @@
 static const uint16_t text_combining_bit = 0x8000;
 
 static const uint16_t text[] = {
+	//           teapot
+	0x0BD8, 0xFFFF, 0xEFFE, 0xC4A0, 0,
     //  F       L       Y       I         N               G
-    0x79A4, 0x4927, 0x5A92, 0x7497, 0x4D64, 0xA4B2, 0x3963, 0xC114, 0,
-    //  T       E       A       P       O       T
-    0x7492, 0x79A7, 0x7B7D, 0x7BE4, 0x7B6F, 0x7492, 0,
-    //  P       R       E         S             E         N             T
-    0x6BA4, 0x6BAD, 0x79A7, 0x38C7, 0xC020, 0x79A7, 0x4D64, 0xA4B2, 0x7492, 0,
-    //  [         M             U         S             H       R       O       O         M             ]
-    0x6926, 0x4D64, 0xAC92, 0x5B6F, 0x38C7, 0xC020, 0x5BED, 0x6BAD, 0x2B6A, 0x2B6A, 0x4D64, 0xAC92, 0x324B, 0,
+	0x39A4, 0x4927, 0x5B52, 0x7497, 0x49AC, 0xC924, 0x3967, 0xC120, 0,
+    //  T   filler     E       A       P         O            T
+    0x7492, 0x8000, 0x39A7, 0x3B7D, 0x3B74, 0x3927, 0xC920, 0x7492, 0,
+	// mushroom, mushroom
+	0x3E09, 0xCC00, 0x07C1, 0x8980, 0, 
+    //  [         M               U               S               H               R               O               O               M             ]
+	0x6926, 0x4D64, 0xAC92, 0x4927, 0xC920, 0x39C7, 0xE194, 0x49E4, 0xC924, 0x793C, 0x8904, 0x3927, 0xC920, 0x3927, 0xC920, 0x4D64, 0xAC92, 0x324B, 0,
 };
 
 static const size_t ntext = sizeof(text) / sizeof(*text);
@@ -98,7 +100,7 @@ static bool check_neighbour(uint8_t *mydist, uint8_t neighbourdist) {
 }
 #endif
 
-static const int line_height = 7;
+static const int line_height = 6;
 
 int render_text(struct text_tex *tex) {
     LOGF("Text bytes: %d", (int)sizeof(text));
@@ -180,7 +182,8 @@ int render_text(struct text_tex *tex) {
         }
     } while (changes);
 #endif
-
+	// bloody awful hack for teapot lid
+	img[3103] = 0xFF;
 #if !defined(NDEBUG)
 	FILE *imgraw = fopen("img.raw", "wb");
 	fwrite(img, 1, w * h, imgraw);
