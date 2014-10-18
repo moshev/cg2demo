@@ -8,6 +8,8 @@ uniform mat4 camera;
 // ray
 centroid in vec2 pixelcenter;
 
+in float millis2;
+
 /*
 // pixel size
 flat in vec2 pixel;
@@ -139,7 +141,7 @@ vec3 tile(vec3 p, vec3 r) {
 
 // 0.0 - 1.0
 float timing(int p) {
-    return float(int(millis) % p) / float(p - 1);
+    return float(int(millis2) % p) / float(p - 1);
 }
 
 // 0.0 - 1.0 - 0.0

@@ -497,6 +497,7 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
     switch_scene(&progs[scene], width, height);
     glUniform1i(progs[scene].ufrm_camera, 0);
 
+	/*
     GLuint frontcopyRenderbuffer;
     glGenRenderbuffers(1, &frontcopyRenderbuffer);
     glBindRenderbuffer(GL_RENDERBUFFER, frontcopyRenderbuffer);
@@ -510,6 +511,7 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
     glReadBuffer(GL_BACK);
     glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	*/
     // to keep precise 60fps
     // every third frame will be 17ms
     // instead of 16.
@@ -567,6 +569,7 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
         }
         */
         glClear(GL_COLOR_BUFFER_BIT);
+		/*
         Uint32 ticks_elapsed = ticks_start - ticks_start_old;
         if (ticks_elapsed < height) {
             glReadBuffer(GL_FRONT);
@@ -575,9 +578,11 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
                               GL_COLOR_BUFFER_BIT, GL_NEAREST);
             glFinish();
         }
+		*/
         ticks_start_old = ticks_start;
         scene_start_old = scene_start;
         scene_old = scene;
+		/*
         ticks_start = ticks_start + height - ticks_elapsed;
         if (ticks_start < ticks_start_old) {
             ticks_start = ticks_start_old;
@@ -593,8 +598,10 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
             switch_scene(&progs[scene], width, height);
         }
         ticks_elapsed = height / 2;
+		*/
+		/*
         for (unsigned i = 0;
-                i < height && i < ticks_elapsed; i++, ticks_start++) {
+                i < height; i++, ticks_start++) {
             if (ticks_start - scene_start >= scenes[scene].duration) {
                 scene_start = scene_start + scenes[scene].duration;
                 scene = scene + 1;
@@ -626,6 +633,15 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
         RECTANGLE[3] = -1;
         RECTANGLE[5] = 1;
         RECTANGLE[7] = 1;
+		*/
+		if (progs[scene].ufrm_millis >= 0) {
+			glUniform1i(progs[scene].ufrm_millis, ticks_start - scene_start);
+		}
+		if (scene < nscenes) {
+			camera = mkcamera(ticks_start - ticks_first, mktranslationm4(scenes[scene].camera_translation));
+			glUniformMatrix4fv(progs[scene].ufrm_camera, 1, 0, &camera.c[0].v[0]);
+		}
+		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
         if (scene < nscenes) {
             // copy frontcopy to back
             //glBindFramebuffer(GL_READ_FRAMEBUFFER, frontcopyFramebuffer);
