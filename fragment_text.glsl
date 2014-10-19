@@ -13,8 +13,8 @@ void main() {
     t1 = pow(t, vec2(coming, coming));
     t2 = vec2(1, 1) - pow((vec2(1, 1) - t), vec2(1 - going, 1 - going));
 #elif TRANSITION == 1
-    t1 = clamp(t, 0, coming);
-    t2 = clamp(t, going, 1);
+    t1 = clamp(t, 1 - coming, 1);
+    t2 = clamp(t, 0, 1 - going);
 #elif TRANSITION == 2
     t1 = clamp(t, 0, pow(coming, 0.5));
     t2 = clamp(t, pow(going, 0.5), 1);
