@@ -92,6 +92,7 @@ static int modpow(int base, int exponent, int modulus) {
 // I could not understand Bailey-Borwein-Plouffe
 // this is not quite that formula
 // but it generates some randomish numbers
+// Shamelessly copied (mostly) from http://www.jasondavies.com/bbp/
 static double S(int j, int n) {
     double s = 0;
     int k;
@@ -237,7 +238,7 @@ int main(int argc, char *argv[]) {
     uint8_t *taudigitsrw = (uint8_t *)malloc(ntaudigits);
     // gen tau
     for (size_t i = 0, j = 0; j < ntaudigits; i++) {
-        int digit = tau((int)i);
+        int digit = tau((int)i + 1);
         if (i < 16) {
             LOGF("tau_%02d = %d", (int)i, digit);
         }
@@ -783,7 +784,7 @@ static int audio_note_duration(const audio_state *as) {
     //return 11025;
     //return as->current_scene % 2 ? 5555 : 11025;
     //return 22050;
-    return (as->note % 2 ? 11025 : 5512);
+    return (as->note % 2 ? 11025 : 5450);
 }
 
 static int audio_scale_duration(int scale) {
@@ -879,10 +880,6 @@ static double audio_gen_note_sample(int samples, double hz) {
     return v;
 }
 
-static double audio_mix(double v1, double v2) {
-    return v1 + v2;
-}
-
 static double audio_gen(const audio_state *as) {
     double attack = 0.035;
     double sustain = 0.0;
@@ -897,12 +894,17 @@ static double audio_gen(const audio_state *as) {
     f *= 1 - smoothstep(attack + sustain, attack + sustain + release, u);
     v = f * audio_gen_note_sample(as->samples, hz);
     audio_state asrw = *as;
-    asrw.scale += 4;
+    if (as->note % 2) {
+        asrw.scale += 4;
+    }
     hz = audio_note_hz(&asrw);
-    v = audio_mix(v, f * audio_gen_note_sample(as->samples, hz));
-    asrw.scale += 3;
+    v += f * audio_gen_note_sample(as->samples, hz);
+    if (as->note % 2) {
+        asrw.scale += 3;
+    }
     hz = audio_note_hz(&asrw);
-    v = audio_mix(v, f * audio_gen_note_sample(as->samples, hz));
+    v += f * audio_gen_note_sample(as->samples, hz);
+    v = clamp(v, -1, 1);
     //v -= 1;
     //v = smoothstep(0, 0.5, 0.5 - abs(t - 0.5)) * 2 - 1;
     return v;
@@ -917,7 +919,7 @@ void audio_callback(void *userdata, Uint8 *stream, int len) {
     for (size_t i = 0; i < bufsz; i++) {
         double v = 0;
         v = audio_gen(as);
-        buf[i] = (Sint16)(v * 0x4000);
+        buf[i] = (Sint16)(v * 0x7FFF);
         audio_state_advance(as, 1);
     }
     if (movie) {
