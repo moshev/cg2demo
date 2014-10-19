@@ -17,6 +17,8 @@
 #include <SDL_opengl.h>
 #endif
 
+#include <atomic>
+
 #include "cg2demo.h"
 #include "math3d.h"
 #include "scene.h"
@@ -44,8 +46,12 @@ static GLfloat RECTANGLE[] = {
     -1, 1
 };
 
-static uint8_t *taudigits;
-static const size_t ntaudigits = 1280;
+static const uint8_t SCENES[] = {
+#include "scenespecs.inc"
+};
+
+static const uint8_t *taudigits;
+static size_t ntaudigits = 1280;
 
 static const char *vertex_glsl;
 static size_t vertex_glslsz;
@@ -65,6 +71,8 @@ static void check_program(GLuint id);
 static void check_shader(GLuint id);
 
 static GLuint create_program(const char *vs, size_t szvs, const char *fs, size_t szfs);
+
+static std::atomic_int current_scene;
 
 // http://en.wikipedia.org/wiki/Modular_exponentiation#Right-to-left_binary_method
 static int modpow(int base, int exponent, int modulus) {
@@ -95,9 +103,47 @@ static int tau(int n) {
     return r;
 }
 
+// BLUES SCALE
+uint16_t noteshz_BLUES[] = {
+    262, 311, 349, 370, 392, 466, 523, 622, 699, 740, 784, 932, 1047, 1245, 1397, 1480
+};
+
+int8_t notesoffsets_BLUES[] = {
+	3, 6, 8, 9, 10, 13, 15, 18, 20, 21, 22, 25, //27, 30, 32, 33, 35,
+};
+
+int8_t notesoffsets_MIDDLE_BLUES[] = {
+	-5, -2, 0, 1, 2, 5, 7, 11, 12, 13, 14, 17, //19, 23, 24, 25, 27,
+};
+
+int8_t notesoffsets_DEEP_BLUES[] = {
+	-13, -10, -8, -7, -6, -3, -1, 3, 4, 5, 6, 9, 11, 14, 16, 17, 19,
+};
+
+// BLUES SCALE with silence
+uint16_t noteshz_BLUES_SILENCE[] = {
+    262, 311, 349, 0, 370, 392, 466, 523, 622, 699, 740, 784, 932, 1047, 1245, 1397, 1480
+};
+
+//HUNGARIAN MINOR
+uint16_t noteshz_HUNGARIAN[] = {
+    262, 294, 311, 370, 392, 415, 494, 523, 587, 622, 734, 784, 831, 988, 1047, 1175
+};
+
+uint16_t noteshz_HUNGARIAN_SILENCE[] = {
+	262, 294, 311, 370, 392, 415, 494, 523, 587, 622, 734, 784, 831, 988, 1047, 1175
+};
+
+#define notesoffsets notesoffsets_MIDDLE_BLUES
+
+size_t nnotesoffsets = sizeof(notesoffsets) / sizeof(*notesoffsets);
+
 struct audio_state {
     unsigned samples;
     int note;
+	int scale;
+	int scalenotes;
+	int current_scene;
 };
 
 static void audio_callback(void *userdata, Uint8 *stream, int len);
@@ -121,9 +167,7 @@ int main(int argc, char *argv[]) {
         LOG("FAILED TO INIT AUDIO");
         exit(1);
     }
-    audio_state as;
-    as.samples = 0;
-    as.note = 0;
+	audio_state as = { 0 };
     SDL_AudioSpec desired;
     desired.channels = 1;
     desired.format = AUDIO_S16;
@@ -170,11 +214,16 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    taudigits = (uint8_t *)malloc(ntaudigits);
+
+    uint8_t *taudigitsrw = (uint8_t *)malloc(ntaudigits);
     // gen tau
-    for (size_t i = 0; i < ntaudigits; i++) {
-        taudigits[i] = tau((int)i);
+    for (size_t i = 0, j = 0; j < ntaudigits; i++) {
+		unsigned digit = tau((int)i);
+		if (digit < nnotesoffsets - 1) {
+			taudigitsrw[j++] = (uint8_t)digit;
+		}
     }
+    taudigits = taudigitsrw;
 
     SDL_MaximizeWindow(window);
     // main loop
@@ -335,10 +384,6 @@ static GLuint create_program(const char *vs, size_t szvs, const char *fs, size_t
 static float smootherstep(float x) {
     return  x*x*x*(x*(x * 6 - 15) + 10);
 }
-
-static const uint8_t SCENES[] = {
-#include "scenespecs.inc"
-};
 
 static mat4 mkcamera(Uint32 ticks, mat4 additional) {
     ///*
@@ -567,8 +612,8 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 	*/
     // to keep precise 60fps
-    // every third frame will be 17ms
-    // instead of 16.
+    // every third frame will be 16ms
+    // instead of 17.
     int waiterror = 0;
     Uint32 ticks_start = SDL_GetTicks();
     // bleh. offset with first scene to put back camera on track
@@ -581,6 +626,8 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
         return 1;
     }
     size_t framebuffer = 0;
+	current_scene.store((int)scene, std::memory_order_release);
+    SDL_PauseAudio(0);
     for (;;) {
         if (ticks_start - scene_start >= scenes[scene].duration) {
             scene_start = scene_start + scenes[scene].duration;
@@ -589,6 +636,7 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
                 scene = 0;
             }
             switch_scene(&progs[scene], width, height);
+			current_scene.store((int)scene, std::memory_order_release);
         }
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
@@ -672,33 +720,140 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
     }
 }
 
-// BLUES SCALE
-uint16_t noteshz[] = {
-    262, 311, 349, 370, 392, 466, 523, 622, 699, 740, 784, 932, 1047, 1245, 1397, 1480
-};
+static inline double clamp(double a, double min, double max) {
+    return
+        a < min ? min :
+        a > max ? max :
+                  a;
+}
 
-//HUNGARIAN MINOR
-//uint16_t noteshz[] = {
-//    262, 294, 311, 370, 392, 415, 494, 523, 587, 622, 734, 784, 831, 988, 1047, 1175
-//};
+static inline double smoothstep(double min, double max, double a) {
+    if (a < min) {
+        return 0.0f;
+    }
+    if (a > max) {
+        return 1.0f;
+    }
+    double t = (a - min) / (max - min);
+    t = t * t * t * (t * (t * 6.0f - 15.0f) + 10.0f);
+    t = clamp(t, 0.0f, 1.0f);
+    return t;
+}
+
+static int audio_note_duration(const audio_state *as) {
+    //return (int)(log1p((double)hz) * 2000 + 1000);
+    //return 5555;
+    return 11025;
+	//return as->current_scene % 2 ? 5555 : 11025;
+	//return 22050;
+}
+
+static int audio_scale_duration(int scale) {
+    return scale == 0 ? 32 : 8;
+}
+
+double audio_note_hz(const audio_state *as) {
+	int n = as->note;
+	int offset = n % 2 ?
+		notesoffsets[(taudigits[n / 2] % (nnotesoffsets - 1)) + 1] :
+		notesoffsets[0];
+	double hz = 220.0 * pow(2.0, (offset + as->scale) / 12.0);
+	return hz;
+}
+
+static void audio_state_advance(audio_state *as, int samples) {
+    int s = as->samples + samples;
+    int n = as->note;
+    int t = as->scalenotes;
+    int duration = audio_note_duration(as);
+    while (s >= duration) {
+        s -= duration;
+        n = (n + 1) % ntaudigits;
+        duration = audio_note_duration(as);
+        t++;
+    }
+    duration = audio_scale_duration(as->scale);
+    while (t >= duration) {
+        t -= duration;
+        switch (as->scale) {
+        case 0:
+            as->scale = 7;
+            break;
+        case 7:
+            as->scale = 5;
+            break;
+        default:
+            as->scale = 0;
+            break;
+        }
+        duration = audio_scale_duration(as->scale);
+    }
+    as->scalenotes = t;
+    as->samples = s;
+    as->note = n;
+}
+
+static double audio_gen_note_sample(int samples, double hz) {
+    double t = ((int)(samples * hz) % 44100) / 44099.0;
+    double alpha = t * TAU;
+    double A = -0.5;//1.0 / pow(2, -12) - 1;//alpha / (1 + pow(2, -12));
+    double B = 1.0;//pow(2, -12) - 1;//alpha * (pow(2, -12));
+	double v = 0;
+    /*
+       for (double factor = 1, displacement = 0; factor < 1.5; factor *= 2.0, displacement += 0.25) {
+       v = v + sin((t * factor + displacement) * TAU) / (abs(log(factor)) * 15 + 1);
+       }
+       */
+    //v = -sin(alpha) * cos(A) + sin(alpha) * cos(B) + cos(alpha) * sin(A) - cos(alpha) * sin(B);
+    //v = sin(alpha);
+    //v = (-exp(B) * alpha + sin(B * alpha) + alpha * cos(B * alpha)) / (exp(B) * (alpha * alpha + 1));
+    // integral sin(alpha * (x + 1)) / exp(|x|) dx over A to B
+
+    v = (exp(-abs(A)) * (sin((A + 1) * alpha) + alpha * cos((A + 1) * alpha))
+       - exp(-abs(B)) * (sin((B + 1) * alpha) + alpha * cos((B + 1) * alpha)))
+       / (alpha * alpha + 1);
+
+
+	// chords
+	//v = smoothstep(0, 0.5, t) * smoothstep(0, 0.5, 1 - t);
+	return v;
+}
+
+static double audio_gen(const audio_state *as) {
+    double attack = 0.31;
+	double sustain = 0.09;
+    double release = 0.6;
+    int s = as->samples;
+	double hz = audio_note_hz(as);
+    int duration = audio_note_duration(as);
+    double u = (double)s / duration;
+    double v = 0;
+	v = audio_gen_note_sample(as->samples, hz);
+	audio_state asrw = *as;
+	asrw.scale += 4;
+	hz = audio_note_hz(&asrw);
+	v += audio_gen_note_sample(as->samples + 5000, hz);
+	asrw.scale += 3;
+	hz = audio_note_hz(&asrw);
+	v += audio_gen_note_sample(as->samples + 10000, hz);
+	v *= 1.0 / 3.0;
+	//v -= 1;
+	//v = smoothstep(0, 0.5, 0.5 - abs(t - 0.5)) * 2 - 1;
+    v *= smoothstep(0, attack, u);
+    v *= 1 - smoothstep(attack + sustain, attack + sustain + release, u);
+    return v;
+}
 
 //AUDIO
 void audio_callback(void *userdata, Uint8 *stream, int len) {
     audio_state *as = (audio_state *)userdata;
     Sint16 *buf = (Sint16 *)stream;
     size_t bufsz = len / 2;
+	as->current_scene = current_scene.load(std::memory_order_acquire);
     for (size_t i = 0; i < bufsz; i++) {
-        int s = as->samples + 1;
-        int n = as->note;
-        int hz = noteshz[taudigits[n]];
-        if ((s * hz) % 44100 < 500 && s > 11025) {
-            s = 0;
-            n = (n + 1) % ntaudigits;
-        }
-        hz = noteshz[taudigits[n]];
-        double t = ((s * hz) % 44100) / 44099.0;
-        buf[i] = (Sint16)(sin(t * TAU) * 0x2000);
-        as->samples = s;
-        as->note = n;
+        double v = 0;
+        v = audio_gen(as);
+        buf[i] = (Sint16)(v * 0x4000);
+        audio_state_advance(as, 1);
     }
 }

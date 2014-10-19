@@ -1,7 +1,7 @@
 CC=gcc
 CXX=g++
 CFLAGS=-std=c11 -Wall -Werror -march=native -Og -g
-CXXFLAGS=-std=c++11 -Wall -Werror -Wno-comment -Wno-error=comment -march=native -Og -g `pkg-config --cflags-only-I sdl2` -I/usr/include/malloc -DGL_GLEXT_FUNCTION_POINTERS=1
+CXXFLAGS=-std=c++11 -Wall -Werror -Wno-comment -Wno-error=comment -march=native -O2 -g `pkg-config --cflags-only-I sdl2` -I/usr/include/malloc -DGL_GLEXT_FUNCTION_POINTERS=1
 
 cg2demo: cg2demo.o scene.o shaders.o text.o
 # -lGL has to be at end or you start getting awful warnings!
