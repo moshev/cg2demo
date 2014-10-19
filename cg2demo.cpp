@@ -92,18 +92,33 @@ static int modpow(int base, int exponent, int modulus) {
 // I could not understand Bailey-Borwein-Plouffe
 // this is not quite that formula
 // but it generates some randomish numbers
-static int S(int j, int n) {
+static double S(int j, int n) {
     double s = 0;
-    for (int k = 0; k <= n; ++k) {
+    int k;
+    for (k = 0; k <= n; ++k) {
         int r = 8 * k + j;
-        s += (2 * modpow(16, n - k, r)) / (double)r;
+        double t = modpow(16, n - k, r);
+        s += t / r;
+        s -= floor(s);
     }
-    return (int)s & 0xf;
+    k = n + 1;
+    double k1 = 0;
+    double k2 = 0;
+    double f = pow(16.0, -k);
+    do {
+        k1 = k2;
+        k2 = k2 + f / (8.0 * k + j);
+        k++;
+        f /= 16.0;
+    } while (abs(k1 - k2) > 1.0e-128);
+    return s + k2;
 }
 
 static int tau(int n) {
-    int r = (4 * S(1, n) - 2 * S(2, n) - S(3, n) - S(4, n)) & 0xf;
-    return r;
+    int n1 = n - 1;
+    double r = (8 * S(1, n1) - 4 * S(2, n1) - 2 * S(3, n1) - 2 * S(4, n1));
+    r -= floor(r);
+    return (int)floor(16.0 * r);
 }
 
 // BLUES SCALE
@@ -120,7 +135,7 @@ int8_t notesoffsets_MIDDLE_BLUES[] = {
 };
 
 int8_t notesoffsets_DEEP_BLUES[] = {
-    -13, -10, -8, -7, -6, -3, -1, 3, 4, 5, 6, 9, 11, 14, 16, 17, 19,
+    -13, -10, -8, -7, -6, -3, -1, 3, 4, 5, 6, 9, //11, 14, 16, 17, 19,
 };
 
 // BLUES SCALE with silence
@@ -133,11 +148,7 @@ uint16_t noteshz_HUNGARIAN[] = {
     262, 294, 311, 370, 392, 415, 494, 523, 587, 622, 734, 784, 831, 988, 1047, 1175
 };
 
-uint16_t noteshz_HUNGARIAN_SILENCE[] = {
-    262, 294, 311, 370, 392, 415, 494, 523, 587, 622, 734, 784, 831, 988, 1047, 1175
-};
-
-#define notesoffsets notesoffsets_MIDDLE_BLUES
+#define notesoffsets notesoffsets_DEEP_BLUES
 
 size_t nnotesoffsets = sizeof(notesoffsets) / sizeof(*notesoffsets);
 
@@ -226,9 +237,12 @@ int main(int argc, char *argv[]) {
     uint8_t *taudigitsrw = (uint8_t *)malloc(ntaudigits);
     // gen tau
     for (size_t i = 0, j = 0; j < ntaudigits; i++) {
-        unsigned digit = tau((int)i);
-        if (digit < nnotesoffsets - 1) {
-            taudigitsrw[j++] = (uint8_t)digit;
+        int digit = tau((int)i);
+        if (i < 16) {
+            LOGF("tau_%02d = %d", (int)i, digit);
+        }
+        if ((size_t)digit < nnotesoffsets - 1) {
+            taudigitsrw[j++] = (uint8_t)digit % 16;
         }
     }
     taudigits = taudigitsrw;
@@ -546,7 +560,7 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
         progs[i].ufrm_millis = glGetUniformLocation(progs[i].id, "millis");
         progs[i].ufrm_camera = glGetUniformLocation(progs[i].id, "camera");
         progs[i].ufrm_currentFramebuffer = glGetUniformLocation(progs[i].id, "currentFramebuffer");
-        GLuint samplers = glGetUniformLocation(progs[i].id, "framessampler");
+        GLint samplers = glGetUniformLocation(progs[i].id, "framessampler");
         glUseProgram(progs[i].id);
         if (samplers >= 0) {
             glUniform1iv(samplers, MOTIONBLUR_FACTOR, framebuffer_texture_samplers);
@@ -704,7 +718,7 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
             glUniformMatrix4fv(progs[scene].ufrm_camera, 1, 0, &camera.c[0].v[0]);
         }
         glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+        //glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
         glDrawBuffer(GL_BACK);
         glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer_id[framebuffer]);
@@ -766,9 +780,10 @@ static inline double smoothstep(double min, double max, double a) {
 static int audio_note_duration(const audio_state *as) {
     //return (int)(log1p((double)hz) * 2000 + 1000);
     //return 5555;
-    return 11025;
+    //return 11025;
     //return as->current_scene % 2 ? 5555 : 11025;
     //return 22050;
+    return as->note % 2 ? 11025 : 5512;
 }
 
 static int audio_scale_duration(int scale) {
@@ -791,7 +806,12 @@ static void audio_state_advance(audio_state *as, int samples) {
     int duration = audio_note_duration(as);
     while (s >= duration) {
         s -= duration;
-        n = (n + 1) % ntaudigits;
+        n = n + 1;
+        if (n % 2 && (size_t)(n / 2) >= ntaudigits) {
+            n = 0;
+        }
+        as->samples = s;
+        as->note = n;
         duration = audio_note_duration(as);
         t++;
     }
@@ -816,36 +836,53 @@ static void audio_state_advance(audio_state *as, int samples) {
     as->note = n;
 }
 
+#define AUDIO_GEN_FUNC 3
+
 static double audio_gen_note_sample(int samples, double hz) {
     double t = ((int)(samples * hz) % 44100) / 44099.0;
     double alpha = t * TAU;
-    double A = -0.5;//1.0 / pow(2, -12) - 1;//alpha / (1 + pow(2, -12));
-    double B = 1.0;//pow(2, -12) - 1;//alpha * (pow(2, -12));
+    double A = 0.8;//1.0 / pow(2, -12) - 1;//alpha / (1 + pow(2, -12));
+    double B = 1.3;//pow(2, -12) - 1;//alpha * (pow(2, -12));
     double v = 0;
-    /*
-       for (double factor = 1, displacement = 0; factor < 1.5; factor *= 2.0, displacement += 0.25) {
-       v = v + sin((t * factor + displacement) * TAU) / (abs(log(factor)) * 15 + 1);
-       }
-       */
-    //v = -sin(alpha) * cos(A) + sin(alpha) * cos(B) + cos(alpha) * sin(A) - cos(alpha) * sin(B);
-    //v = sin(alpha);
-    //v = (-exp(B) * alpha + sin(B * alpha) + alpha * cos(B * alpha)) / (exp(B) * (alpha * alpha + 1));
-    // integral sin(alpha * (x + 1)) / exp(|x|) dx over A to B
-
-    v = (exp(-abs(A)) * (sin((A + 1) * alpha) + alpha * cos((A + 1) * alpha))
-       - exp(-abs(B)) * (sin((B + 1) * alpha) + alpha * cos((B + 1) * alpha)))
-       / (alpha * alpha + 1);
-
-
-    // chords
-    //v = smoothstep(0, 0.5, t) * smoothstep(0, 0.5, 1 - t);
+#if AUDIO_GEN_FUNC == 0
+    // B
+    // ⌠
+    // ⎮ sin(alpha + x) dx
+    // ⌡
+    // A
+    v = -sin(alpha) * cos(A) + sin(alpha) * cos(B) + cos(alpha) * sin(A) - cos(alpha) * sin(B);
+#elif AUDIO_GEN_FUNC == 1
+    (void) A;
+    (void) B;
+    v = sin(alpha);
+#elif AUDIO_GEN_FUNC == 2
+    // B
+    // ⌠
+    // ⎮ sin(alpha * x) / exp(|x - 1|) dx
+    // ⌡
+    // A
+    // calculated using sympy
+    double a2p1 = alpha * alpha + 1;
+    v = - exp(1) * alpha * cos(B * alpha) / (a2p1 * exp(B))
+        - exp(1) * alpha * sin(B * alpha) / (a2p1 * exp(B))
+        + exp(1) *         sin(    alpha) / (a2p1 * exp(1))
+        + exp(A) * alpha * cos(A * alpha) / (a2p1 * exp(1))
+        - exp(A) *         sin(A * alpha) / (a2p1 * exp(1))
+        + exp(1) *         sin(    alpha) / (a2p1 * exp(1));
+    v /= 2 - exp(1 - B) - exp(A - 1);
+#elif AUDIO_GEN_FUNC == 3
+    (void) A;
+    (void) B;
+    (void) alpha;
+    v = smoothstep(0, 0.5, t) * smoothstep(0, 0.5, 1 - t);
+#endif
     return v;
 }
 
 static double audio_gen(const audio_state *as) {
-    double attack = 0.31;
-    double sustain = 0.09;
-    double release = 0.6;
+    double attack = 0.035;
+    double sustain = 0.0;
+    double release = 0.82;
     int s = as->samples;
     double hz = audio_note_hz(as);
     int duration = audio_note_duration(as);
@@ -855,10 +892,10 @@ static double audio_gen(const audio_state *as) {
     audio_state asrw = *as;
     asrw.scale += 4;
     hz = audio_note_hz(&asrw);
-    v += audio_gen_note_sample(as->samples + 5000, hz);
+    v += audio_gen_note_sample(as->samples, hz);
     asrw.scale += 3;
     hz = audio_note_hz(&asrw);
-    v += audio_gen_note_sample(as->samples + 10000, hz);
+    v += audio_gen_note_sample(as->samples, hz);
     v *= 1.0 / 3.0;
     //v -= 1;
     //v = smoothstep(0, 0.5, 0.5 - abs(t - 0.5)) * 2 - 1;
