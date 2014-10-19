@@ -31,7 +31,7 @@ FILE *flog;
 /* read file into memory, return 1 on success, 0 on failure */
 int read_file(const char *path, char **text, size_t *sz);
 
-static const bool movie = false;
+static const bool movie = true;
 
 static const unsigned int WIDTH = 1024;
 static const unsigned int HEIGHT = 768;
@@ -175,12 +175,12 @@ int main(int argc, char *argv[]) {
     for (size_t i = 0; i < ntaudigits; i++) {
         taudigits[i] = tau((int)i);
     }
-    SDL_PauseAudio(0);
 
     SDL_MaximizeWindow(window);
     // main loop
     int result = renderloop(window, context);
     SDL_DestroyWindow(window);
+    SDL_Quit();
     return result;
 }
 
@@ -374,6 +374,7 @@ struct program {
     GLint ufrm_height;
     GLint ufrm_millis;
     GLint ufrm_camera;
+    GLint ufrm_currentFramebuffer;
 };
 
 static void switch_scene(struct program *prog, unsigned width, unsigned height) {
@@ -382,7 +383,6 @@ static void switch_scene(struct program *prog, unsigned width, unsigned height) 
     glUniform1i(prog->ufrm_height, height);
     glEnableVertexAttribArray(prog->attr_p);
     glVertexAttribPointer(prog->attr_p, 2, GL_FLOAT, 0, 0, 0);
-
 }
 
 static int renderloop(SDL_Window *window, SDL_GLContext context) {
@@ -390,6 +390,18 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
     unsigned int height;
     mat4 camera;
     SDL_GetWindowSize(window, (int *)&width, (int *)&height);
+    SDL_Event event;
+    // in some cases the window is resized by delivering
+    // a resize event. try to catch that
+    SDL_Delay(100);
+    for (int i = 0; SDL_PollEvent(&event) && i < 500; i++) {
+        if (event.type == SDL_WINDOWEVENT) {
+            if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
+                width = event.window.data1;
+                height = event.window.data2;
+            }
+        }
+    }
 
     glViewport(0, 0, width, height);
     //glClearColor(0x8A / 255.0f, 0xFF / 255.0f, 0xC1 / 255.0f, 1);
@@ -409,11 +421,12 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
     struct text_tex img;
     if (!render_text(&img)) {
         LOG("Error render text");
-        exit(1);
+        return 1;
     }
 
     GLuint img_texid;
     glGenTextures(1, &img_texid);
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, img_texid);
     for (int level = 0; img.width > 0 && img.height > 0; level++) {
         glTexImage2D(GL_TEXTURE_2D, level, GL_RED, img.width, img.height, 0, GL_RED, GL_UNSIGNED_BYTE, img.data);
@@ -441,7 +454,7 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
     size_t nscenes;
     if (!split_scenes(SCENES, sizeof(SCENES), &scenes, &nscenes)) {
         LOG("error splitting scenes");
-        exit(1);
+        return 1;
     }
     // make room for text
     {
@@ -450,7 +463,7 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
         scenes = (struct scene *)malloc(sizeof(struct scene) * (nscenes + 1));
         if (!scenes) {
             LOG("Error malloc");
-            exit(1);
+            return 1;
         }
         memcpy(scenes, tmpscenes, sizeof(struct scene) * nscenes);
         free(tmpscenes);
@@ -462,32 +475,74 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
     struct program *progs;
     // +1 for the starting text scene
     progs = (struct program *)malloc((nscenes + 1) * sizeof(struct program));
-    for (size_t i = 0; i < nscenes; i++) {
-        progs[i].id = create_program_from_scene(scenes[i].data, scenes[i].datasz);
+    GLint *framebuffer_texture_samplers = (GLint *)malloc(MOTIONBLUR_FACTOR * sizeof(GLint));
+    for (size_t i = 0; i < MOTIONBLUR_FACTOR; i++) {
+        framebuffer_texture_samplers[i] = i + 1;
+    }
+    for (size_t i = 0; i < nscenes + 1; i++) {
+        if (i < nscenes) {
+            progs[i].id = create_program_from_scene(scenes[i].data, scenes[i].datasz);
+        } else {
+            progs[nscenes].id = create_text_program();
+        }
         progs[i].attr_p = glGetAttribLocation(progs[i].id, "p");
         progs[i].ufrm_width = glGetUniformLocation(progs[i].id, "width");
         progs[i].ufrm_height = glGetUniformLocation(progs[i].id, "height");
         progs[i].ufrm_millis = glGetUniformLocation(progs[i].id, "millis");
         progs[i].ufrm_camera = glGetUniformLocation(progs[i].id, "camera");
+        progs[i].ufrm_currentFramebuffer = glGetUniformLocation(progs[i].id, "currentFramebuffer");
+        GLuint samplers = glGetUniformLocation(progs[i].id, "framessampler");
+        glUseProgram(progs[i].id);
+        if (samplers >= 0) {
+            glUniform1iv(samplers, MOTIONBLUR_FACTOR, framebuffer_texture_samplers);
+        }
+        glBindFragDataLocation(progs[i].id, 0, "colorBackLeft");
+        glBindFragDataLocation(progs[i].id, 1, "colorObject");
+        if (i == nscenes) {
+            GLuint textsampler_location = glGetUniformLocation(progs[i].id, "textsampler");
+            glUniform1i(textsampler_location, 0);
+        }
     }
-
-    // initialise the text scene
-    progs[nscenes].id = create_text_program();
-    progs[nscenes].attr_p = glGetAttribLocation(progs[nscenes].id, "p");
-    progs[nscenes].ufrm_width = glGetUniformLocation(progs[nscenes].id, "width");
-    progs[nscenes].ufrm_height = glGetUniformLocation(progs[nscenes].id, "height");
-    progs[nscenes].ufrm_millis = glGetUniformLocation(progs[nscenes].id, "millis");
-    // reuse like a BOSS
-    progs[nscenes].ufrm_camera = glGetUniformLocation(progs[nscenes].id, "textsampler");
+    free(framebuffer_texture_samplers);
 
     LOGF("total scenes size: %d", (int)sizeof(SCENES));
+
+    // colour attachments and framebuffers
+    GLuint third_buffer;
+    glGenRenderbuffers(1, &third_buffer);
+    glBindRenderbuffer(GL_RENDERBUFFER, third_buffer);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, width, height);
+    GLuint *framebuffer_color_attachment = (GLuint *)malloc(MOTIONBLUR_FACTOR * 2 * sizeof(GLuint));
+    if (!framebuffer_color_attachment) {
+        LOG("error malloc");
+        return 1;
+    }
+    GLuint *framebuffer_id = framebuffer_color_attachment + MOTIONBLUR_FACTOR;
+    glGenTextures(MOTIONBLUR_FACTOR, framebuffer_color_attachment);
+    glGenFramebuffers(MOTIONBLUR_FACTOR, framebuffer_id);
+    for (size_t i = 0; i < MOTIONBLUR_FACTOR; i++) {
+        glActiveTexture(GL_TEXTURE0 + i + 1);
+        glBindTexture(GL_TEXTURE_2D, framebuffer_color_attachment[i]);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_LOD, 0);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LOD, 0);
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer_id[i]);
+        glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, third_buffer);
+        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D,
+                framebuffer_color_attachment[i], 0);
+        glDrawBuffer(GL_COLOR_ATTACHMENT1);
+        glClearColor(0, 0, 0, 0);
+        glClear(GL_COLOR_BUFFER_BIT);
+    }
 
     GLuint vao, buf;
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
     glGenBuffers(1, &buf);
     glBindBuffer(GL_ARRAY_BUFFER, buf);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(RECTANGLE), RECTANGLE, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(RECTANGLE), RECTANGLE, GL_STREAM_DRAW);
 
     for (size_t i = 0; i < nscenes; i++) {
         switch_scene(&progs[i], width, height);
@@ -495,8 +550,22 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
 
     size_t scene = nscenes;
     switch_scene(&progs[scene], width, height);
-    glUniform1i(progs[scene].ufrm_camera, 0);
 
+	/*
+    GLuint frontcopyRenderbuffer;
+    glGenRenderbuffers(1, &frontcopyRenderbuffer);
+    glBindRenderbuffer(GL_RENDERBUFFER, frontcopyRenderbuffer);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, width, height);
+    GLuint frontcopyFramebuffer;
+    glGenFramebuffers(1, &frontcopyFramebuffer);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, frontcopyFramebuffer);
+    glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, frontcopyRenderbuffer);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+    glReadBuffer(GL_BACK);
+    glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	*/
     // to keep precise 60fps
     // every third frame will be 17ms
     // instead of 16.
@@ -505,8 +574,14 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
     // bleh. offset with first scene to put back camera on track
     const Uint32 ticks_first = ticks_start + scenes[nscenes].duration;
     Uint32 scene_start = ticks_start;
+    unsigned nframes = 0;
+    float *rects = (float *)malloc(8 * height * sizeof(float));
+    if (!rects) {
+        LOG("error malloc");
+        return 1;
+    }
+    size_t framebuffer = 0;
     for (;;) {
-        SDL_Event event;
         if (ticks_start - scene_start >= scenes[scene].duration) {
             scene_start = scene_start + scenes[scene].duration;
             scene = scene + 1;
@@ -525,22 +600,59 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
                     glUniform1i(progs[scene].ufrm_width, width);
                     glUniform1i(progs[scene].ufrm_height, height);
                     glViewport(0, 0, width, height);
+                    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, width, height);
+                    for (size_t i = 0; i < MOTIONBLUR_FACTOR; i++) {
+                        glActiveTexture(GL_TEXTURE0 + i + 1);
+                        glBindTexture(GL_TEXTURE_2D, framebuffer_color_attachment[i]);
+                        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_LOD, 0);
+                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LOD, 0);
+                        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer_id[i]);
+                        glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                                GL_RENDERBUFFER, third_buffer);
+                        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D,
+                                framebuffer_color_attachment[i], 0);
+                        glDrawBuffer(GL_COLOR_ATTACHMENT1);
+                        glClearColor(0, 0, 0, 0);
+                        glClear(GL_COLOR_BUFFER_BIT);
+                    }
                 }
             }
         }
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer_id[framebuffer]);
+        glClearColor(0.70f, 0.70f, 0.70f, 1);
+        glDrawBuffer(GL_COLOR_ATTACHMENT0);
         glClear(GL_COLOR_BUFFER_BIT);
-        if (progs[scene].ufrm_millis >= 0) {
-            glUniform1i(progs[scene].ufrm_millis, ticks_start - scene_start);
+        glDrawBuffer(GL_COLOR_ATTACHMENT1);
+        glClearColor(0, 0, 0, 0);
+        glClear(GL_COLOR_BUFFER_BIT);
+        GLuint drawbuffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+        glDrawBuffers(2, drawbuffers);
+		if (progs[scene].ufrm_millis >= 0) {
+			glUniform1i(progs[scene].ufrm_millis, ticks_start - scene_start);
+		}
+        if (progs[scene].ufrm_currentFramebuffer >= 0) {
+            glUniform1i(progs[scene].ufrm_currentFramebuffer, framebuffer);
         }
-        if (scene < nscenes) {
-            camera = mkcamera(ticks_start - ticks_first, mktranslationm4(scenes[scene].camera_translation));
-            glUniformMatrix4fv(progs[scene].ufrm_camera, 1, 0, &camera.c[0].v[0]);
-        }
-        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+		if (scene < nscenes) {
+			camera = mkcamera(ticks_start - ticks_first, mktranslationm4(scenes[scene].camera_translation));
+			glUniformMatrix4fv(progs[scene].ufrm_camera, 1, 0, &camera.c[0].v[0]);
+		}
+        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+        glDrawBuffer(GL_BACK);
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer_id[framebuffer]);
+        glReadBuffer(GL_COLOR_ATTACHMENT0);
+        glBlendFunc(GL_ONE, GL_ZERO);
+        glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
         SDL_GL_SwapWindow(window);
-        Uint32 allotted = 16;
+        framebuffer = (framebuffer + 1) % MOTIONBLUR_FACTOR;
+        Uint32 allotted = 17;
         if (waiterror == 2) {
-            allotted++;
+            allotted--;
         }
         if (!movie) {
             Uint32 ticks_end = SDL_GetTicks();
@@ -553,8 +665,10 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
             }
             waiterror = (waiterror + 1) % 3;
         } else {
+            waiterror = (waiterror + 1) % 3;
             ticks_start += allotted;
         }
+        nframes++;
     }
 }
 

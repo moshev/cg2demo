@@ -3,17 +3,32 @@
 const float TAU = 6.2831853;
 
 uniform int millis;
+uniform int currentFramebuffer;
 uniform mat4 camera;
+
+#define MOTIONBLUR_COEFFICIENT 4.0
+// newlines left as space to insert motionblur factor
+// keep them at least 3!
+#define MOTIONBLUR_FACTOR 
+
+
+
+
+
+
+uniform sampler2D framessampler[MOTIONBLUR_FACTOR];
 
 // ray
 centroid in vec2 pixelcenter;
+centroid in vec2 screenpixel;
 
 /*
 // pixel size
 flat in vec2 pixel;
 */
 
-out vec4 color;
+out vec4 colorBackLeft;
+out vec4 colorObject;
 
 /*
 // set this to something depending on

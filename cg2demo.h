@@ -17,6 +17,8 @@
 #define LOG(str) LOGF("%s", str)
 #endif
 
+static const int MOTIONBLUR_FACTOR = 6;
+
 extern FILE *flog;
 int read_file(const char *path, char **text, size_t *sz);
 
