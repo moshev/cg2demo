@@ -136,12 +136,13 @@ void main() {
     //rand_state = uint(millis) + uint((pixelcenter.x + pixelcenter.y) * 1000);
     vec3 p = vec3(0.0, 0.0, 1.3);
     vec3 t = vec3(pixelcenter, 0.98);
+    mat4 camera_transform = mkcamera();
 
-    light3_pos = (camera * vec4(light3_pos, 1.0)).xyz;
-    p = (camera * vec4(p, 1.0)).xyz;
+    light3_pos = (camera_transform * vec4(light3_pos, 1.0)).xyz;
+    p = (camera_transform * vec4(p, 1.0)).xyz;
 
     vec3 tr;
-    vec3 ray = normalize((camera * vec4(t, 1.0)).xyz - p);
+    vec3 ray = normalize((camera_transform * vec4(t, 1.0)).xyz - p);
     vec4 result = go(p, ray);
 /*
     // the number of iterations plus one must be
@@ -149,7 +150,7 @@ void main() {
     // anti-aliasing is turned off right now because it murders performance
     for (i = 0; i < 0; i++) {
         tr = t + vec3(pixel * rand2(), 0.0);
-        tr = (camera * vec4(tr, 1.0)).xyz;
+        tr = (camera_transform * vec4(tr, 1.0)).xyz;
         ray = normalize(tr - p);
         result += go(p, ray);
     }

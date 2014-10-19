@@ -33,6 +33,8 @@ int read_file(const char *path, char **text, size_t *sz);
 
 static const bool movie = true;
 
+static FILE *movieout = nullptr;
+
 static const unsigned int WIDTH = 1024;
 static const unsigned int HEIGHT = 768;
 
@@ -113,6 +115,9 @@ int main(int argc, char *argv[]) {
         exit(-1);
     }
 #endif
+    if (movie) {
+        movieout = fopen("movieout", "w+b");
+    }
     if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
         LOG("FAILED TO INIT VIDEO");
         exit(1);
@@ -332,13 +337,14 @@ static GLuint create_program(const char *vs, size_t szvs, const char *fs, size_t
     return prog;
 }
 
-static float smootherstep(float x) {
-    return  x*x*x*(x*(x * 6 - 15) + 10);
-}
-
 static const uint8_t SCENES[] = {
 #include "scenespecs.inc"
 };
+
+#if 0
+static float smootherstep(float x) {
+    return  x*x*x*(x*(x * 6 - 15) + 10);
+}
 
 static mat4 mkcamera(Uint32 ticks, mat4 additional) {
     ///*
@@ -366,6 +372,7 @@ static mat4 mkcamera(Uint32 ticks, mat4 additional) {
     mkv4(0, 0, 0, 1));
     */
 }
+#endif
 
 struct program {
     GLuint id;
@@ -373,6 +380,7 @@ struct program {
     GLint ufrm_width;
     GLint ufrm_height;
     GLint ufrm_millis;
+    GLint ufrm_globalMillis;
     GLint ufrm_camera;
     GLint ufrm_currentFramebuffer;
 };
@@ -402,6 +410,8 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
             }
         }
     }
+    LOGF("width: %u", width);
+    LOGF("height: %u", height);
 
     glViewport(0, 0, width, height);
     //glClearColor(0x8A / 255.0f, 0xFF / 255.0f, 0xC1 / 255.0f, 1);
@@ -489,6 +499,7 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
         progs[i].ufrm_width = glGetUniformLocation(progs[i].id, "width");
         progs[i].ufrm_height = glGetUniformLocation(progs[i].id, "height");
         progs[i].ufrm_millis = glGetUniformLocation(progs[i].id, "millis");
+        progs[i].ufrm_globalMillis = glGetUniformLocation(progs[i].id, "globalMillis");
         progs[i].ufrm_camera = glGetUniformLocation(progs[i].id, "camera");
         progs[i].ufrm_currentFramebuffer = glGetUniformLocation(progs[i].id, "currentFramebuffer");
         GLuint samplers = glGetUniformLocation(progs[i].id, "framessampler");
@@ -581,6 +592,11 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
         return 1;
     }
     size_t framebuffer = 0;
+    uint8_t *framebuffer_data = nullptr;
+    if (movie) {
+        glPixelStorei(GL_PACK_ALIGNMENT, 1);
+        framebuffer_data = (uint8_t *)malloc(3 * width * height);
+    }
     for (;;) {
         if (ticks_start - scene_start >= scenes[scene].duration) {
             scene_start = scene_start + scenes[scene].duration;
@@ -633,11 +649,14 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
 		if (progs[scene].ufrm_millis >= 0) {
 			glUniform1i(progs[scene].ufrm_millis, ticks_start - scene_start);
 		}
+		if (progs[scene].ufrm_globalMillis >= 0) {
+			glUniform1i(progs[scene].ufrm_globalMillis, ticks_start - ticks_first);
+		}
         if (progs[scene].ufrm_currentFramebuffer >= 0) {
             glUniform1i(progs[scene].ufrm_currentFramebuffer, framebuffer);
         }
 		if (scene < nscenes) {
-			camera = mkcamera(ticks_start - ticks_first, mktranslationm4(scenes[scene].camera_translation));
+			camera = mktranslationm4(scenes[scene].camera_translation);
 			glUniformMatrix4fv(progs[scene].ufrm_camera, 1, 0, &camera.c[0].v[0]);
 		}
         glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
@@ -648,6 +667,14 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
         glReadBuffer(GL_COLOR_ATTACHMENT0);
         glBlendFunc(GL_ONE, GL_ZERO);
         glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+        if (movie) {
+            glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, framebuffer_data);
+            size_t remaining = width * height * 3;
+            while (remaining) {
+                remaining = remaining - fwrite(framebuffer_data + width * height * 3 - remaining,
+                        1, remaining, movieout);
+            }
+        }
         SDL_GL_SwapWindow(window);
         framebuffer = (framebuffer + 1) % MOTIONBLUR_FACTOR;
         Uint32 allotted = 17;

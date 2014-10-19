@@ -18,6 +18,7 @@ uniform mat4 camera;
 
 uniform sampler2D framessampler[MOTIONBLUR_FACTOR];
 
+in float millis2;
 // ray
 centroid in vec2 pixelcenter;
 centroid in vec2 screenpixel;
@@ -77,6 +78,23 @@ mat3x3 rotationAlign(vec3 d, vec3 z) {
                v.y, -v.x, c);
 }
 */
+
+mat4 mkrotationm4(vec3 axis, float angle) {
+    float c = cos(angle);
+    float nc = 1.0 - c;
+    float s = sin(angle);
+    float v0 = axis.x;
+    float v1 = axis.y;
+    float v2 = axis.z;
+    /* Formula copied from wikipedia
+     * matrices are column-major so this looks transposed
+     * with regards to what you'd find there */
+    return mat4(
+        v0 * v0 * nc + c, v1 * v0 * nc + v2 * s, v2 * v0 * nc - v1 * s, 0,
+        v0 * v1 * nc - v2 * s, v1 * v1 * nc + c, v2 * v1 * nc + v0 * s, 0,
+        v0 * v2 * nc + v1 * s, v1 * v2 * nc - v0 * s, v2 * v2 * nc + c, 0,
+        0, 0, 0, 1);
+}
 
 float plane(vec3 p, vec3 c, vec3 n) {
     return dot(n, p) - dot(n, c);
@@ -161,4 +179,33 @@ float timing(int p) {
 float timing2(int p) {
     float t = timing(p);
     return 2.0 * (0.5 - abs(t - 0.5));
+}
+
+// 0.0 - 1.0
+float m2timing(int p) {
+    return float(int(millis2) % p) / float(p - 1);
+}
+
+// 0.0 - 1.0 - 0.0
+float m2timing2(int p) {
+    float t = m2timing(p);
+    return 2.0 * (0.5 - abs(t - 0.5));
+}
+
+mat4 mkcamera() {
+    float rotf = m2timing(32000);
+    float trf = m2timing(17000);
+    rotf = smoothstep(0, 1, rotf);
+    trf = smoothstep(0, 1, trf);
+
+    //return mkrotationm4(mkv3(0, 1, 0), trf * TAU);
+    ///*
+    return camera
+        * mkrotationm4(vec3(0, 1, 0), rotf * TAU)
+        * mkrotationm4(
+                normalize(vec3(
+                        0.5f + 0.5f * cos(trf * TAU),
+                        1.0f,
+                        0.5f + 0.5f * sin(trf * TAU))),
+                trf * TAU);
 }
