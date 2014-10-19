@@ -103,6 +103,41 @@ static int tau(int n) {
     return r;
 }
 
+// BLUES SCALE
+uint16_t noteshz_BLUES[] = {
+    262, 311, 349, 370, 392, 466, 523, 622, 699, 740, 784, 932, 1047, 1245, 1397, 1480
+};
+
+int8_t notesoffsets_BLUES[] = {
+	3, 6, 8, 9, 10, 13, 15, 18, 20, 21, 22, 25, //27, 30, 32, 33, 35,
+};
+
+int8_t notesoffsets_MIDDLE_BLUES[] = {
+	-5, -2, 0, 1, 2, 5, 7, 11, 12, 13, 14, 17, //19, 23, 24, 25, 27,
+};
+
+int8_t notesoffsets_DEEP_BLUES[] = {
+	-13, -10, -8, -7, -6, -3, -1, 3, 4, 5, 6, 9, 11, 14, 16, 17, 19,
+};
+
+// BLUES SCALE with silence
+uint16_t noteshz_BLUES_SILENCE[] = {
+    262, 311, 349, 0, 370, 392, 466, 523, 622, 699, 740, 784, 932, 1047, 1245, 1397, 1480
+};
+
+//HUNGARIAN MINOR
+uint16_t noteshz_HUNGARIAN[] = {
+    262, 294, 311, 370, 392, 415, 494, 523, 587, 622, 734, 784, 831, 988, 1047, 1175
+};
+
+uint16_t noteshz_HUNGARIAN_SILENCE[] = {
+	262, 294, 311, 370, 392, 415, 494, 523, 587, 622, 734, 784, 831, 988, 1047, 1175
+};
+
+#define notesoffsets notesoffsets_MIDDLE_BLUES
+
+size_t nnotesoffsets = sizeof(notesoffsets) / sizeof(*notesoffsets);
+
 struct audio_state {
     unsigned samples;
     int note;
@@ -182,8 +217,11 @@ int main(int argc, char *argv[]) {
 
     uint8_t *taudigitsrw = (uint8_t *)malloc(ntaudigits);
     // gen tau
-    for (size_t i = 0; i < ntaudigits; i++) {
-        taudigitsrw[i] = tau((int)i);
+    for (size_t i = 0, j = 0; j < ntaudigits; i++) {
+		unsigned digit = tau((int)i);
+		if (digit < nnotesoffsets - 1) {
+			taudigitsrw[j++] = (uint8_t)digit;
+		}
     }
     //taudigits = (uint8_t *)&main;
     //taudigits = (uint8_t *)fragment_pre_glsl;
@@ -572,37 +610,6 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
     }
 }
 
-// BLUES SCALE
-uint16_t noteshz_BLUES[] = {
-    262, 311, 349, 370, 392, 466, 523, 622, 699, 740, 784, 932, 1047, 1245, 1397, 1480
-};
-
-int8_t notesoffsets_BLUES[] = {
-	3, 6, 8, 9, 10, 13, 15, 18, 20, 21, 22, 25, 27, 30, 32, 33, 35,
-};
-
-int8_t notesoffsets_DEEP_BLUES[] = {
-	-13, -10, -8, -7, -6, -3, -1, 3, 4, 5, 6, 9, 11, 14, 16, 17,
-};
-
-// BLUES SCALE with silence
-uint16_t noteshz_BLUES_SILENCE[] = {
-    262, 311, 349, 0, 370, 392, 466, 523, 622, 699, 740, 784, 932, 1047, 1245, 1397, 1480
-};
-
-//HUNGARIAN MINOR
-uint16_t noteshz_HUNGARIAN[] = {
-    262, 294, 311, 370, 392, 415, 494, 523, 587, 622, 734, 784, 831, 988, 1047, 1175
-};
-
-uint16_t noteshz_HUNGARIAN_SILENCE[] = {
-	262, 294, 311, 370, 392, 415, 494, 523, 587, 622, 734, 784, 831, 988, 1047, 1175
-};
-
-#define notesoffsets notesoffsets_BLUES
-
-size_t nnotesoffsets = sizeof(notesoffsets) / sizeof(*notesoffsets);
-
 static inline double clamp(double a, double min, double max) {
     return
         a < min ? min :
@@ -628,6 +635,7 @@ static int audio_note_duration(const audio_state *as) {
     //return 5555;
     return 11025;
 	//return as->current_scene % 2 ? 5555 : 11025;
+	//return 22050;
 }
 
 static int audio_scale_duration(int scale) {
@@ -677,20 +685,12 @@ static void audio_state_advance(audio_state *as, int samples) {
     as->note = n;
 }
 
-static double audio_gen(const audio_state *as) {
-    double attack = 0.045;
-	double sustain = 0.3;
-    double release = 0.7;
-    int s = as->samples;
-    int n = as->note;
-	double hz = audio_note_hz(as);
-    int duration = audio_note_duration(as);
-    double u = (double)s / duration;
-    double t = ((int)(s * hz) % 44100) / 44099.0;
-    double v = 0;
+static double audio_gen_note_sample(int samples, double hz) {
+    double t = ((int)(samples * hz) % 44100) / 44099.0;
     double alpha = t * TAU;
     double A = -0.5;//1.0 / pow(2, -12) - 1;//alpha / (1 + pow(2, -12));
     double B = 1.0;//pow(2, -12) - 1;//alpha * (pow(2, -12));
+	double v = 0;
     /*
        for (double factor = 1, displacement = 0; factor < 1.5; factor *= 2.0, displacement += 0.25) {
        v = v + sin((t * factor + displacement) * TAU) / (abs(log(factor)) * 15 + 1);
@@ -701,11 +701,36 @@ static double audio_gen(const audio_state *as) {
     //v = (-exp(B) * alpha + sin(B * alpha) + alpha * cos(B * alpha)) / (exp(B) * (alpha * alpha + 1));
     // integral sin(alpha * (x + 1)) / exp(|x|) dx over A to B
 
-       v = (exp(-abs(A)) * (sin((A + 1) * alpha) + alpha * cos((A + 1) * alpha))
+    v = (exp(-abs(A)) * (sin((A + 1) * alpha) + alpha * cos((A + 1) * alpha))
        - exp(-abs(B)) * (sin((B + 1) * alpha) + alpha * cos((B + 1) * alpha)))
        / (alpha * alpha + 1);
 
-    //v = smoothstep(0, 0.5, t) * smoothstep(0, 0.5, 1 - t) * 2 - 1;
+
+	// chords
+	//v = smoothstep(0, 0.5, t) * smoothstep(0, 0.5, 1 - t);
+	return v;
+}
+
+static double audio_gen(const audio_state *as) {
+    double attack = 0.31;
+	double sustain = 0.09;
+    double release = 0.6;
+    int s = as->samples;
+    int n = as->note;
+	double hz = audio_note_hz(as);
+    int duration = audio_note_duration(as);
+    double u = (double)s / duration;
+    double v = 0;
+	v = audio_gen_note_sample(as->samples, hz);
+	audio_state asrw = *as;
+	asrw.scale += 4;
+	hz = audio_note_hz(&asrw);
+	v += audio_gen_note_sample(as->samples + 5000, hz);
+	asrw.scale += 3;
+	hz = audio_note_hz(&asrw);
+	v += audio_gen_note_sample(as->samples + 10000, hz);
+	v *= 1.0 / 3.0;
+	//v -= 1;
 	//v = smoothstep(0, 0.5, 0.5 - abs(t - 0.5)) * 2 - 1;
     v *= smoothstep(0, attack, u);
     v *= 1 - smoothstep(attack + sustain, attack + sustain + release, u);
