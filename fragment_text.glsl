@@ -25,9 +25,18 @@ void main() {
 	float going = smoothstep(0.6, 1, f);
 	vec2 t1 = pow(t, vec2(coming, coming));
 	vec2 t2 = vec2(1, 1) - pow((vec2(1, 1) - t), vec2(1 - going, 1 - going));
-	float d = mix(texture(textsampler, t1), texture(textsampler, t2), step(0.5, f));
+	float d = mix(texture(textsampler, t1).x, texture(textsampler, t2).x, step(0.5, f));
     vec4 result = vec4(d, d, d, 1 - smoothstep(0.8, 1, f));
+
+    vec4 c = result;
+    vec2 texcoord = (vec2(1, 1) + screenpixel) * 0.5;
+    for (int i = 0; i < MOTIONBLUR_FACTOR; i++) {
+        c += texture(framessampler[i], texcoord);
+    }
+    c /= MOTIONBLUR_FACTOR;
+    colorObject = result;
+    // gamma correction for standard monitor
     float g = 1.0 / 2.2;
-    color = pow(result / 1.0, vec4(g, g, g, 1.0));
+    colorBackLeft = pow(c, vec4(g, g, g, 1.0));
 }
 

@@ -3,6 +3,7 @@
 #else
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #endif
 
 #include "cg2demo.h"
@@ -31,6 +32,19 @@ int get_fragment_shader_pre(const char **fspre, size_t *fspresz) {
     char *source;
     int result = read_file("fragment_pre.glsl", &source, fspresz);
     if (result) {
+        char *motionblur_constant = source;
+        // yes the space at the end is important
+        const char name[] = "MOTIONBLUR_FACTOR ";
+        char factor[6];
+        for (; motionblur_constant < source + *fspresz - sizeof(name) - sizeof(factor); ++motionblur_constant) {
+            if (memcmp(motionblur_constant, name, sizeof(name) - 1) == 0) {
+                int printed = snprintf(factor, 6, "%d", MOTIONBLUR_FACTOR);
+                if (printed > 0) {
+                    memcpy(motionblur_constant + sizeof(name) - 1, factor, printed);
+                }
+                break;
+            }
+        }
         *fspre = source;
     }
     return result;

@@ -1,6 +1,7 @@
 #if !defined(__MACOSX__)
 extern PFNGLATTACHSHADERPROC glAttachShader;
 extern PFNGLBINDBUFFERPROC glBindBuffer;
+extern PFNGLBINDFRAGDATALOCATIONPROC glBindFragDataLocation;
 extern PFNGLBINDFRAMEBUFFERPROC glBindFramebuffer;
 extern PFNGLBINDRENDERBUFFERPROC glBindRenderbuffer;
 extern PFNGLBINDSAMPLERPROC glBindSampler;
@@ -11,8 +12,10 @@ extern PFNGLBUFFERSUBDATAPROC glBufferSubData;
 extern PFNGLCOMPILESHADERPROC glCompileShader;
 extern PFNGLCREATEPROGRAMPROC glCreateProgram;
 extern PFNGLCREATESHADERPROC glCreateShader;
+extern PFNGLDRAWBUFFERSPROC glDrawBuffers;
 extern PFNGLENABLEVERTEXATTRIBARRAYPROC glEnableVertexAttribArray;
 extern PFNGLFRAMEBUFFERRENDERBUFFERPROC glFramebufferRenderbuffer;
+extern PFNGLFRAMEBUFFERTEXTURE2DPROC glFramebufferTexture2D;
 extern PFNGLGENBUFFERSPROC glGenBuffers;
 extern PFNGLGENFRAMEBUFFERSPROC glGenFramebuffers;
 extern PFNGLGENRENDERBUFFERSPROC glGenRenderbuffers;
@@ -31,6 +34,7 @@ extern PFNGLSAMPLERPARAMETERIPROC glSamplerParameteri;
 extern PFNGLSHADERSOURCEPROC glShaderSource;
 extern PFNGLUNIFORM1FPROC glUniform1f;
 extern PFNGLUNIFORM1IPROC glUniform1i;
+extern PFNGLUNIFORM1IVPROC glUniform1iv;
 extern PFNGLUNIFORM4FVPROC glUniform4fv;
 extern PFNGLUNIFORMMATRIX4FVPROC glUniformMatrix4fv;
 extern PFNGLUSEPROGRAMPROC glUseProgram;

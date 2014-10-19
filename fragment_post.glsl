@@ -136,7 +136,6 @@ void main() {
     //rand_state = uint(millis) + uint((pixelcenter.x + pixelcenter.y) * 1000);
     vec3 p = vec3(0.0, 0.0, 1.3);
     vec3 t = vec3(pixelcenter, 0.98);
-    int i;
 
     light3_pos = (camera * vec4(light3_pos, 1.0)).xyz;
     p = (camera * vec4(p, 1.0)).xyz;
@@ -144,9 +143,6 @@ void main() {
     vec3 tr;
     vec3 ray = normalize((camera * vec4(t, 1.0)).xyz - p);
     vec4 result = go(p, ray);
-    if (result.w < 1.0) {
-        discard;
-    }
 /*
     // the number of iterations plus one must be
     // divided by below.
@@ -158,8 +154,14 @@ void main() {
         result += go(p, ray);
     }
 */
-    // divide by number of iterations plus one
-    // and gamma correction
+    vec4 c = result;
+    vec2 texcoord = (vec2(1, 1) + screenpixel) * 0.5;
+    for (int i = 0; i < MOTIONBLUR_FACTOR; i++) {
+        c += texture(framessampler[i], texcoord);
+    }
+    c /= MOTIONBLUR_FACTOR;
+    colorObject = result;
+    // gamma correction for standard monitor
     float g = 1.0 / 2.2;
-    color = pow(result / 1.0, vec4(g, g, g, 1.0));
+    colorBackLeft = pow(c, vec4(g, g, g, 1.0));
 }

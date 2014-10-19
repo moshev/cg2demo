@@ -5,17 +5,28 @@ const float TAU = 6.2831853;
 uniform int millis;
 uniform mat4 camera;
 
+// newlines left as space to insert motionblur factor
+// keep them at least 3!
+#define MOTIONBLUR_FACTOR 
+
+
+
+
+
+
+uniform sampler2D framessampler[MOTIONBLUR_FACTOR];
+
 // ray
 centroid in vec2 pixelcenter;
-
-in float millis2;
+centroid in vec2 screenpixel;
 
 /*
 // pixel size
 flat in vec2 pixel;
 */
 
-out vec4 color;
+out vec4 colorBackLeft;
+out vec4 colorObject;
 
 /*
 // set this to something depending on
@@ -141,7 +152,7 @@ vec3 tile(vec3 p, vec3 r) {
 
 // 0.0 - 1.0
 float timing(int p) {
-    return float(int(millis2) % p) / float(p - 1);
+    return float(int(millis) % p) / float(p - 1);
 }
 
 // 0.0 - 1.0 - 0.0
