@@ -33,7 +33,7 @@ FILE *flog;
 /* read file into memory, return 1 on success, 0 on failure */
 int read_file(const char *path, char **text, size_t *sz);
 
-static const bool movie = true;
+static bool movie = false;
 
 static FILE *movieout = nullptr;
 
@@ -161,6 +161,7 @@ int main(int argc, char *argv[]) {
         exit(-1);
     }
 #endif
+    movie = (argc > 1 && strcmp(argv[1], "--record") == 0);
     if (movie) {
         movieout = fopen("movieout", "w+b");
     }
