@@ -35,7 +35,8 @@ int read_file(const char *path, char **text, size_t *sz);
 
 static bool movie = false;
 
-static FILE *movieout = nullptr;
+static FILE *fvideoout = nullptr;
+static FILE *faudioout = nullptr;
 
 static const unsigned int WIDTH = 1024;
 static const unsigned int HEIGHT = 768;
@@ -163,7 +164,8 @@ int main(int argc, char *argv[]) {
 #endif
     movie = (argc > 1 && strcmp(argv[1], "--record") == 0);
     if (movie) {
-        movieout = fopen("movieout", "w+b");
+        fvideoout = fopen("fvideoout", "w+b");
+        faudioout = fopen("faudioout", "w+b");
     }
     if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
         LOG("FAILED TO INIT VIDEO");
@@ -714,7 +716,7 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
             size_t remaining = width * height * 3;
             while (remaining) {
                 remaining = remaining - fwrite(framebuffer_data + width * height * 3 - remaining,
-                        1, remaining, movieout);
+                        1, remaining, fvideoout);
             }
         }
         SDL_GL_SwapWindow(window);
@@ -876,5 +878,11 @@ void audio_callback(void *userdata, Uint8 *stream, int len) {
         v = audio_gen(as);
         buf[i] = (Sint16)(v * 0x4000);
         audio_state_advance(as, 1);
+    }
+    if (movie) {
+        size_t remaining = (size_t) len;
+        while (remaining) {
+            remaining -= fwrite(stream + len - remaining, 1, remaining, faudioout);
+        }
     }
 }
