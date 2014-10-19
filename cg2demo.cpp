@@ -35,6 +35,8 @@ int read_file(const char *path, char **text, size_t *sz);
 
 static const bool movie = true;
 
+static FILE *movieout = nullptr;
+
 static const unsigned int WIDTH = 1024;
 static const unsigned int HEIGHT = 768;
 
@@ -159,6 +161,9 @@ int main(int argc, char *argv[]) {
         exit(-1);
     }
 #endif
+    if (movie) {
+        movieout = fopen("movieout", "w+b");
+    }
     if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
         LOG("FAILED TO INIT VIDEO");
         exit(1);
@@ -447,6 +452,8 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
             }
         }
     }
+    LOGF("width: %u", width);
+    LOGF("height: %u", height);
 
     glViewport(0, 0, width, height);
     //glClearColor(0x8A / 255.0f, 0xFF / 255.0f, 0xC1 / 255.0f, 1);
@@ -628,6 +635,11 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
     size_t framebuffer = 0;
 	current_scene.store((int)scene, std::memory_order_release);
     SDL_PauseAudio(0);
+    uint8_t *framebuffer_data = nullptr;
+    if (movie) {
+        glPixelStorei(GL_PACK_ALIGNMENT, 1);
+        framebuffer_data = (uint8_t *)malloc(3 * width * height);
+    }
     for (;;) {
         if (ticks_start - scene_start >= scenes[scene].duration) {
             scene_start = scene_start + scenes[scene].duration;
@@ -696,6 +708,14 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
         glReadBuffer(GL_COLOR_ATTACHMENT0);
         glBlendFunc(GL_ONE, GL_ZERO);
         glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+        if (movie) {
+            glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, framebuffer_data);
+            size_t remaining = width * height * 3;
+            while (remaining) {
+                remaining = remaining - fwrite(framebuffer_data + width * height * 3 - remaining,
+                        1, remaining, movieout);
+            }
+        }
         SDL_GL_SwapWindow(window);
         framebuffer = (framebuffer + 1) % MOTIONBLUR_FACTOR;
         Uint32 allotted = 17;
