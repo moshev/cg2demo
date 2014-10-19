@@ -111,15 +111,15 @@ uint16_t noteshz_BLUES[] = {
 };
 
 int8_t notesoffsets_BLUES[] = {
-	3, 6, 8, 9, 10, 13, 15, 18, 20, 21, 22, 25, //27, 30, 32, 33, 35,
+    3, 6, 8, 9, 10, 13, 15, 18, 20, 21, 22, 25, //27, 30, 32, 33, 35,
 };
 
 int8_t notesoffsets_MIDDLE_BLUES[] = {
-	-5, -2, 0, 1, 2, 5, 7, 11, 12, 13, 14, 17, //19, 23, 24, 25, 27,
+    -5, -2, 0, 1, 2, 5, 7, 11, 12, 13, 14, 17, //19, 23, 24, 25, 27,
 };
 
 int8_t notesoffsets_DEEP_BLUES[] = {
-	-13, -10, -8, -7, -6, -3, -1, 3, 4, 5, 6, 9, 11, 14, 16, 17, 19,
+    -13, -10, -8, -7, -6, -3, -1, 3, 4, 5, 6, 9, 11, 14, 16, 17, 19,
 };
 
 // BLUES SCALE with silence
@@ -133,7 +133,7 @@ uint16_t noteshz_HUNGARIAN[] = {
 };
 
 uint16_t noteshz_HUNGARIAN_SILENCE[] = {
-	262, 294, 311, 370, 392, 415, 494, 523, 587, 622, 734, 784, 831, 988, 1047, 1175
+    262, 294, 311, 370, 392, 415, 494, 523, 587, 622, 734, 784, 831, 988, 1047, 1175
 };
 
 #define notesoffsets notesoffsets_MIDDLE_BLUES
@@ -143,9 +143,9 @@ size_t nnotesoffsets = sizeof(notesoffsets) / sizeof(*notesoffsets);
 struct audio_state {
     unsigned samples;
     int note;
-	int scale;
-	int scalenotes;
-	int current_scene;
+    int scale;
+    int scalenotes;
+    int current_scene;
 };
 
 static void audio_callback(void *userdata, Uint8 *stream, int len);
@@ -172,7 +172,7 @@ int main(int argc, char *argv[]) {
         LOG("FAILED TO INIT AUDIO");
         exit(1);
     }
-	audio_state as = { 0 };
+    audio_state as = { 0 };
     SDL_AudioSpec desired;
     desired.channels = 1;
     desired.format = AUDIO_S16;
@@ -223,10 +223,10 @@ int main(int argc, char *argv[]) {
     uint8_t *taudigitsrw = (uint8_t *)malloc(ntaudigits);
     // gen tau
     for (size_t i = 0, j = 0; j < ntaudigits; i++) {
-		unsigned digit = tau((int)i);
-		if (digit < nnotesoffsets - 1) {
-			taudigitsrw[j++] = (uint8_t)digit;
-		}
+        unsigned digit = tau((int)i);
+        if (digit < nnotesoffsets - 1) {
+            taudigitsrw[j++] = (uint8_t)digit;
+        }
     }
     taudigits = taudigitsrw;
 
@@ -603,7 +603,7 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
     size_t scene = nscenes;
     switch_scene(&progs[scene], width, height);
 
-	/*
+    /*
     GLuint frontcopyRenderbuffer;
     glGenRenderbuffers(1, &frontcopyRenderbuffer);
     glBindRenderbuffer(GL_RENDERBUFFER, frontcopyRenderbuffer);
@@ -617,7 +617,7 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
     glReadBuffer(GL_BACK);
     glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-	*/
+    */
     // to keep precise 60fps
     // every third frame will be 16ms
     // instead of 17.
@@ -633,7 +633,7 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
         return 1;
     }
     size_t framebuffer = 0;
-	current_scene.store((int)scene, std::memory_order_release);
+    current_scene.store((int)scene, std::memory_order_release);
     SDL_PauseAudio(0);
     uint8_t *framebuffer_data = nullptr;
     if (movie) {
@@ -648,7 +648,7 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
                 scene = 0;
             }
             switch_scene(&progs[scene], width, height);
-			current_scene.store((int)scene, std::memory_order_release);
+            current_scene.store((int)scene, std::memory_order_release);
         }
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
@@ -690,18 +690,18 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
         glClear(GL_COLOR_BUFFER_BIT);
         GLuint drawbuffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
         glDrawBuffers(2, drawbuffers);
-		if (progs[scene].ufrm_millis >= 0) {
-			glUniform1i(progs[scene].ufrm_millis, ticks_start - scene_start);
-		}
+        if (progs[scene].ufrm_millis >= 0) {
+            glUniform1i(progs[scene].ufrm_millis, ticks_start - scene_start);
+        }
         if (progs[scene].ufrm_currentFramebuffer >= 0) {
             glUniform1i(progs[scene].ufrm_currentFramebuffer, framebuffer);
         }
-		if (scene < nscenes) {
-			camera = mkcamera(ticks_start - ticks_first, mktranslationm4(scenes[scene].camera_translation));
-			glUniformMatrix4fv(progs[scene].ufrm_camera, 1, 0, &camera.c[0].v[0]);
-		}
+        if (scene < nscenes) {
+            camera = mkcamera(ticks_start - ticks_first, mktranslationm4(scenes[scene].camera_translation));
+            glUniformMatrix4fv(progs[scene].ufrm_camera, 1, 0, &camera.c[0].v[0]);
+        }
         glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
         glDrawBuffer(GL_BACK);
         glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer_id[framebuffer]);
@@ -764,8 +764,8 @@ static int audio_note_duration(const audio_state *as) {
     //return (int)(log1p((double)hz) * 2000 + 1000);
     //return 5555;
     return 11025;
-	//return as->current_scene % 2 ? 5555 : 11025;
-	//return 22050;
+    //return as->current_scene % 2 ? 5555 : 11025;
+    //return 22050;
 }
 
 static int audio_scale_duration(int scale) {
@@ -773,12 +773,12 @@ static int audio_scale_duration(int scale) {
 }
 
 double audio_note_hz(const audio_state *as) {
-	int n = as->note;
-	int offset = n % 2 ?
-		notesoffsets[(taudigits[n / 2] % (nnotesoffsets - 1)) + 1] :
-		notesoffsets[0];
-	double hz = 220.0 * pow(2.0, (offset + as->scale) / 12.0);
-	return hz;
+    int n = as->note;
+    int offset = n % 2 ?
+        notesoffsets[(taudigits[n / 2] % (nnotesoffsets - 1)) + 1] :
+        notesoffsets[0];
+    double hz = 220.0 * pow(2.0, (offset + as->scale) / 12.0);
+    return hz;
 }
 
 static void audio_state_advance(audio_state *as, int samples) {
@@ -818,7 +818,7 @@ static double audio_gen_note_sample(int samples, double hz) {
     double alpha = t * TAU;
     double A = -0.5;//1.0 / pow(2, -12) - 1;//alpha / (1 + pow(2, -12));
     double B = 1.0;//pow(2, -12) - 1;//alpha * (pow(2, -12));
-	double v = 0;
+    double v = 0;
     /*
        for (double factor = 1, displacement = 0; factor < 1.5; factor *= 2.0, displacement += 0.25) {
        v = v + sin((t * factor + displacement) * TAU) / (abs(log(factor)) * 15 + 1);
@@ -834,31 +834,31 @@ static double audio_gen_note_sample(int samples, double hz) {
        / (alpha * alpha + 1);
 
 
-	// chords
-	//v = smoothstep(0, 0.5, t) * smoothstep(0, 0.5, 1 - t);
-	return v;
+    // chords
+    //v = smoothstep(0, 0.5, t) * smoothstep(0, 0.5, 1 - t);
+    return v;
 }
 
 static double audio_gen(const audio_state *as) {
     double attack = 0.31;
-	double sustain = 0.09;
+    double sustain = 0.09;
     double release = 0.6;
     int s = as->samples;
-	double hz = audio_note_hz(as);
+    double hz = audio_note_hz(as);
     int duration = audio_note_duration(as);
     double u = (double)s / duration;
     double v = 0;
-	v = audio_gen_note_sample(as->samples, hz);
-	audio_state asrw = *as;
-	asrw.scale += 4;
-	hz = audio_note_hz(&asrw);
-	v += audio_gen_note_sample(as->samples + 5000, hz);
-	asrw.scale += 3;
-	hz = audio_note_hz(&asrw);
-	v += audio_gen_note_sample(as->samples + 10000, hz);
-	v *= 1.0 / 3.0;
-	//v -= 1;
-	//v = smoothstep(0, 0.5, 0.5 - abs(t - 0.5)) * 2 - 1;
+    v = audio_gen_note_sample(as->samples, hz);
+    audio_state asrw = *as;
+    asrw.scale += 4;
+    hz = audio_note_hz(&asrw);
+    v += audio_gen_note_sample(as->samples + 5000, hz);
+    asrw.scale += 3;
+    hz = audio_note_hz(&asrw);
+    v += audio_gen_note_sample(as->samples + 10000, hz);
+    v *= 1.0 / 3.0;
+    //v -= 1;
+    //v = smoothstep(0, 0.5, 0.5 - abs(t - 0.5)) * 2 - 1;
     v *= smoothstep(0, attack, u);
     v *= 1 - smoothstep(attack + sustain, attack + sustain + release, u);
     return v;
@@ -869,7 +869,7 @@ void audio_callback(void *userdata, Uint8 *stream, int len) {
     audio_state *as = (audio_state *)userdata;
     Sint16 *buf = (Sint16 *)stream;
     size_t bufsz = len / 2;
-	as->current_scene = current_scene.load(std::memory_order_acquire);
+    as->current_scene = current_scene.load(std::memory_order_acquire);
     for (size_t i = 0; i < bufsz; i++) {
         double v = 0;
         v = audio_gen(as);
