@@ -16,6 +16,9 @@
 #else
 #include <SDL_opengl.h>
 #endif
+#if defined(WIN32)
+static void (*glActiveTexture)(GLenum);
+#endif
 
 #include <atomic>
 
@@ -216,6 +219,9 @@ int main(int argc, char *argv[]) {
     SDL_GLContext context = SDL_GL_CreateContext(window);
 
 #include "protoget.inc"
+#if defined(WIN32)
+    glActiveTexture = (void (*) (GLenum))SDL_GL_GetProcAddress("glActiveTexture");
+#endif
 
     if (!get_vertex_shader(&vertex_glsl, &vertex_glslsz)) {
         LOG("error reading vertex shader source");
@@ -499,7 +505,7 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, img_texid);
     for (int level = 0; img.width > 0 && img.height > 0; level++) {
-        glTexImage2D(GL_TEXTURE_2D, level, GL_RED, img.width, img.height, 0, GL_RED, GL_UNSIGNED_BYTE, img.data);
+        glTexImage2D(GL_TEXTURE_2D, level, GL_RED, (GLsizei)img.width, (GLsizei)img.height, 0, GL_RED, GL_UNSIGNED_BYTE, img.data);
         size_t w2 = img.width / 2;
         size_t h2 = img.height / 2;
         for (size_t y = 0; y < h2; y++) {
@@ -546,7 +552,7 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
     // +1 for the starting text scene
     progs = (struct program *)malloc((nscenes + 1) * sizeof(struct program));
     GLint *framebuffer_texture_samplers = (GLint *)malloc(MOTIONBLUR_FACTOR * sizeof(GLint));
-    for (size_t i = 0; i < MOTIONBLUR_FACTOR; i++) {
+    for (GLint i = 0; i < (GLint)MOTIONBLUR_FACTOR; i++) {
         framebuffer_texture_samplers[i] = i + 1;
     }
     for (size_t i = 0; i < nscenes + 1; i++) {
@@ -591,7 +597,7 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
     glGenTextures(MOTIONBLUR_FACTOR, framebuffer_color_attachment);
     glGenFramebuffers(MOTIONBLUR_FACTOR, framebuffer_id);
     for (size_t i = 0; i < MOTIONBLUR_FACTOR; i++) {
-        glActiveTexture(GL_TEXTURE0 + i + 1);
+        glActiveTexture(GL_TEXTURE0 + (GLenum)i + 1);
         glBindTexture(GL_TEXTURE_2D, framebuffer_color_attachment[i]);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -680,7 +686,7 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
                     glViewport(0, 0, width, height);
                     glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, width, height);
                     for (size_t i = 0; i < MOTIONBLUR_FACTOR; i++) {
-                        glActiveTexture(GL_TEXTURE0 + i + 1);
+                        glActiveTexture(GL_TEXTURE0 + (GLenum)i + 1);
                         glBindTexture(GL_TEXTURE_2D, framebuffer_color_attachment[i]);
                         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
                         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -712,7 +718,7 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
             glUniform1i(progs[scene].ufrm_millis, ticks_start - scene_start);
         }
         if (progs[scene].ufrm_currentFramebuffer >= 0) {
-            glUniform1i(progs[scene].ufrm_currentFramebuffer, framebuffer);
+            glUniform1i(progs[scene].ufrm_currentFramebuffer, (GLint)framebuffer);
         }
         if (scene < nscenes) {
             camera = mkcamera(ticks_start - ticks_first, mktranslationm4(scenes[scene].camera_translation));

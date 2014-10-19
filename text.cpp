@@ -147,8 +147,8 @@ int render_text(struct text_tex *tex) {
         }
         // 0x4924 - leftmost vertical bar
         linew += kerndist(prev, 0x4924);
-        int x = (w - linew + 1) / 2;
-        int y = (h - nlines * line_height) / 2 + line * line_height;
+        int x = (int)(w - linew + 1) / 2;
+        int y = (int)((h - nlines * line_height) / 2 + line * line_height);
         prev = 0;
         for (; i < ntext && text[i]; i++) {
             int dist = kerndist(prev, text[i]);

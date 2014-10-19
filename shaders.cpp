@@ -42,10 +42,10 @@ int get_fragment_shader_pre(const char **fspre, size_t *fspresz) {
         char *motionblur_constant = source;
         // yes the space at the end is important
         const char name[] = "MOTIONBLUR_FACTOR ";
-        char factor[6];
+        char factor[16];
         for (; motionblur_constant < source + *fspresz - sizeof(name) - sizeof(factor); ++motionblur_constant) {
             if (memcmp(motionblur_constant, name, sizeof(name) - 1) == 0) {
-                int printed = snprintf(factor, sizeof(factor), "%d", MOTIONBLUR_FACTOR);
+                int printed = sprintf(factor, "%d", MOTIONBLUR_FACTOR);
                 if (printed > 0) {
                     memcpy(motionblur_constant + sizeof(name) - 1, factor, printed);
                 }
