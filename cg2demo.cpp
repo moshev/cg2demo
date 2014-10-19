@@ -131,15 +131,15 @@ uint16_t noteshz_BLUES[] = {
 };
 
 int8_t notesoffsets_BLUES[] = {
-    3, 6, 8, 9, 10, 13, 15, 18, 20, 21, 22, 25, //27, 30, 32, 33, 35,
+    3, 6, 8, 9, 10, 13, 15, 18, 20, 21, 22, 25, 27, 30, 32, 33, 35,
 };
 
 int8_t notesoffsets_MIDDLE_BLUES[] = {
-    -5, -2, 0, 1, 2, 5, 7, 11, 12, 13, 14, 17, //19, 23, 24, 25, 27,
+    -5, -2, 0, 1, 2, 5, 7, 11, 12, 13, 14, 17, 19, 23, 24, 25, 27,
 };
 
 int8_t notesoffsets_DEEP_BLUES[] = {
-    -13, -10, -8, -7, -6, -3, -1, 3, 4, 5, 6, 9, //11, 14, 16, 17, 19,
+    -13, -10, -8, -7, -6, -3, -1, 3, 4, 5, 6, 9, 11, 14, 16, 17, 19,
 };
 
 // BLUES SCALE with silence
@@ -152,7 +152,7 @@ uint16_t noteshz_HUNGARIAN[] = {
     262, 294, 311, 370, 392, 415, 494, 523, 587, 622, 734, 784, 831, 988, 1047, 1175
 };
 
-#define notesoffsets notesoffsets_MIDDLE_BLUES
+#define notesoffsets notesoffsets_DEEP_BLUES
 
 size_t nnotesoffsets = sizeof(notesoffsets) / sizeof(*notesoffsets);
 
@@ -843,13 +843,13 @@ static void audio_state_advance(audio_state *as, int samples) {
     as->note = n;
 }
 
-#define AUDIO_GEN_FUNC 3
+#define AUDIO_GEN_FUNC 2
 
 static double audio_gen_note_sample(int samples, double hz) {
     double t = ((int)(samples * hz) % 44100) / 44099.0;
     double alpha = t * TAU;
-    double A = 0.8;//1.0 / pow(2, -12) - 1;//alpha / (1 + pow(2, -12));
-    double B = 1.3;//pow(2, -12) - 1;//alpha * (pow(2, -12));
+    double A = 0.2;//1.0 / pow(2, -12) - 1;//alpha / (1 + pow(2, -12));
+    double B = 1.1;//pow(2, -12) - 1;//alpha * (pow(2, -12));
     double v = 0;
 #if AUDIO_GEN_FUNC == 0
     // B
@@ -870,46 +870,53 @@ static double audio_gen_note_sample(int samples, double hz) {
     // A
     // calculated using sympy
     double a2p1 = alpha * alpha + 1;
-    v = - exp(1) * alpha * cos(B * alpha) / (a2p1 * exp(B))
-        - exp(1) * alpha * sin(B * alpha) / (a2p1 * exp(B))
-        + exp(1) *         sin(    alpha) / (a2p1 * exp(1))
-        + exp(A) * alpha * cos(A * alpha) / (a2p1 * exp(1))
-        - exp(A) *         sin(A * alpha) / (a2p1 * exp(1))
-        + exp(1) *         sin(    alpha) / (a2p1 * exp(1));
+    v = - exp(1.0) * alpha * cos(B * alpha) / (a2p1 * exp(B  ))
+        - exp(1.0) * alpha * sin(B * alpha) / (a2p1 * exp(B  ))
+        + exp(1.0) *         sin(    alpha) / (a2p1 * exp(1.0))
+        + exp(A  ) * alpha * cos(A * alpha) / (a2p1 * exp(1.0))
+        - exp(A  ) *         sin(A * alpha) / (a2p1 * exp(1.0))
+        + exp(1.0) *         sin(    alpha) / (a2p1 * exp(1.0));
     v /= 2 - exp(1 - B) - exp(A - 1);
 #elif AUDIO_GEN_FUNC == 3
     (void) A;
     (void) B;
     (void) alpha;
-    v = smoothstep(0, 0.5, t) * smoothstep(0, 0.5, 1 - t);
+    if (t < 0.5) {
+        v = smoothstep(0, 0.5, t);
+    } else {
+        v = smoothstep(0, 0.5, 1 - t);
+    }
+    v = v * 2 - 1;
 #endif
     return v;
 }
 
 static double audio_gen(const audio_state *as) {
     double attack = 0.035;
-    double sustain = 0.0;
-    double release = 0.82;
+    double sustain = 0.2;
+    double release = 0.42;
     int s = as->samples;
     double hz = audio_note_hz(as);
     int duration = audio_note_duration(as);
     double u = (double)s / duration;
     double v = 0;
-    double f = 0.25;//0.25;
+    double f = 0.2;//0.25;
     f *= smoothstep(0, attack, u);
     f *= 1 - smoothstep(attack + sustain, attack + sustain + release, u);
     v = f * audio_gen_note_sample(as->samples, hz);
+    /*
     audio_state asrw = *as;
-    if (as->note % 2) {
+    if (as->note % 2 == 0) {
         asrw.scale += 4;
-    }
-    hz = audio_note_hz(&asrw);
-    v += f * audio_gen_note_sample(as->samples, hz);
-    if (as->note % 2) {
+        hz = audio_note_hz(&asrw);
+        v += f * audio_gen_note_sample(as->samples, hz);
         asrw.scale += 3;
+        hz = audio_note_hz(&asrw);
+        v += f * audio_gen_note_sample(as->samples, hz);
+    } else {
+        v *= 3;
     }
-    hz = audio_note_hz(&asrw);
-    v += f * audio_gen_note_sample(as->samples, hz);
+    /*/
     v = clamp(v, -1, 1);
     //v -= 1;
     //v = smoothstep(0, 0.5, 0.5 - abs(t - 0.5)) * 2 - 1;

@@ -3,8 +3,9 @@
 #else
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 #endif
+#include <string.h>
+#include <malloc.h>
 
 #include "cg2demo.h"
 
