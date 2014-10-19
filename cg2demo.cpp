@@ -148,7 +148,7 @@ uint16_t noteshz_HUNGARIAN[] = {
     262, 294, 311, 370, 392, 415, 494, 523, 587, 622, 734, 784, 831, 988, 1047, 1175
 };
 
-#define notesoffsets notesoffsets_DEEP_BLUES
+#define notesoffsets notesoffsets_MIDDLE_BLUES
 
 size_t nnotesoffsets = sizeof(notesoffsets) / sizeof(*notesoffsets);
 
@@ -718,7 +718,7 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
             glUniformMatrix4fv(progs[scene].ufrm_camera, 1, 0, &camera.c[0].v[0]);
         }
         glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-        //glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
         glDrawBuffer(GL_BACK);
         glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer_id[framebuffer]);
@@ -783,7 +783,7 @@ static int audio_note_duration(const audio_state *as) {
     //return 11025;
     //return as->current_scene % 2 ? 5555 : 11025;
     //return 22050;
-    return as->note % 2 ? 11025 : 5512;
+    return (as->note % 2 ? 11025 : 5512);
 }
 
 static int audio_scale_duration(int scale) {
@@ -879,6 +879,10 @@ static double audio_gen_note_sample(int samples, double hz) {
     return v;
 }
 
+static double audio_mix(double v1, double v2) {
+    return v1 + v2;
+}
+
 static double audio_gen(const audio_state *as) {
     double attack = 0.035;
     double sustain = 0.0;
@@ -888,19 +892,19 @@ static double audio_gen(const audio_state *as) {
     int duration = audio_note_duration(as);
     double u = (double)s / duration;
     double v = 0;
-    v = audio_gen_note_sample(as->samples, hz);
+    double f = 0.25;//0.25;
+    f *= smoothstep(0, attack, u);
+    f *= 1 - smoothstep(attack + sustain, attack + sustain + release, u);
+    v = f * audio_gen_note_sample(as->samples, hz);
     audio_state asrw = *as;
     asrw.scale += 4;
     hz = audio_note_hz(&asrw);
-    v += audio_gen_note_sample(as->samples, hz);
+    v = audio_mix(v, f * audio_gen_note_sample(as->samples, hz));
     asrw.scale += 3;
     hz = audio_note_hz(&asrw);
-    v += audio_gen_note_sample(as->samples, hz);
-    v *= 1.0 / 3.0;
+    v = audio_mix(v, f * audio_gen_note_sample(as->samples, hz));
     //v -= 1;
     //v = smoothstep(0, 0.5, 0.5 - abs(t - 0.5)) * 2 - 1;
-    v *= smoothstep(0, attack, u);
-    v *= 1 - smoothstep(attack + sustain, attack + sustain + release, u);
     return v;
 }
 
