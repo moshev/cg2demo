@@ -156,10 +156,14 @@ void main() {
 */
     vec4 c = result;
     vec2 texcoord = (vec2(1, 1) + screenpixel) * 0.5;
-    for (int i = 0; i < MOTIONBLUR_FACTOR; i++) {
-        c += texture(framessampler[i], texcoord);
+    float factor = 1.0 / MOTIONBLUR_COEFFICIENT;
+    for (int i = 0, j = currentFramebuffer;
+            i < MOTIONBLUR_FACTOR - 1; i++) {
+        j = (j + MOTIONBLUR_FACTOR - 1) % MOTIONBLUR_FACTOR;
+        c += texture(framessampler[j], texcoord) * factor;
+        factor /= MOTIONBLUR_COEFFICIENT;
     }
-    c /= MOTIONBLUR_FACTOR;
+    c *= (MOTIONBLUR_COEFFICIENT - 1) / (MOTIONBLUR_COEFFICIENT - pow(MOTIONBLUR_COEFFICIENT, -float(MOTIONBLUR_FACTOR)));
     colorObject = result;
     // gamma correction for standard monitor
     float g = 1.0 / 2.2;

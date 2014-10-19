@@ -24,13 +24,20 @@ int get_vertex_shader(const char **vs, size_t *vssz) {
 }
 
 int get_fragment_shader_pre(const char **fspre, size_t *fspresz) {
-#if defined(NDEBUG)
-    *fspre = fragment_pre_glsl;
-    *fspresz = fragment_pre_glslsz;
-    return 1;
-#else
+    int result;
     char *source;
-    int result = read_file("fragment_pre.glsl", &source, fspresz);
+#if defined(NDEBUG)
+    source = (char *)malloc(fragment_pre_glslsz);
+    if (!source) {
+        LOG("error malloc");
+        return 0;
+    }
+    memcpy(source, fragment_pre_glsl, fragment_pre_glslsz);
+    *fspresz = fragment_pre_glslsz;
+    result = 1;
+#else
+    result = read_file("fragment_pre.glsl", &source, fspresz);
+#endif
     if (result) {
         char *motionblur_constant = source;
         // yes the space at the end is important
@@ -38,7 +45,7 @@ int get_fragment_shader_pre(const char **fspre, size_t *fspresz) {
         char factor[6];
         for (; motionblur_constant < source + *fspresz - sizeof(name) - sizeof(factor); ++motionblur_constant) {
             if (memcmp(motionblur_constant, name, sizeof(name) - 1) == 0) {
-                int printed = snprintf(factor, 6, "%d", MOTIONBLUR_FACTOR);
+                int printed = snprintf(factor, sizeof(factor), "%d", MOTIONBLUR_FACTOR);
                 if (printed > 0) {
                     memcpy(motionblur_constant + sizeof(name) - 1, factor, printed);
                 }
@@ -48,7 +55,6 @@ int get_fragment_shader_pre(const char **fspre, size_t *fspresz) {
         *fspre = source;
     }
     return result;
-#endif
 }
 
 int get_fragment_shader_post(const char **fspost, size_t *fspostsz) {

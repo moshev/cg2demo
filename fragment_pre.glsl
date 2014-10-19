@@ -3,8 +3,10 @@
 const float TAU = 6.2831853;
 
 uniform int millis;
+uniform int currentFramebuffer;
 uniform mat4 camera;
 
+#define MOTIONBLUR_COEFFICIENT 8.0
 // newlines left as space to insert motionblur factor
 // keep them at least 3!
 #define MOTIONBLUR_FACTOR 
