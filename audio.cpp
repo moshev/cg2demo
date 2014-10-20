@@ -93,7 +93,7 @@ void audio_state_advance(audio_state *as, int samples) {
     as->note = n;
 }
 
-#define AUDIO_GEN_FUNC 1
+#define AUDIO_GEN_FUNC 2
 
 static double audio_gen_note_sample(int samples, double hz) {
     double t = ((int)(samples * hz) % 44100) / 44099.0;
