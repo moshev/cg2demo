@@ -3,6 +3,18 @@ CXX=g++
 CFLAGS=-std=c11 -Wall -Werror -march=native -Og -g
 CXXFLAGS=-std=c++11 -Wall -Werror -Wno-comment -Wno-error=comment -march=native -O2 -g `pkg-config --cflags-only-I sdl2` -I/usr/include/malloc -DGL_GLEXT_FUNCTION_POINTERS=1
 
+all: cg2demo
+
+cg2demo.h: protodef.inc
+
+cg2demo.cpp: cg2demo.h protodecl.inc protoget.inc
+
+scene.cpp: scene.h scenedsl.h
+
+shaders.cpp: shaders.h shaders.inc
+
+text.cpp: text.h
+
 cg2demo: cg2demo.o scene.o shaders.o text.o
 # -lGL has to be at end or you start getting awful warnings!
 #  basically if you put -lGL in front, the libGL symbols will
