@@ -146,8 +146,8 @@ double audio_gen_1(audio_state *as) {
     double attack = 0.02;
     double sustain = 0.1;
     double release = 0.75;
-    unsigned overtones = 1;
-    double overtone_factor = 1;
+    unsigned overtones = 4;
+    double overtone_factor = 2;
     int n = as->note;
     as->note = 0;
     int duration = audio_note_duration(as);
@@ -162,7 +162,7 @@ double audio_gen_1(audio_state *as) {
     double hz = audio_note_hz(as);
     double u = (double)s / duration;
     double v = 0;
-    double f = 1.0 / 7.0;
+    double f = 1.0 / 8.0;
     f *= smoothstep(0, attack, u);
     f *= 1 - smoothstep(attack + sustain, attack + sustain + release, u);
     for (unsigned i = 1; i <= overtones; i++) {
