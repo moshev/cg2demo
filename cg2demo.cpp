@@ -150,7 +150,8 @@ int main(int argc, char *argv[]) {
         LOG("FAILED TO INIT AUDIO");
         exit(1);
     }
-    audio_state as = { 0 };
+    audio_state as;
+    memset(&as, 0, sizeof(as));
     SDL_AudioSpec desired;
     desired.channels = 1;
     desired.format = AUDIO_S16;

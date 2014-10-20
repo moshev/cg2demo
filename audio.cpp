@@ -197,7 +197,7 @@ double audio_gen_2(audio_state *as) {
     int duration = audio_note_duration(as);
     double u = (double)s / duration;
     double v = 0;
-    double f = 1.0 / 6.0;
+    double f = 1.0 / 4.0;
     f *= smoothstep(0, attack, u);
     f *= 1 - smoothstep(attack + sustain, attack + sustain + release, u);
     for (unsigned i = 1; i <= overtones; i++) {
@@ -212,8 +212,8 @@ double audio_gen_3(audio_state *as) {
     double attack = 0.01;
     double sustain = 0.175;
     double release = 0.820;
-    double vibrato = 0.5;
-    int vibrato_factor = 4;
+    double vibrato = 0.8;
+    int vibrato_factor = 3;
     unsigned overtones = 1;
     double overtone_factor = 1;
     int s = as->samples;
@@ -229,10 +229,12 @@ double audio_gen_3(audio_state *as) {
     double hz = audio_note_hz(as);
     double u = (double)s / duration;
     double v = 0;
-    double f = 1.0 / 6.0;
+    double f = 1.0 / 2.5;
     double fhz = smoothstep(0, attack, u);
     fhz *= 1 - smoothstep(attack + sustain, attack + sustain + release, u);
-    f *= pow(sin(fhz * TAU * 0.25), 2);
+    f *= pow(sin(fhz * TAU * 0.25), 0.5);
+    f *= smoothstep(0, attack, u);
+    f *= 1 - smoothstep(attack + sustain, attack + sustain + release, u);
     for (unsigned i = 1; i <= overtones; i++) {
         v += audio_gen_note_sample(s, hz * i) / pow(overtone_factor, (double)i);
     }
