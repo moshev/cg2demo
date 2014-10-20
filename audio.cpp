@@ -41,7 +41,7 @@ static int audio_note_duration(const audio_state *as) {
     //return 11025;
     //return as->current_scene % 2 ? 5555 : 11025;
     //return 22050;
-    return (as->note % 2 ? 11025 : 8000);
+    return (as->note % 2 ? 8000 : 5450);
     //return 11025;
     //return 6666;
     //return 8000;
@@ -145,51 +145,22 @@ static double audio_gen_note_sample(int samples, double hz) {
     return v;
 }
 
-static double audio_adsr_off_calculate(double attack, double decay, double sustain, double release, double t, double toff) {
-    if (t < attack) {
-        if (t < toff) {
-            return smoothstep(0, attack, t);
-        } else {
-            double s = smoothstep(0, attack, toff);
-            return (1.0 - smoothstep(toff, 1.0, t)) * s;
-        }
-    } else if (t < attack + decay) {
-        if (t < toff) {
-            return mix(1.0, sustain, smoothstep(attack, attack + decay, t));
-        } else {
-            double s = mix(1.0, sustain, smoothstep(attack, attack + decay, toff));
-            return (1.0 - smoothstep(toff, 1.0, t)) * s;
-        }
-    } else if (t < toff) {
-        return sustain;
-    } else {
-        return (1.0 - smoothstep(0, release, t - toff)) * sustain;
-    }
-}
-
-static double audio_adsr_calculate(double attack, double decay, double sustain, double release, double t) {
-    return audio_adsr_off_calculate(attack, decay, sustain, release, t, 1.0 - release);
-}
-
 // main tones
 double audio_gen_1(audio_state *as) {
     double attack = 0.02;
-    double decay = 0.1;
-    double sustain = 0.8;
-    double release = 0.9;
-    unsigned overtones = 2;
-    double overtone_factor = 2;
+    double sustain = 0.1;
+    double release = 0.6;
+    unsigned overtones = 1;
+    double overtone_factor = 1.41;
     int s = as->samples;
-    int n = as->note;
-    as->note -= 1 - as->note % 2;
     int duration = audio_note_duration(as);
-    as->note = n;
+    as->note -= 1 - as->note % 2;
     double hz = audio_note_hz(as);
     double u = (double)s / duration;
-    double toff = as->note % 2 ? 1.0 - release : ((double)s / audio_note_duration(as));
     double v = 0;
     double f = 1.0 / 2.0;
-    f *= audio_adsr_off_calculate(attack, decay, sustain, release, u, toff);
+    f *= smoothstep(0, attack, u);
+    f *= 1 - smoothstep(attack + sustain, attack + sustain + release, u);
     for (unsigned i = 1; i <= overtones; i++) {
         v += audio_gen_note_sample(s, hz * i) / pow(overtone_factor, (double)i);
     }
@@ -294,9 +265,9 @@ int16_t audio_gen(const audio_state *as) {
     double v = 0;
     v += audio_gen_1(&asrw);
     asrw = *as;
-    //v += audio_gen_2(&asrw);
+    v += audio_gen_2(&asrw);
     asrw = *as;
-    //v += audio_gen_3(&asrw);
+    v += audio_gen_3(&asrw);
     v = clamp(v, -1, 1);
     return (int16_t)(v * 0x6000);
 }

@@ -429,6 +429,3 @@ static inline double smoothstep(double min, double max, double a) {
     return t;
 }
 
-static inline double mix(double a, double b, double factor) {
-    return (1.0 - factor) * a + factor * b;
-}
