@@ -93,51 +93,52 @@ void audio_state_advance(audio_state *as, int samples) {
     as->note = n;
 }
 
-#define AUDIO_GEN_FUNC 2
-
-static double audio_gen_note_sample(int samples, double hz) {
+static double audio_gen_note_sample_func(int samples, double hz, unsigned func) {
     double t = ((int)(samples * hz) % 44100) / 44099.0;
     double alpha = t * TAU;
     double A = 0.2;//1.0 / pow(2, -12) - 1;//alpha / (1 + pow(2, -12));
-    double B = 1.1;//pow(2, -12) - 1;//alpha * (pow(2, -12));
+    double B = 1.5;//pow(2, -12) - 1;//alpha * (pow(2, -12));
     double v = 0;
-#if AUDIO_GEN_FUNC == 0
-    // B
-    // ⌠
-    // ⎮ sin(alpha + x) dx
-    // ⌡
-    // A
-    v = -sin(alpha) * cos(A) + sin(alpha) * cos(B) + cos(alpha) * sin(A) - cos(alpha) * sin(B);
-#elif AUDIO_GEN_FUNC == 1
-    (void) A;
-    (void) B;
-    v = sin(alpha);
-#elif AUDIO_GEN_FUNC == 2
-    // B
-    // ⌠
-    // ⎮ sin(alpha * x) / exp(|x - 1|) dx
-    // ⌡
-    // A
-    // calculated using sympy
-    double a2p1 = alpha * alpha + 1;
-    v = - exp(1.0) * alpha * cos(B * alpha) / (a2p1 * exp(B  ))
-        - exp(1.0) * alpha * sin(B * alpha) / (a2p1 * exp(B  ))
-        + exp(1.0) *         sin(    alpha) / (a2p1 * exp(1.0))
-        + exp(A  ) * alpha * cos(A * alpha) / (a2p1 * exp(1.0))
-        - exp(A  ) *         sin(A * alpha) / (a2p1 * exp(1.0))
-        + exp(1.0) *         sin(    alpha) / (a2p1 * exp(1.0));
-    v /= 2 - exp(1 - B) - exp(A - 1);
-#elif AUDIO_GEN_FUNC == 3
-    (void) A;
-    (void) B;
-    (void) alpha;
-    if (t < 0.5) {
-        v = smoothstep(0, 0.5, t);
-    } else {
-        v = smoothstep(0, 0.5, 1 - t);
+    switch (func) {
+    case 0:
+        // B
+        // ⌠
+        // ⎮ sin(alpha + x) dx
+        // ⌡
+        // A
+        v = -sin(alpha) * cos(A) + sin(alpha) * cos(B) + cos(alpha) * sin(A) - cos(alpha) * sin(B);
+        break;
+    case 1:
+        v = sin(alpha);
+        break;
+    case 2:
+    {
+        // B
+        // ⌠
+        // ⎮ sin(alpha * x) / exp(|x - 1|) dx
+        // ⌡
+        // A
+        // calculated using sympy
+        double a2p1 = alpha * alpha + 1;
+        v = - exp(1.0) * alpha * cos(B * alpha) / (a2p1 * exp(  B))
+            - exp(1.0) * alpha * sin(B * alpha) / (a2p1 * exp(  B))
+            + exp(1.0) *         sin(    alpha) / (a2p1 * exp(1.0))
+            + exp(  A) * alpha * cos(A * alpha) / (a2p1 * exp(1.0))
+            - exp(  A) *         sin(A * alpha) / (a2p1 * exp(1.0))
+            + exp(1.0) *         sin(    alpha) / (a2p1 * exp(1.0));
+        v /= 2 - exp(1 - B) - exp(A - 1);
     }
-    v = v * 2 - 1;
-#endif
+    case 3:
+        if (t < 0.5) {
+            v = smoothstep(0, 0.5, t);
+        } else {
+            v = smoothstep(0, 0.5, 1 - t);
+        }
+        v = v * 2 - 1;
+        break;
+    default:
+        v = 0;
+    }
     return v;
 }
 
@@ -146,7 +147,7 @@ double audio_gen_1(audio_state *as) {
     double attack = 0.02;
     double sustain = 0.1;
     double release = 0.75;
-    unsigned overtones = 4;
+    unsigned overtones = 1;
     double overtone_factor = 2;
     int n = as->note;
     as->note = 0;
@@ -166,7 +167,7 @@ double audio_gen_1(audio_state *as) {
     f *= smoothstep(0, attack, u);
     f *= 1 - smoothstep(attack + sustain, attack + sustain + release, u);
     for (unsigned i = 1; i <= overtones; i++) {
-        v += audio_gen_note_sample(s, hz * i) / pow(overtone_factor, (double)i - 1);
+        v += audio_gen_note_sample_func(s, hz * i, 2) / pow(overtone_factor, (double)i - 1);
     }
     v *= f;
     /*
@@ -204,7 +205,7 @@ double audio_gen_2(audio_state *as) {
     f *= smoothstep(0, attack, u);
     f *= 1 - smoothstep(attack + sustain, attack + sustain + release, u);
     for (unsigned i = 1; i <= overtones; i++) {
-        v += audio_gen_note_sample(s, hz * i) / pow(overtone_factor, (double)i - 1);
+        v += audio_gen_note_sample_func(s, hz * i, 1) / pow(overtone_factor, (double)i - 1);
     }
     v *= f;
     return v;
