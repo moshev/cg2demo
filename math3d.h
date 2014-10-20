@@ -342,7 +342,7 @@ static inline float clampf(float a, float min, float max) {
     return minf(maxf(a, min), max);
 }
 
-static inline float smoothstep(float min, float max, float a) {
+static inline float smoothstepf(float min, float max, float a) {
     if (a < min) {
         return 0.0f;
     }
@@ -408,3 +408,24 @@ static inline mat4 mktranslationm4(vec3 v) {
         mkv4(0, 0, 1, 0),
         mkv4(v.v[0], v.v[1], v.v[2], 1));
 }
+
+static inline double clamp(double a, double min, double max) {
+    return
+        a < min ? min :
+        a > max ? max :
+                  a;
+}
+
+static inline double smoothstep(double min, double max, double a) {
+    if (a < min) {
+        return 0.0f;
+    }
+    if (a > max) {
+        return 1.0f;
+    }
+    double t = (a - min) / (max - min);
+    t = t * t * t * (t * (t * 6.0f - 15.0f) + 10.0f);
+    t = clamp(t, 0.0f, 1.0f);
+    return t;
+}
+
