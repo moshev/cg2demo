@@ -210,7 +210,7 @@ int main(int argc, char *argv[]) {
             LOGF("tau_%02d = %d", (int)i, digit);
         }
         if ((size_t)digit < nnotesoffsets - 1) {
-            taudigitsrw[j++] = (uint8_t)digit % 16;
+            taudigitsrw[j++] = (uint8_t)digit;
         }
     }
     as.taudigits = taudigitsrw;

@@ -145,26 +145,28 @@ static double audio_gen_note_sample(int samples, double hz) {
 double audio_gen_1(audio_state *as) {
     double attack = 0.02;
     double sustain = 0.1;
-    double release = 0.6;
-    unsigned overtones = 4;
+    double release = 0.75;
+    unsigned overtones = 1;
     double overtone_factor = 1;
-    int s = as->samples;
+    int n = as->note;
+    as->note = 0;
     int duration = audio_note_duration(as);
-    as->note++;
+    as->note = 1;
     duration += audio_note_duration(as);
-    if (as->note % 2 == 1) {
-        as->note--;
+    as->note = 0;
+    int s = as->samples;
+    if (n % 1) {
         s += audio_note_duration(as);
     }
-    as->note++;
+    as->note = n + 1 - n % 2;
     double hz = audio_note_hz(as);
     double u = (double)s / duration;
     double v = 0;
-    double f = 1.0 / 4.0;
+    double f = 1.0 / 7.0;
     f *= smoothstep(0, attack, u);
     f *= 1 - smoothstep(attack + sustain, attack + sustain + release, u);
     for (unsigned i = 1; i <= overtones; i++) {
-        v += audio_gen_note_sample(s, hz * i) / pow(overtone_factor, (double)i);
+        v += audio_gen_note_sample(s, hz * i) / pow(overtone_factor, (double)i - 1);
     }
     v *= f;
     /*
@@ -187,23 +189,22 @@ double audio_gen_1(audio_state *as) {
 
 // bass line
 double audio_gen_2(audio_state *as) {
-    as->scale -= 12;
-    as->note -= as->note % 2;
-    double attack = 0.05;
-    double sustain = 0.0;
-    double release = 0.5;
-    unsigned overtones = 4;
+    double attack = 0.01;
+    double sustain = 0.1;
+    double release = 0.8;
+    unsigned overtones = 1;
     double overtone_factor = 1.5;
     int s = as->samples;
-    double hz = audio_note_hz(as);
     int duration = audio_note_duration(as);
+    as->note = 0;
+    double hz = audio_note_hz(as);
     double u = (double)s / duration;
     double v = 0;
-    double f = 1.0 / 3.0;
+    double f = 1.0 / 5.0;
     f *= smoothstep(0, attack, u);
     f *= 1 - smoothstep(attack + sustain, attack + sustain + release, u);
     for (unsigned i = 1; i <= overtones; i++) {
-        v += audio_gen_note_sample(s, hz * i) / pow(overtone_factor, (double)i);
+        v += audio_gen_note_sample(s, hz * i) / pow(overtone_factor, (double)i - 1);
     }
     v *= f;
     return v;
@@ -212,7 +213,9 @@ double audio_gen_2(audio_state *as) {
 int16_t audio_gen(const audio_state *as) {
     audio_state asrw = *as;
     double v = 0;
-    v += audio_gen_1(&asrw);
+    if (as->current_scene < 16 && as->current_scene > 2) {
+        v += audio_gen_1(&asrw);
+    }
     asrw = *as;
     v += audio_gen_2(&asrw);
     v = clamp(v, -1, 1);
