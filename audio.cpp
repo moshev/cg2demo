@@ -96,8 +96,8 @@ void audio_state_advance(audio_state *as, int samples) {
 static double audio_gen_note_sample_func(int samples, double hz, unsigned func) {
     double t = ((int)(samples * hz) % 44100) / 44099.0;
     double alpha = t * TAU;
-    double A = 0.2;//1.0 / pow(2, -12) - 1;//alpha / (1 + pow(2, -12));
-    double B = 1.5;//pow(2, -12) - 1;//alpha * (pow(2, -12));
+    double A = 0.0;//1.0 / pow(2, -12) - 1;//alpha / (1 + pow(2, -12));
+    double B = 1.3;//pow(2, -12) - 1;//alpha * (pow(2, -12));
     double v = 0;
     switch (func) {
     case 0:
@@ -144,7 +144,7 @@ static double audio_gen_note_sample_func(int samples, double hz, unsigned func) 
 
 // main tones
 double audio_gen_1(audio_state *as) {
-    double attack = 0.02;
+    double attack = 0.05;
     double sustain = 0.1;
     double release = 0.75;
     unsigned overtones = 1;
@@ -156,14 +156,14 @@ double audio_gen_1(audio_state *as) {
     duration += audio_note_duration(as);
     as->note = 0;
     int s = as->samples;
-    if (n % 1) {
+    if (n % 2) {
         s += audio_note_duration(as);
     }
     as->note = n + 1 - n % 2;
     double hz = audio_note_hz(as);
     double u = (double)s / duration;
     double v = 0;
-    double f = 1.0 / 8.0;
+    double f = 1.0 / 4.0;
     f *= smoothstep(0, attack, u);
     f *= 1 - smoothstep(attack + sustain, attack + sustain + release, u);
     for (unsigned i = 1; i <= overtones; i++) {
