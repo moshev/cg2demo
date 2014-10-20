@@ -599,7 +599,7 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
     for (size_t i = 0; i < MOTIONBLUR_FACTOR; i++) {
         glActiveTexture(GL_TEXTURE0 + (GLenum)i + 1);
         glBindTexture(GL_TEXTURE_2D, framebuffer_color_attachment[i]);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_LOD, 0);
@@ -688,7 +688,7 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
                     for (size_t i = 0; i < MOTIONBLUR_FACTOR; i++) {
                         glActiveTexture(GL_TEXTURE0 + (GLenum)i + 1);
                         glBindTexture(GL_TEXTURE_2D, framebuffer_color_attachment[i]);
-                        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+                        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
                         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
                         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
                         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_LOD, 0);

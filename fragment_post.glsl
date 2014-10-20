@@ -154,6 +154,7 @@ void main() {
         result += go(p, ray);
     }
 */
+    colorObject = result;
     vec4 c = result;
     vec2 texcoord = (vec2(1, 1) + screenpixel) * 0.5;
     float factor = 1.0 / MOTIONBLUR_COEFFICIENT;
@@ -164,8 +165,15 @@ void main() {
         factor /= MOTIONBLUR_COEFFICIENT;
     }
     c *= (MOTIONBLUR_COEFFICIENT - 1) / (MOTIONBLUR_COEFFICIENT - pow(MOTIONBLUR_COEFFICIENT, -float(MOTIONBLUR_FACTOR)));
-    colorObject = result;
-    // gamma correction for standard monitor
-    float g = 1.0 / 2.2;
-    colorBackLeft = pow(c, vec4(g, g, g, 1.0));
+    // do blending with clear colour here
+    // to remain correct wrt sRGB colourspace
+    vec3 a = vec3(0.055, 0.055, 0.055);
+    vec3 ap1 = vec3(1, 1, 1) + a;
+    vec3 g = vec3(2.4, 2.4, 2.4);
+    vec3 ginv = 1.0 / g;
+    vec3 srgbClearColor = vec3(0.7, 0.7, 0.7);
+    vec3 rgbClearColor = pow((srgbClearColor + a) / ap1, g);
+    vec3 blended = c.xyz + (1.0 - c.w) * rgbClearColor;
+    bvec3 select = greaterThan(blended, vec3(0.0031308, 0.0031308, 0.0031308));
+    colorBackLeft = vec4(mix(blended * 12.92, pow(ap1 * blended, ginv) - a, select), 1.0);
 }

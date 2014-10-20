@@ -6,7 +6,7 @@ uniform int millis;
 uniform int currentFramebuffer;
 uniform mat4 camera;
 
-#define MOTIONBLUR_COEFFICIENT 4.0
+#define MOTIONBLUR_COEFFICIENT 2.5
 // newlines left as space to insert motionblur factor
 // keep them at least 3!
 #define MOTIONBLUR_FACTOR 
