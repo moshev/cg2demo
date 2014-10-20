@@ -214,7 +214,7 @@ double audio_gen_2(audio_state *as) {
 int16_t audio_gen(const audio_state *as) {
     audio_state asrw = *as;
     double v = 0;
-    if (as->current_scene < 16 && as->current_scene > 2) {
+    if (as->current_scene < 16 && as->current_scene > 3) {
         v += audio_gen_1(&asrw);
     }
     asrw = *as;
