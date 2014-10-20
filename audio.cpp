@@ -146,7 +146,7 @@ static double audio_gen_note_sample_func(int samples, double hz, unsigned func) 
 double audio_gen_1(audio_state *as) {
     double attack = 0.05;
     double sustain = 0.1;
-    double release = 0.75;
+    double release = 0.82;
     unsigned overtones = 1;
     double overtone_factor = 2;
     int n = as->note;
