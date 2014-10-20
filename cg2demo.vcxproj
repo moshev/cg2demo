@@ -168,6 +168,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="audio.cpp" />
     <ClCompile Include="cg2demo.cpp" />
     <ClCompile Include="math3d.h" />
     <ClCompile Include="scene.cpp" />
@@ -175,6 +176,7 @@
     <ClCompile Include="text.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="audio.h" />
     <ClInclude Include="cg2demo.h" />
     <ClInclude Include="math3d_t.h" />
     <ClInclude Include="scene.h" />

@@ -164,7 +164,7 @@ double audio_gen_1(audio_state *as) {
     f *= smoothstep(0, attack, u);
     f *= 1 - smoothstep(attack + sustain, attack + sustain + release, u);
     for (unsigned i = 1; i <= overtones; i++) {
-        v += audio_gen_note_sample(s, hz * i) / pow(overtone_factor, i);
+        v += audio_gen_note_sample(s, hz * i) / pow(overtone_factor, (double)i);
     }
     v *= f;
     /*
@@ -203,7 +203,7 @@ double audio_gen_2(audio_state *as) {
     f *= smoothstep(0, attack, u);
     f *= 1 - smoothstep(attack + sustain, attack + sustain + release, u);
     for (unsigned i = 1; i <= overtones; i++) {
-        v += audio_gen_note_sample(s, hz * i) / pow(overtone_factor, i);
+        v += audio_gen_note_sample(s, hz * i) / pow(overtone_factor, (double)i);
     }
     v *= f;
     return v;
