@@ -727,11 +727,42 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
 }
 
 //AUDIO
+static const int recordinghack[] = {
+/*0*/ 1500,
+/*1*/ 3750,
+/*2*/ 6750,
+/*3*/ 9750,
+/*4*/ 14750,
+/*5*/ 35750,
+/*6*/ 39750,
+/*7*/ 50750,
+/*8*/ 54750,
+/*9*/ 57250,
+/*10*/ 65250,
+/*11*/ 67850,
+/*12*/ 72650,
+/*13*/ 74650,
+/*14*/ 101150,
+/*15*/ 111150,
+};
+static int sampleshack = 0;
 void audio_callback(void *userdata, Uint8 *stream, int len) {
     audio_state *as = (audio_state *)userdata;
     Sint16 *buf = (Sint16 *)stream;
     size_t bufsz = len / 2;
-    as->current_scene = current_scene.load(std::memory_order_acquire);
+    if (movie) {
+        int ticks = (sampleshack * 1000) / 44100 - 6000;
+        if (ticks < 0) {
+            as->current_scene = 16;
+        } else {
+            ticks = ticks % recordinghack[15];
+            int i;
+            for (i = 0; i < 16 && ticks >= recordinghack[i]; i++);
+            as->current_scene = i;
+        }
+    } else {
+        as->current_scene = current_scene.load(std::memory_order_acquire);
+    }
     for (size_t i = 0; i < bufsz; i++) {
         buf[i] = audio_gen(as);
         audio_state_advance(as, 1);
