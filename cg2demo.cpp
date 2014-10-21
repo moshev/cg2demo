@@ -167,10 +167,18 @@ int main(int argc, char *argv[]) {
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-    SDL_Window *window = SDL_CreateWindow("Super Special Awesome Demo 2014",
-        SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-        WIDTH, HEIGHT,
-        SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE);
+    SDL_Window *window;
+    if (movie) {
+        window = SDL_CreateWindow("Super Special Awesome Demo 2014 [recording]",
+            SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+            1920, 1080,
+            SDL_WINDOW_OPENGL);
+    } else {
+        window = SDL_CreateWindow("Super Special Awesome Demo 2014",
+            SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+            WIDTH, HEIGHT,
+            SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE);
+    }
 
     if (!window) {
         LOGF("Could not create window: %s", SDL_GetError());
@@ -216,7 +224,9 @@ int main(int argc, char *argv[]) {
     as.taudigits = taudigitsrw;
     as.ntaudigits = ntaudigits;
 
-    SDL_MaximizeWindow(window);
+    if (!movie) {
+        SDL_MaximizeWindow(window);
+    }
     // main loop
     int result = renderloop(window, context);
     SDL_DestroyWindow(window);
@@ -282,7 +292,17 @@ static GLuint create_program_from_scene(const uint8_t *scene, size_t scenesz) {
     memcpy(fs + fragment_pre_glslsz, fsscene, fsscenesz);
     memcpy(fs + fragment_pre_glslsz + fsscenesz, fragment_post_glsl, fragment_post_glslsz);
     fs[fssz - 1] = '\0';
-    LOGF("generated shader:\n-----\n%.*s\n------\n", (int)fssz, fs);
+    LOG("generated shader:\n-------------------");
+    int line = 0;
+    for (char *from = fs, *to = fs; *from; from = to) {
+        to = from + 1;
+        while (*to != '\0' && *to != '\n') {
+            to++;
+        }
+        LOGF("%5d: %.*s", line, (int)(to - from), from);
+        line++;
+    }
+    LOG("-------------------");
 
     GLuint prog = create_program(vertex_glsl, vertex_glslsz, fs, fssz);
     free(fsscene);
@@ -518,6 +538,7 @@ static int renderloop(SDL_Window *window, SDL_GLContext context) {
         framebuffer_texture_samplers[i] = i + 1;
     }
     for (size_t i = 0; i < nscenes + 1; i++) {
+        LOGF("Creating scene %d", (int) i);
         if (i < nscenes) {
             progs[i].id = create_program_from_scene(scenes[i].data, scenes[i].datasz);
         } else {

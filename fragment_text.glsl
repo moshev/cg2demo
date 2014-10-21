@@ -29,9 +29,9 @@ void main() {
 #endif
     float d;
     if (f < 0.5) {
-        d = texture(textsampler, t1);
+        d = texture(textsampler, t1).x;
     } else {
-        d = texture(textsampler, t2);
+        d = texture(textsampler, t2).x;
     }
     vec4 result = vec4(d, d, d, 1 - smoothstep(0.8, 1, f));
 

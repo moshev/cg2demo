@@ -22,36 +22,9 @@ uniform sampler2D framessampler[MOTIONBLUR_FACTOR];
 centroid in vec2 pixelcenter;
 centroid in vec2 screenpixel;
 
-/*
-// pixel size
-flat in vec2 pixel;
-*/
-
 out vec4 colorBackLeft;
 out vec4 colorObject;
 
-/*
-// set this to something depending on
-// both time and pixel
-uint rand_state = 0u;
-
-float rand() {
-    rand_state = ((rand_state * 1664525u + 1013904223u) >> 8) & 0xFFFFFFu;
-    return float(rand_state) / float(0xFFFFFF);
-}
-
-vec2 rand2_state = vec2(-0.75, 0.75);
-vec2 rand2_state_m = vec2(-1.0, 1.0);
-
-void srand2(int seed) {
-}
-
-vec2 rand2() {
-    rand2_state *= rand2_state_m;
-    rand2_state_m *= vec2(-1.0, -1.0);
-    return rand2_state;
-}
-*/
 float mixfix(float a, float b, float t) {
     // this piece is nonsensical but without it
     // we get a black screen, fuck you nVidia
@@ -63,20 +36,6 @@ float mixfix(float a, float b, float t) {
     u = clamp(u, 0.0, 1.0);
     return a * u + b * t;
 }
-
-/*rotation matrix that will make d point the same direction as z*/
-/*both must be normalized*/
-/*
-mat3x3 rotationAlign(vec3 d, vec3 z) {
-    vec3 v = cross(z, d);
-    float c = dot(z, d);
-    float k = 1.0f / (1.0f + c);
-    return k * outerProduct(v, v) +
-        mat3x3(c, v.z, -v.y,
-               -v.z, c, v.x,
-               v.y, -v.x, c);
-}
-*/
 
 float plane(vec3 p, vec3 c, vec3 n) {
     return dot(n, p) - dot(n, c);
@@ -117,18 +76,6 @@ float torus(vec3 p, vec3 c, vec3 n, float rc, float rt) {
     float b = rc - sqrt(xy2);
     return sqrt(b * b + z * z) - rt;
 }
-
-/*
-float cylinderx(vec3 p, vec3 c, float h, float r) {
-    vec3 q = p - c;
-    return max(max(-h - q.x, q.x - h), sqrt(dot(q.yz, q.yz)) - r);
-}
-
-float cylindery(vec3 p, vec3 c, float h, float r) {
-    vec3 q = p - c;
-    return max(max(-h - q.y, q.y - h), sqrt(dot(q.xz, q.xz)) - r);
-}
-*/
 
 /*cylinder with spherical caps at ends*/
 /* a, b - centres of the caps, r - radius */
