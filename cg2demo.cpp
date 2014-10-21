@@ -766,13 +766,13 @@ static const int recordinghack[] = {
 /*14*/ 101150,
 /*15*/ 111150,
 };
-static int sampleshack = 0;
+static int64_t sampleshack = 0;
 void audio_callback(void *userdata, Uint8 *stream, int len) {
     audio_state *as = (audio_state *)userdata;
     Sint16 *buf = (Sint16 *)stream;
     size_t bufsz = len / 2;
     if (movie) {
-        int ticks = (sampleshack * 1000) / 44100 - 6000;
+        int64_t ticks = (sampleshack * 1000) / 44100 - 6000;
         if (ticks < 0) {
             as->current_scene = 16;
         } else {
