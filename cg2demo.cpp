@@ -760,6 +760,7 @@ void audio_callback(void *userdata, Uint8 *stream, int len) {
             for (i = 0; i < 16 && ticks >= recordinghack[i]; i++);
             as->current_scene = i;
         }
+        sampleshack += len / 2;
     } else {
         as->current_scene = current_scene.load(std::memory_order_acquire);
     }
