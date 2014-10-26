@@ -1,7 +1,7 @@
 Demo R&D
 ========
 
-Written for MSVS2013.
+Written for MSVS2013. Also works on Linux and Mac.
 
 Guidelines
 ==========
@@ -26,3 +26,10 @@ Recording
 * ffmpeg -f s16le -ar 44100 -ac 1 -i fiaudioout -c:a ac3 audio.ac3
 * cg2demo --record
 * When done run: ffmpeg -i video.mp4 -i audio.ac3 -c:a copy -c:v copy -shortest combined.mp4
+
+Competition
+===========
+
+We won first prize at the CG2 Demo Competition!
+
+A rendered video is available at http://www.youtube.com/watch?v=F0EsAEaxN6E
