@@ -12,36 +12,21 @@ vec3 grad(vec3 p) {
 vec4 trace(vec3 p, vec3 r) {
     vec3 p1 = p;
     float d = dist_object(p);
-    float epsilon = 1.0e-05;
-    // Kalman summation
-    float dsum = 0.0;
-    float dsumerr = 0.0;
-    float tmp;
-    for (int i = 0; i < 512 && d >= epsilon; i++) {
+    float epsilon = 2.0e-04;
+    float d1;
+    for (int i = 0; i < 256 && abs(d) >= epsilon; i++) {
         // escape if too long
-        if (dsum > 16) {
+        if (dot(p1 - p, p1 - p) > 16 * 16) {
             return vec4(p1, 0.0);
         }
-        tmp = dsum;
-        dsum = dsum + d;
-        tmp = tmp - (dsum - d);
-        dsumerr = dsumerr + tmp;
-        p1 = dsumerr * r + dsum * r + p;
+        d1 = distance(p1, p);
+        p1 = (d + d1) * r + p;
         d = dist_object(p1);
     }
     if (d > epsilon) {
         return vec4(p1, 0.0);
     } else {
         // woop woop
-        for (int j = 0; j < 16 && d < 0; j++) {
-            tmp = dsum;
-            dsum = dsum + d;
-            tmp = tmp - (dsum - d);
-            dsumerr = dsumerr + tmp;
-            p1 = dsumerr * r + dsum * r + p;
-            d = dist_object(p1);
-        }
-        p1 = dsumerr * r + dsum * r + p;
         return vec4(p1, 1.0);
     }
 }
@@ -82,10 +67,13 @@ vec3 shade(vec3 p) {
     vec4 m1 = trace(p - light1 * 0.05, -light1);
     vec4 m2 = trace(p - light2 * 0.05, -light2);
     vec4 m3 = trace(light3_pos, light3);
-    float factor1 = (1.0 - m1.w) * dot(n, light1);
-    float factor2 = (1.0 - m2.w) * dot(n, light2);
     m3.xyz -= p;
-    float factor3 = (1.0 - step(0.01, dot(m3.xyz, m3.xyz)) * m3.w) * dot(n, light3);
+    float see1 = 1.0 - m1.w;
+    float see2 = 1.0 - m2.w;
+    float see3 = (1.0 - step(0.01, dot(m3.xyz, m3.xyz)) * m3.w);
+    float factor1 = see1 * dot(n, light1);
+    float factor2 = see2 * dot(n, light2);
+    float factor3 = see3 * dot(n, light3);
 
     vec3 c = texmex(p, n);
 
@@ -100,13 +88,19 @@ vec3 shade(vec3 p) {
     // no light shadows only
 //   return c * ((2.0 - m1.w - m2.w) * 2.0 / 3.0 + 1.0 / 3.0);
     // three lights
+
      return min((
      max(factor1, 0.0) * light1c +
      max(factor2, 0.0) * light2c +
      max(factor3, 0.0) * light3c
      ) / (light1c + light2c + light3c) * c, c);
+
+    // debug normals
+//    return 0.5 * (vec3(1.0, 1.0, 1.0) + n);
     // debug shadows
-//    return vec3(m1.w, m2.w, 0.0);
+//    return vec3(see1, see2, see3);
+    // debug space
+//    return 0.5 * (vec3(1.0, 1.0, 1.0) + p);
 }
 
 vec4 go(vec3 p, vec3 ray) {
